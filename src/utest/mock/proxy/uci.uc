@@ -1,0 +1,96 @@
+// Loaded via require() in ucode program mode — see proxy_base.uc for why `return` is used here.
+return {
+	create: function(name, real, ctx) {
+		let proxy = ctx.base();
+
+		proxy.cursor = function() {
+			let f = ctx.get_behavior('cursor');
+			if (f) return f();
+
+			return {
+				get: function(pkg, sec, opt) {
+					let override = ctx.get_behavior('get');
+					if (override) return override(pkg, sec, opt);
+
+					let p = ctx.get_data(pkg);
+					if (type(p) != 'object') {
+						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
+						return null;
+					}
+					let s = p[sec];
+					if (type(s) != 'object') return null;
+					let v = s[opt];
+					return (v != null) ? v : null;
+				},
+
+				get_all: function(pkg, sec) {
+					let override = ctx.get_behavior('get_all');
+					if (override) return override(pkg, sec);
+
+					let p = ctx.get_data(pkg);
+					if (type(p) != 'object') return null;
+					let s = p[sec];
+					return (type(s) == 'object') ? s : null;
+				},
+
+				foreach: function(pkg, type_name, cb) {
+					let override = ctx.get_behavior('foreach');
+					if (override) return override(pkg, type_name, cb);
+
+					let p = ctx.get_data(pkg);
+					if (type(p) != 'object') return;
+					for (let sec_name, sec in p) {
+						if (type(sec) != 'object' || sec['.type'] != type_name) continue;
+						let s = { ...sec };
+						s['.name'] = sec_name;
+						cb(s);
+					}
+				},
+
+				set: function(pkg, sec, opt, val) {
+					let override = ctx.get_behavior('set');
+					if (override) return override(pkg, sec, opt, val);
+
+					let p = ctx.get_data(pkg);
+					p = (type(p) == 'object') ? { ...p } : {};
+					p[sec] = (type(p[sec]) == 'object') ? { ...p[sec] } : {};
+					p[sec][opt] = val;
+					ctx.set_data(pkg, p);
+					return true;
+				},
+
+				commit: function(pkg) {
+					let override = ctx.get_behavior('commit');
+					if (override) return override(pkg);
+					return true;
+				},
+
+				save: function(pkg) {
+					let override = ctx.get_behavior('save');
+					if (override) return override(pkg);
+					return true;
+				},
+
+				delete: function(pkg, sec, opt) {
+					let override = ctx.get_behavior('delete');
+					if (override) return override(pkg, sec, opt);
+
+					let p = ctx.get_data(pkg);
+					if (type(p) != 'object') return false;
+					p = { ...p };
+					if (opt != null) {
+						if (type(p[sec]) != 'object') return false;
+						p[sec] = { ...p[sec] };
+						delete p[sec][opt];
+					} else {
+						delete p[sec];
+					}
+					ctx.set_data(pkg, p);
+					return true;
+				}
+			};
+		};
+
+		return proxy;
+	}
+};

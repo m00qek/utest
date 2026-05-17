@@ -1,0 +1,12 @@
+# Build artifacts
+bin/
+.include/
+references/
+
+# Docker
+.docker_id
+
+# System / IDE
+.DS_Store
+.vscode/
+.idea/

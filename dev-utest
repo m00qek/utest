@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Find the absolute path of the project root
+PROJECT_ROOT=$(cd "$(dirname "$0")" && pwd)
+
+# Execute the framework inside the official OpenWrt 24.10 Docker environment
+# We mount the project root to /app and run src/utest.sh
+docker run --rm \
+    -v "$PROJECT_ROOT:/app" \
+    -w /app \
+    openwrt/rootfs:x86-64-openwrt-24.10 \
+    src/utest.sh "$@"

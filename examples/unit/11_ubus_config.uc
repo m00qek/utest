@@ -1,0 +1,5 @@
+return {
+	mocks: {
+		ubus: null
+	}
+};

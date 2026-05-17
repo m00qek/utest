@@ -1,0 +1,170 @@
+import { describe, it, mock } from 'utest';
+import { assert } from 'utest.assert';
+import * as fs from 'fs';
+
+/**
+ * FS Mocking Example
+ *
+ * Demonstrates how to intercept filesystem calls. `import * as fs from 'fs'`
+ * always gives the real module. Mock proxies are received via the callback
+ * parameter (mock.inject) or the return value (mock.patch).
+ */
+
+describe('FS Mocking', () => {
+	it('real fs is unaffected by default', () => {
+		const content = fs.readfile('/etc/banner');
+		assert.match(content, /OpenWrt/);
+	});
+
+	it('patches global state via mock.global.patch()', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/tmp/setup.txt': 'setup' } });
+		assert.eq(m_fs.readfile('/tmp/setup.txt'), 'setup');
+		assert.eq(fs.readfile('/tmp/setup.txt'), 'setup', 'shim transparently intercepts global state');
+		mock.global.unpatch('fs');
+
+		assert.eq(m_fs.readfile('/tmp/setup.txt'), null);
+	});
+
+	it('injects scoped mock via mock.inject()', () => {
+		mock.inject('fs', { data: { '/tmp/scoped': 'data' } }, (m_fs) => {
+			assert.eq(m_fs.readfile('/tmp/scoped'), 'data');
+			assert.ok(fs.readfile('/tmp/scoped') == null, 'real fs is unaffected inside callback');
+		});
+	});
+
+	it('supports nesting mock.inject()', () => {
+		mock.inject('fs', { data: { '/a': '1' } }, (m_fs) => {
+			assert.eq(m_fs.readfile('/a'), '1');
+
+			mock.inject('fs', { data: { '/b': '2' } }, (m_fs2) => {
+				assert.eq(m_fs2.readfile('/a'), '1');
+				assert.eq(m_fs2.readfile('/b'), '2');
+			});
+
+			assert.eq(m_fs.readfile('/a'), '1');
+			assert.ok(m_fs.readfile('/b') == null, "Mock state should be restored");
+		});
+	});
+
+	it('allows custom function implementation via mock.inject()', () => {
+		let created = [];
+
+		mock.inject('fs', { behavior: { mkdir: (path) => {
+			push(created, path);
+			return true;
+		}}}, (m_fs) => {
+			m_fs.mkdir('/tmp/custom_path');
+			assert.eq(created, ['/tmp/custom_path']);
+		});
+	});
+
+	it('intercepts readfile calls when enabled', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/tmp/virtual.txt': 'hello virtual world' } });
+		assert.eq(m_fs.readfile('/tmp/virtual.txt'), 'hello virtual world');
+		mock.global.unpatch('fs');
+	});
+
+	it('lists virtual files in lsdir()', () => {
+		const m_fs = mock.global.patch('fs', { data: {
+			'/tmp/mockdir/file1.txt': '1',
+			'/tmp/mockdir/file2.txt': '2',
+			'/tmp/mockdir/subdir/file3.txt': '3'
+		}});
+
+		const list = m_fs.lsdir('/tmp/mockdir');
+		sort(list);
+		assert.eq(list, ['file1.txt', 'file2.txt', 'subdir']);
+		mock.global.unpatch('fs');
+	});
+
+	it('merges real and virtual files in lsdir()', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/etc/virtual_config': 'v' } });
+		const list = m_fs.lsdir('/etc');
+
+		let has_virtual = false;
+		let has_real = false;
+		for (let name in list) {
+			if (name == 'virtual_config') has_virtual = true;
+			if (name == 'banner' || name == 'hosts') has_real = true;
+		}
+
+		assert.ok(has_virtual, 'Should find virtual file');
+		assert.ok(has_real, 'Should find real file');
+		mock.global.unpatch('fs');
+	});
+
+	it('supports globbing virtual files', () => {
+		const m_fs = mock.global.patch('fs', { data: {
+			'/tmp/glob/a.txt': 'a',
+			'/tmp/glob/b.txt': 'b',
+			'/tmp/glob/c.log': 'c'
+		}});
+		const files = m_fs.glob('/tmp/glob/*.txt');
+		sort(files);
+		assert.eq(files, ['/tmp/glob/a.txt', '/tmp/glob/b.txt']);
+		mock.global.unpatch('fs');
+	});
+
+	it('supports writing to pre-registered virtual files', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/tmp/writable.txt': 'initial' } });
+		m_fs.writefile('/tmp/writable.txt', 'updated');
+		assert.eq(m_fs.readfile('/tmp/writable.txt'), 'updated');
+		mock.global.unpatch('fs');
+	});
+
+	it('supports writing to new virtual paths when mock is active', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/tmp/seed.txt': 'seed' } });
+		m_fs.writefile('/tmp/new.txt', 'created');
+		assert.eq(m_fs.readfile('/tmp/new.txt'), 'created');
+		mock.global.unpatch('fs');
+	});
+
+	it('access() returns true for virtual files', () => {
+		mock.inject('fs', { data: { '/tmp/present.txt': 'yes' } }, (m_fs) => {
+			assert.ok(m_fs.access('/tmp/present.txt'));
+			assert.eq(m_fs.access('/tmp/absent.txt'), null);
+		});
+	});
+
+	it('stat() returns size and type for virtual files', () => {
+		mock.inject('fs', { data: { '/tmp/data.txt': 'hello' } }, (m_fs) => {
+			let s = m_fs.stat('/tmp/data.txt');
+			assert.eq(s.size, 5);
+			assert.eq(s.type, 'regular');
+			assert.eq(m_fs.stat('/tmp/missing.txt'), null);
+		});
+	});
+
+	it('rename() moves a virtual file', () => {
+		mock.inject('fs', { data: { '/tmp/old.txt': 'content' } }, (m_fs) => {
+			assert.ok(m_fs.rename('/tmp/old.txt', '/tmp/new.txt'));
+			assert.eq(m_fs.readfile('/tmp/new.txt'), 'content');
+			assert.eq(m_fs.readfile('/tmp/old.txt'), null);
+		});
+	});
+
+	it('unlink() removes a virtual file and it disappears from lsdir()', () => {
+		mock.inject('fs', { data: {
+			'/tmp/dir/keep.txt': 'keep',
+			'/tmp/dir/gone.txt': 'gone'
+		}}, (m_fs) => {
+			assert.ok(m_fs.unlink('/tmp/dir/gone.txt'));
+			assert.eq(m_fs.readfile('/tmp/dir/gone.txt'), null);
+			const list = m_fs.lsdir('/tmp/dir');
+			assert.eq(list, ['keep.txt']);
+		});
+	});
+
+	it('mkdir() and chmod() are no-ops returning true', () => {
+		mock.inject('fs', {}, (m_fs) => {
+			assert.ok(m_fs.mkdir('/tmp/newdir', 493));
+			assert.ok(m_fs.chmod('/tmp/file.txt', 420));
+		});
+	});
+
+	it('error() returns null by default', () => {
+		mock.inject('fs', {}, (m_fs) => {
+			assert.eq(m_fs.error(), null);
+		});
+	});
+});
