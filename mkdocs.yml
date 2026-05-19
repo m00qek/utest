@@ -30,6 +30,8 @@ theme:
     - content.code.copy
 
 markdown_extensions:
+  - attr_list
+  - md_in_html
   - admonition
   - pymdownx.details
   - pymdownx.superfences:
@@ -47,6 +49,7 @@ nav:
   - Tutorials:
       - Overview: tutorials/index.md
       - Writing your first test: tutorials/user/first-test.md
+      - Writing your first mock: tutorials/user/first-mock.md
       - Contributing your first patch: tutorials/contributor/first-patch.md
   - How-to Guides:
       - Overview: how-to/index.md
@@ -76,10 +79,12 @@ nav:
       - Assertions: reference/assertions.md
       - Mock API: reference/mock-api.md
       - Proxy Data Models: reference/proxy-data-models.md
+      - Glossary: reference/glossary.md
       - Internals:
           - Source layout: reference/contributor/source-layout.md
           - Message protocol: reference/contributor/message-protocol.md
           - Proxy context API: reference/contributor/proxy-ctx-api.md
+          - Reporter API: reference/contributor/reporter-api.md
   - Explanation:
       - Overview: explanation/index.md
       - Key concepts: explanation/concepts.md
@@ -89,3 +94,4 @@ nav:
       - About the worker/coordinator: explanation/worker-coordinator.md
       - About the mock engine: explanation/mock-engine.md
       - About shim generation: explanation/shim-generation.md
+      - About the reporter architecture: explanation/reporter-architecture.md

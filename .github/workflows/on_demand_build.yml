@@ -4,15 +4,10 @@ on:
   issue_comment:
     types: [created]
 
-env:
-  REGISTRY: ghcr.io
-  SDK_VERSION: 24.10.5
-  SDK_ARCH: x86-64
-
 jobs:
   build-ipk:
     if: |
-      github.event.issue.pull_request && 
+      github.event.issue.pull_request &&
       contains(github.event.comment.body, '/build-ipk') &&
       (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'COLLABORATOR' || github.event.comment.author_association == 'MEMBER')
 
@@ -20,7 +15,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      packages: read
 
     steps:
       - name: Checkout PR Branch
@@ -29,28 +23,7 @@ jobs:
           ref: refs/pull/${{ github.event.issue.number }}/head
 
       - name: Export Project Variables
-        run: |
-          grep '^PKG_.*:=' Makefile | sed 's/:=/=/' >> $GITHUB_ENV
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull Docker Images
-        continue-on-error: true
-        run: |
-          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_BASE="$REGISTRY/$REPO_OWNER/$REPO_NAME"
-
-          docker pull $IMAGE_BASE/builder:latest || true
-          docker pull $IMAGE_BASE/tester:latest || true
-
-          docker tag $IMAGE_BASE/builder:latest ${{ env.PKG_NAME }}-builder:${{ env.SDK_ARCH }}-${{ env.SDK_VERSION }} || true
-          docker tag $IMAGE_BASE/tester:latest ${{ env.PKG_NAME }}-tester:${{ env.SDK_ARCH }}-${{ env.SDK_VERSION }} || true
+        run: grep '^PKG_NAME:=' Makefile | sed 's/:=/=/' >> $GITHUB_ENV
 
       - name: Post Starting Comment
         uses: actions/github-script@v7
@@ -64,14 +37,14 @@ jobs:
               body: '🚀 **IPK Build Started!**\n\nI am compiling `' + process.env.PKG_NAME + '`. This might take a few minutes. You can track the progress [here](' + runUrl + '). I will post an update once it is finished.'
             })
 
-      - name: Build IPK package
+      - name: Build Package
         run: make -f dev.mk package
 
-      - name: Upload IPK
+      - name: Upload Package
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PKG_NAME }}-pr-${{ github.event.issue.number }}
-          path: bin/packages/*/base/${{ env.PKG_NAME }}*.ipk
+          path: bin/packages/**/${{ env.PKG_NAME }}*
 
       - name: Post Success Comment
         uses: actions/github-script@v7

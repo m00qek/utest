@@ -38,7 +38,10 @@ return {
 					if (override) return override(pkg, type_name, cb);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) != 'object') return;
+					if (type(p) != 'object') {
+						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
+						return;
+					}
 					for (let sec_name, sec in p) {
 						if (type(sec) != 'object' || sec['.type'] != type_name) continue;
 						let s = { ...sec };
