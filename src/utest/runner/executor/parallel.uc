@@ -2,11 +2,10 @@ import * as fs from 'fs';
 import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.base';
 import { mkdir_p } from 'utest.util';
 
-const WORKER_TIMEOUT_MS = 60000;
-
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed) {
+		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout) {
+			const WORKER_TIMEOUT_MS = (timeout || 60) * 1000;
 			const pipes_dir = run_dir + "/pipes";
 
 			if (!mkdir_p(pipes_dir))

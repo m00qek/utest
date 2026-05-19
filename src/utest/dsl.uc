@@ -55,6 +55,8 @@ export function skip(name, fn) {
 	});
 };
 
+export const xit = skip;
+
 export function xdescribe(name, fn) {
 	guard();
 	let parent = stack[length(stack)-1];
@@ -69,8 +71,10 @@ export function xdescribe(name, fn) {
 	};
 	push(parent.groups, group);
 	push(stack, group);
-	try { if (fn) fn(); } catch(e) { pop(stack); die(e); }
+	let _err = null;
+	try { if (fn) fn(); } catch(e) { _err = e; }
 	pop(stack);
+	if (_err != null) die(_err);
 };
 
 export function setup(fn) {

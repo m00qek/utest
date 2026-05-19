@@ -134,6 +134,22 @@ describe('uclient Mocking', () => {
 		});
 	});
 
+	it('does not fire data_read for responses with no body', () => {
+		const url = 'http://api.example.com/no-content';
+		mock.inject('uclient', {
+			data: { [url]: { status: 204, headers: {}, body: null } }
+		}, (m_uclient) => {
+			let data_read_fired = false;
+			let u = m_uclient.new(url, null, {
+				header_done: () => {},
+				data_read:   () => { data_read_fired = true; },
+				data_eof:    () => {}
+			});
+			u.request('GET', {});
+			assert.notOk(data_read_fired);
+		});
+	});
+
 	it('patches global state via mock.global.patch()', () => {
 		const url = 'http://api.example.com/global';
 		const m_uclient = mock.global.patch('uclient', {

@@ -21,7 +21,7 @@ export const build_l_flags = function(src_dir, shim_paths) {
 };
 
 export const ExecutorBase = {
-	execute: function(files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed) {
-		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed);
+	execute: function(files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout) {
+		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed, timeout || 60);
 	}
 };

@@ -1,0 +1,91 @@
+site_name: utest
+site_description: A modern, non-invasive testing framework for the ucode ecosystem.
+site_url: https://m00qek.github.io/utest/
+site_dir: bin/site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - announce.dismiss
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - Overview: tutorials/index.md
+      - Writing your first test: tutorials/user/first-test.md
+      - Contributing your first patch: tutorials/contributor/first-patch.md
+  - How-to Guides:
+      - Overview: how-to/index.md
+      - Testing:
+          - Skip tests temporarily: how-to/skip-tests.md
+          - Filter tests by name: how-to/filter-tests.md
+          - Run tests in CI: how-to/ci.md
+      - Mocking:
+          - Mock a module with inject(): how-to/mock-inject.md
+          - Patch global state: how-to/mock-global-patch.md
+          - Mock the filesystem: how-to/mock-fs.md
+          - Mock UCI configuration: how-to/mock-uci.md
+          - Mock ubus calls: how-to/mock-ubus.md
+          - Mock the event loop: how-to/mock-uloop.md
+          - Mock HTTP requests: how-to/mock-uclient.md
+          - Use strict mode: how-to/strict-mode.md
+          - Write a custom proxy: how-to/custom-proxy.md
+      - Contributing:
+          - Add a built-in proxy: how-to/contributor/add-proxy.md
+          - Add an assertion: how-to/contributor/add-assertion.md
+          - Add a reporter: how-to/contributor/add-reporter.md
+          - Run the regression suite: how-to/contributor/run-regression.md
+  - Reference:
+      - Overview: reference/index.md
+      - CLI and Configuration: reference/cli.md
+      - DSL: reference/dsl.md
+      - Assertions: reference/assertions.md
+      - Mock API: reference/mock-api.md
+      - Proxy Data Models: reference/proxy-data-models.md
+      - Internals:
+          - Source layout: reference/contributor/source-layout.md
+          - Message protocol: reference/contributor/message-protocol.md
+          - Proxy context API: reference/contributor/proxy-ctx-api.md
+  - Explanation:
+      - Overview: explanation/index.md
+      - Key concepts: explanation/concepts.md
+      - About test isolation: explanation/test-isolation.md
+      - About inject() vs global.patch(): explanation/inject-vs-patch.md
+      - About strict mode: explanation/strict-mode.md
+      - About the worker/coordinator: explanation/worker-coordinator.md
+      - About the mock engine: explanation/mock-engine.md
+      - About shim generation: explanation/shim-generation.md

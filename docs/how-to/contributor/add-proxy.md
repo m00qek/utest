@@ -1,0 +1,153 @@
+# How to add a built-in proxy
+
+A built-in proxy teaches utest how to intercept a specific OpenWrt module — `fs`,
+`uloop`, `ubus`, and so on. This guide walks through adding a new one from scratch.
+
+---
+
+## 1. Create the proxy file
+
+Create `src/utest/mock/proxy/<name>.uc`, where `<name>` matches the ucode module
+name exactly (e.g. `mymod` for a module imported as `import * as mymod from 'mymod'`).
+
+The file runs in **program mode** (not ES-module mode), so use a bare `return`
+instead of `export`:
+
+```js
+// src/utest/mock/proxy/mymod.uc
+// Loaded via require() in program mode — use return, not export.
+return {
+    create: function(name, real, ctx) {
+        let proxy = ctx.base();   // start from the generic passthrough
+
+        proxy.read = function(key) {
+            let f = ctx.get_behavior('read');
+            if (f) return f(key);                       // behavior override wins
+            let v = ctx.get_data(key);
+            if (v != null) return v;                    // mocked data wins
+            if (ctx.is_strict())
+                die("strict mock: 'mymod.read' called with unmocked key: " + key);
+            return real ? real.read(key) : null;        // fall through to real
+        };
+
+        proxy.write = function(key, val) {
+            let f = ctx.get_behavior('write');
+            if (f) return f(key, val);
+            if (ctx.is_active()) {
+                ctx.set_data(key, val);
+                return true;
+            }
+            return real ? real.write(key, val) : false;
+        };
+
+        return proxy;
+    }
+};
+```
+
+The three-argument signature `create(name, real, ctx)` is mandatory:
+
+| Argument | Value |
+|---|---|
+| `name` | The module name string (e.g. `"mymod"`) |
+| `real` | The real module object, or `null` if absent from rootfs |
+| `ctx` | The context object — see the proxy context API reference |
+
+---
+
+## 2. Declare an `api` list for absent modules (optional)
+
+If `mymod` is not present on the target rootfs (common for optional packages),
+the shim generator cannot introspect its exports. Add an `api` array so that a
+stub shim is generated from the list instead:
+
+```js
+return {
+    api: ['read', 'write', 'close'],   // exported function names
+    create: function(name, real, ctx) {
+        // ...
+    }
+};
+```
+
+Without `api`, the module is silently skipped when it cannot be found, and tests
+that import it will fail at load time.
+
+---
+
+## 3. Write an example test
+
+Add a test file in `examples/unit/` that exercises the new proxy. Follow the
+existing numbering convention (`NN_<name>_test.uc`):
+
+```js
+// examples/unit/15_mymod_test.uc
+import { describe, it, mock } from 'utest';
+import { assert } from 'utest.assert';
+import * as mymod from 'mymod';
+
+describe('mymod mocking', () => {
+    it('returns mocked data for read()', () => {
+        mock.inject('mymod', { data: { mykey: 'hello' } }, (m) => {
+            assert.eq(m.read('mykey'), 'hello');
+        });
+    });
+
+    it('records writes when active', () => {
+        mock.inject('mymod', {}, (m) => {
+            m.write('x', 42);
+            assert.eq(m.read('x'), 42);
+        });
+    });
+
+    it('patches global state via mock.global.patch()', () => {
+        const m = mock.global.patch('mymod', { data: { greeting: 'hi' } });
+        assert.eq(mymod.read('greeting'), 'hi');
+        mock.global.unpatch('mymod');
+    });
+});
+```
+
+---
+
+## 4. Write a config file
+
+Create a companion config file so the test runner knows to shim `mymod`:
+
+```js
+// examples/unit/15_mymod_config.uc
+return {
+    mocks: {
+        mymod: null
+    }
+};
+```
+
+The runner looks for `<NN>_<name>_config.uc` alongside the test file
+automatically when `test/runner.sh` is used.
+
+---
+
+## 5. Regenerate the baseline JSON
+
+Run the example once with the `json` reporter and capture its output as the
+regression baseline:
+
+```bash
+./dev-utest -r json --config examples/unit/15_mymod_config.uc \
+    examples/unit/15_mymod_test.uc \
+    > test/json/unit/15_mymod_test.json
+```
+
+`./dev-utest` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
+the output reflects the target environment.
+
+---
+
+## Next steps
+
+- Read the [proxy context API reference](../../reference/contributor/proxy-ctx-api.md)
+  for the full `ctx` method list.
+- Read [About shim generation](../../explanation/shim-generation.md) to understand
+  why the config file is required.
+- Run the full regression suite with `./test/runner.sh` to confirm nothing is broken.

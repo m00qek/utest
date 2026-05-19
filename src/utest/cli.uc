@@ -26,7 +26,8 @@ function parse_args(argv) {
 		'config': true,
 		'run-dir': true,
 		'src-dir': true,
-		'seed': true
+		'seed': true,
+		'timeout': true
 	};
 
 	for (let i = 0; i < length(argv); i++) {
@@ -121,7 +122,8 @@ function usage() {
 	print("  --no-color            Disable colorized output.\n");
 	print("  -f, --filter=<regex>  Only run tests matching regex.\n");
 	print("  -c, --config=<path>   Path to configuration file [default: utest.config.uc].\n");
-	print("  --seed=<n>            Fix shuffle seed for reproducible ordering.\n\n");
+	print("  --seed=<n>            Fix shuffle seed for reproducible ordering.\n");
+	print("  --timeout=<s>         Worker timeout in seconds [default: 60].\n\n");
 	print("Examples:\n");
 	print("  utest test/unit\n");
 	print("  utest \"Unit:test/unit/*.uc\" \"Integration:test/integration/*.uc\"\n");
@@ -165,7 +167,8 @@ function main() {
 		run_dir:     args.flags['run-dir'] || sprintf("/tmp/utest_%d_%d", t[0], t[1]),
 		src_dir:     args.flags['src-dir'] || fs.realpath("src"),
 		mocks:       file_config.data.mocks || {},
-		seed:        args.flags.seed != null ? int(args.flags.seed) : int(t[1])
+		seed:        args.flags.seed != null ? int(args.flags.seed) : int(t[1]),
+		timeout:     int(args.flags.timeout || file_config.data.timeout || 60)
 	};
 
 	// 3. Run

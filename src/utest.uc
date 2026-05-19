@@ -6,6 +6,7 @@ export const describe = dsl.describe;
 export const xdescribe = dsl.xdescribe;
 export const it = dsl.it;
 export const skip = dsl.skip;
+export const xit = dsl.xit;
 export const beforeEach = dsl.beforeEach;
 export const afterEach = dsl.afterEach;
 export const setup = dsl.setup;

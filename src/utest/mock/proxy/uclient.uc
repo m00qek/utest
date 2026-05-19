@@ -49,7 +49,7 @@ return {
 
 				if (callbacks && callbacks.header_done)
 					callbacks.header_done(u);
-				if (callbacks && callbacks.data_read)
+				if (callbacks && callbacks.data_read && response.body != null)
 					callbacks.data_read(u);
 				if (callbacks && callbacks.data_eof)
 					callbacks.data_eof(u);

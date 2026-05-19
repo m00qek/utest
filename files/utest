@@ -1,0 +1,14 @@
+#!/bin/sh
+
+UTEST_RUN_DIR=$(mktemp -d /tmp/utest_XXXXXX)
+cleanup() { rm -rf "$UTEST_RUN_DIR"; }
+trap cleanup EXIT
+
+ucode \
+    -L /usr/share/ucode \
+    -L /usr/share/ucode/utest/runner \
+    -L /usr/share/ucode/utest/runner/worker \
+    /usr/share/ucode/utest/cli.uc -- \
+    --run-dir="$UTEST_RUN_DIR" \
+    --src-dir=/usr/share/ucode \
+    "$@"
