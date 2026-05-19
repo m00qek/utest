@@ -8,7 +8,7 @@ Understanding-oriented material that explains the design decisions and concepts 
 
 | Page | What it covers |
 | :--- | :--- |
-| [About the key concepts](concepts.md) | Vocabulary reference: mock, shim, proxy, layer, inject, patch, and more |
+| [About the mocking architecture](concepts.md) | Why utest separates shim, proxy, and mock engine — and how the layer model enables safe nested mocking |
 | [About test isolation](test-isolation.md) | What the framework guarantees between tests and where that guarantee ends |
 | [About inject() vs global.patch()](inject-vs-patch.md) | Why two mock mechanisms exist and when to use each |
 | [About strict mode](strict-mode.md) | The philosophy behind failing on unmocked calls and the trade-offs involved |
@@ -20,5 +20,6 @@ Understanding-oriented material that explains the design decisions and concepts 
 | Page | What it covers |
 | :--- | :--- |
 | [About the worker/coordinator](worker-coordinator.md) | Why tests run in subprocesses and how the coordinator collects results |
+| [About the reporter architecture](reporter-architecture.md) | Why two reporters exist and how the coordinator-side hook model works |
 | [About the mock engine](mock-engine.md) | The registry, layer stack, and snapshot/restore design |
 | [About shim generation](shim-generation.md) | Why shims exist and how manager.uc generates them at runtime |

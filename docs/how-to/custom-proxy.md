@@ -44,16 +44,7 @@ return {
 
 ## The ctx API
 
-`ctx` is a context object built by the framework. It provides:
-
-| Method | Description |
-|---|---|
-| `ctx.get_data(key)` | Returns the value for `key` from the current mock state, or `null` if absent. |
-| `ctx.set_data(key, val)` | Writes `val` for `key` into the active mock layer. |
-| `ctx.get_behavior(fn_name)` | Returns the behavior override function for `fn_name`, or `null` if none. |
-| `ctx.is_strict()` | Returns `true` when `strict: true` is set on any active layer. |
-| `ctx.is_active()` | Returns `true` when any mock layer or global patch is in effect. |
-| `ctx.base()` | Returns a proxy pre-wired so every function checks for a behavior override, then delegates to the real module. Extend this rather than building from scratch. |
+See [Proxy context API reference](../reference/contributor/proxy-ctx-api.md) for the full method list.
 
 ---
 

@@ -25,6 +25,23 @@ The sequence for each test is:
 5. Run all `afterEach` hooks in reverse order (innermost describe first).
 6. Restore the full snapshot unconditionally — this cleans up any patches that `afterEach` itself may have set.
 
+```mermaid
+sequenceDiagram
+    participant R as Runner
+    participant B as beforeEach hooks
+    participant T as Test body
+    participant A as afterEach hooks
+
+    R->>B: run (outermost → innermost)
+    R->>R: mock.snapshot()
+    R->>T: run test body
+    alt test body threw
+        R->>R: mock.restore(snap) — clean state for afterEach
+    end
+    R->>A: run (innermost → outermost)
+    R->>R: mock.restore(snap) — unconditional final cleanup
+```
+
 The result is that each test starts with the same mock state, regardless of what previous tests did. A test that calls `mock.global.patch('fs', ...)` and then crashes before calling `mock.global.unpatch('fs')` will not leave `fs` patched for the next test.
 
 ---

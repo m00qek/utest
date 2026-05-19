@@ -7,4 +7,5 @@ Tutorials are learning-oriented guides that walk you through a concrete task fro
 | Tutorial | Description |
 |---|---|
 | [Writing your first test suite](user/first-test.md) | Go from zero to a passing test file using `describe`, `it`, and `assert`. |
+| [Writing your first mock](user/first-mock.md) | Declare a mock module, seed virtual file content, and verify behavior with `mock.inject()`. |
 | [Contributing your first patch](contributor/first-patch.md) | Clone the repo, extend the framework, and verify your change against the regression suite. |

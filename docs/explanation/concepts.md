@@ -1,119 +1,51 @@
-# About the key concepts
+# About the mocking architecture
 
-A short glossary of the terms used throughout this documentation. Read this before the how-to guides if the vocabulary is unfamiliar.
+utest intercepts module calls without requiring any changes to the code under test — no dependency injection, no interface swaps, no test-aware code paths. This non-invasive property is the central design goal, and it shapes why the framework has three collaborating parts: a **shim**, a **proxy**, and a **mock engine**.
 
----
+The diagram below shows how a call travels at runtime:
 
-## Test suite, bundle, and test
+```mermaid
+graph LR
+    T["Test body"]
+    S["Shim\n(generated at startup)"]
+    P["Proxy\n(built-in or custom)"]
+    D["Mock data\n/ behavior"]
+    R["Real module"]
 
-A **test** is a single `it()` block — one named assertion sequence that either passes or fails.
-
-A **suite** is a single `.uc` test file. It may contain any number of `describe` groups and `it` blocks.
-
-A **bundle** is a named collection of suites passed on the command line (`[Name:]glob`). Bundles are a reporting convenience; they do not affect how tests run.
-
----
-
-## Mock
-
-A **mock** is a controlled substitute for a real module. When code under test calls `fs.readfile('/etc/config/uci')`, a mock can intercept that call and return a canned value instead of touching the real filesystem.
-
-Mocking in utest is non-invasive: the test file does not need to rewrite the module import or pass a dependency explicitly into the code under test. The framework intercepts calls at the module boundary transparently.
-
----
-
-## Shim
-
-A **shim** is a generated ES-module that sits between the test file and the real module. When utest is configured to mock `fs`, it generates a thin file named `fs.uc` and places it first on the worker's module search path. Every `import * as fs from 'fs'` in the test file (and in any module the test file imports) resolves to the shim instead of the real module.
-
-The shim's job is minimal: on every call it checks whether a proxy is active. If one is, the call goes to the proxy. If not, the call falls through to the real module unchanged.
-
-This design means mocking is opt-in per module (declared in the config file) and has zero cost when no mock is active.
-
-See [About shim generation](shim-generation.md) for how shims are built at runtime.
-
----
-
-## Proxy
-
-A **proxy** is the object that actually implements mock behaviour. When a shim detects that a mock is active, it delegates the call to the proxy for that module.
-
-The proxy is responsible for:
-
-- Checking whether a **behavior override** is registered for the called function.
-- Looking up a value in the **mock data** for the call's key.
-- Enforcing **strict mode** if enabled.
-- Falling through to the real module if none of the above apply.
-
-utest ships built-in proxies for `fs`, `uci`, `ubus`, `uloop`, and `uclient`. You can also [write a custom proxy](../how-to/custom-proxy.md) for any other module.
-
----
-
-## Mock data
-
-**Mock data** is a key→value map you supply when setting up a mock. What "key" means is proxy-specific:
-
-- For `fs`: the key is a file path, the value is the file contents.
-- For `uci`: the key is a package name, the value is a nested section/option map.
-- For `ubus`: the key is `'object:method'`, the value is the response.
-- For `uclient`: the key is a URL, the value is a response object with `status`, `headers`, and `body`.
-
-The proxy consults mock data when a call arrives and no behavior override is registered.
-
----
-
-## Behavior override
-
-A **behavior override** (also called a **behavior**) is a function you register under a specific method name. When the proxy sees a call to that method, it invokes your function instead of consulting mock data or the real module.
-
-Use behavior overrides when the return value depends on the call's arguments in a way that a static data map cannot express.
-
-```js
-mock.inject('fs', {
-    behavior: {
-        readfile: function(path) {
-            return path === '/etc/hostname' ? 'myrouter' : null;
-        }
-    }
-}, (m_fs) => { ... });
+    T -->|"import 'fs'"| S
+    S -->|"proxy active"| P
+    S -->|"no proxy"| R
+    P -->|"data / behavior hit"| D
+    P -->|"fallthrough\n(non-strict)"| R
 ```
 
 ---
 
-## inject() and patch()
+## Why three layers?
 
-These are the two mechanisms for activating a mock.
+Each part has a single, narrow responsibility.
 
-**`mock.inject(name, state, callback)`** creates a proxy and passes it to the callback as an argument. The mock is active only for the duration of the callback. When the callback returns (or throws), the proxy is discarded and the layer is removed. The real imported binding in the test file is unaffected.
+The **shim** only intercepts or delegates — it has no knowledge of what mock data exists or which functions should be overridden. This lets shims be generated mechanically from a module's export list.
 
-**`mock.global.patch(name, state)`** installs a proxy into the shim itself, so every call to the module — including calls made through top-level imports in the code under test — is intercepted. The proxy remains active until `mock.global.unpatch(name)` is called or the test ends.
+The **proxy** only handles mock logic — it looks up data, invokes behavior overrides, enforces strict mode, and falls through to the real module. It has no knowledge of how the import was resolved, which means proxies can be swapped per-project via custom proxy factories without touching shims.
 
-See [About inject() vs global.patch()](inject-vs-patch.md) for the full trade-off analysis.
+The **mock engine** only owns the layer stack and snapshot/restore cycle. It has no knowledge of any specific module, which means the same isolation guarantee applies uniformly across all proxied modules.
 
----
-
-## Layer
-
-A **layer** is the unit of state pushed onto the mock engine's stack by each `inject()` call. It holds a copy of the `data`, `behavior`, and `strict` settings for that injection.
-
-Layers stack. An inner `inject()` creates a new layer on top; the proxy searches from the top of the stack downward. When the inner callback exits, its layer is popped and the outer layer's values are visible again. This makes nested mocking safe and predictable.
+Collapsing any two of these into one would couple concerns that need to evolve independently.
 
 ---
 
-## Strict mode
+## Why the layer model
 
-**Strict mode** changes what happens when code calls a proxied function with a key that has no mock data and no behavior override. Normally the proxy falls through to the real module (returning `null` if the real module is absent). With `strict: true`, the proxy calls `die()` immediately, which the runner reports as a `FAIL`.
+`mock.inject()` pushes a layer rather than replacing the mock state outright. An inner `inject()` call can override specific keys without destroying the outer context's state, and the layer is removed automatically when the callback exits — even if the callback throws.
 
-Strict mode is useful in narrow unit tests where you want to be told explicitly if the code under test touches a path you did not anticipate.
-
-See [About strict mode](strict-mode.md).
+The alternative — a flat mutable map — would require explicit save/restore in every test that nests mocks, and a forgotten restore would silently corrupt subsequent tests.
 
 ---
 
-## Worker and coordinator
+## See also
 
-utest runs each test file in its own subprocess (the **worker**). A separate process (the **coordinator**) spawns workers, reads their JSON output, and feeds events to the reporter.
-
-The subprocess boundary provides two guarantees: a crash in one test file cannot affect another, and global state (imports, monkey-patching) cannot bleed between files.
-
-See [About the worker/coordinator architecture](worker-coordinator.md).
+- Term definitions: [Reference: Glossary](../reference/glossary.md)
+- How shims are generated at startup: [About shim generation](shim-generation.md)
+- How inject() and patch() differ at the shim level: [About mock.inject() vs mock.global.patch()](inject-vs-patch.md)
+- The layer stack and registry internals: [About the mock engine](mock-engine.md)

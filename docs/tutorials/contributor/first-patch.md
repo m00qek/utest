@@ -78,9 +78,6 @@ Add `notNull` immediately after it, before the closing `notMatch` entry:
 
 `assert.notNull` behaves identically to `assert.ok` — it fails when `val` is falsy. The separate name makes tests more readable when the intent is specifically to check that a value is not `null`.
 
-!!! note
-    `assert.ok` and `assert.notNull` share the same runtime behaviour. Adding a dedicated name is a documentation and readability choice, not a logic change.
-
 ---
 
 ## Step 4 — Write a test for the new assertion

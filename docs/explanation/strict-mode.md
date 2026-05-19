@@ -44,38 +44,11 @@ The choice not to make strict mode the default was also deliberate. Strict mode 
 
 ---
 
-## How to use it effectively
-
-The effective pattern is to combine strict mode with a minimal data map that covers exactly what the code under test actually touches. Start by running without strict mode to see what the code accesses, then enable strict mode and seed the data map accordingly:
-
-```js
-mock.inject('uci', {
-    strict: true,
-    data: {
-        'network': {
-            'lan': { '.type': 'interface', 'ipaddr': '192.168.1.1', 'netmask': '255.255.255.0' }
-        }
-    }
-}, (m_uci) => {
-    const result = get_lan_summary(m_uci.cursor());
-    assert.eq(result.ip, '192.168.1.1');
-    // If get_lan_summary also reads 'network.lan.proto', the test fails with:
-    // strict mock: uci package 'network' is not mocked
-    // (only if proto is not in the data above)
-});
-```
-
-If `get_lan_summary` also reads `network.lan.proto` — which you did not seed — the test will fail with `strict mock: 'uci.get' is not mocked` (or a path-specific equivalent from the uci proxy). That tells you that either your understanding of what the function reads is incomplete, or the function is reading something it should not.
-
-This makes strict mode a useful specification tool: the data map doubles as a declaration of what the code is expected to access.
-
----
-
 ## The trade-off
 
 Strict mode makes tests more brittle in proportion to the number of paths the code touches. Every new call to the mocked module that was not anticipated at test-writing time will cause a failure until the data map is updated. This is a feature in narrow unit tests — you want to know — and a liability in broad integration tests — you do not want every feature addition to break existing tests.
 
-The practical rule is to use strict mode for security-sensitive paths where silent `null` returns are dangerous (authentication checks, capability lookups, configuration reads that gate behavior), and for narrow unit tests of functions with a well-defined and stable set of dependencies. Avoid it for integration tests that deliberately exercise a wide surface, and for tests written against code that is still evolving rapidly.
+For a workflow that uses this trade-off deliberately, see [How-to: Use strict mode](../how-to/strict-mode.md).
 
 ---
 

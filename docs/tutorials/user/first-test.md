@@ -50,10 +50,8 @@ describe("add()", () => {
 });
 ```
 
-The `describe` block groups related tests under a shared label. Each `it` block is one test case. `assert.eq` performs a deep-equality check; `assert.ok` checks that a value is truthy.
-
 !!! note
-    All DSL functions (`describe`, `it`, etc.) are imported from `'utest'`. All assertion functions come from `'utest.assert'`. These are separate imports by design — you only pull in what you need.
+    All DSL functions (`describe`, `it`, etc.) are imported from `'utest'`. All assertion functions come from `'utest.assert'`.
 
 ---
 

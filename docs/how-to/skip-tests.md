@@ -78,12 +78,6 @@ Summary:
 
 ---
 
-## A note on permanent skips
-
-`skip()` and `xdescribe()` are intended for temporary situations: a test that cannot pass yet because a dependency is missing, a feature that is in progress, or a flaky test you are investigating. Do not let skips accumulate as a permanent workaround. A skip that stays in the codebase indefinitely is an unwritten bug report — either fix the underlying problem or delete the test.
-
----
-
 ## Next steps
 
 - Run only a specific subset of tests without modifying source: [How-to: Filter tests by name](filter-tests.md)

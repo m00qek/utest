@@ -25,11 +25,7 @@ describe('strict mode', () => {
 
 The error message matches the pattern `strict mock` and identifies the module and function or key that was accessed.
 
----
-
-## What strict mode does
-
-In non-strict mode, a call that has no matching data entry returns `null` and continues. In strict mode it calls `die()`, which propagates as a thrown error. This lets `assert.throws()` verify that a code path is gated behind a check before making the call.
+For why strict mode exists and the trade-offs involved, see [About strict mode](../explanation/strict-mode.md).
 
 ---
 
@@ -53,6 +49,34 @@ assert.throws(() => {
     });
 }, /strict mock/);
 ```
+
+---
+
+## Start without strict mode, then add it
+
+When you are unsure which keys your code accesses, run once without strict mode to let the code exercise freely and observe the behaviour. Then enable strict mode and seed only the keys you confirmed it needs:
+
+```js
+// First pass — no strict, learn what the code reads
+mock.inject('uci', {
+    data: { 'network': { 'lan': { '.type': 'interface', 'ipaddr': '192.168.1.1' } } }
+}, (m_uci) => {
+    const result = get_lan_summary(m_uci.cursor());
+    // If get_lan_summary also reads 'proto', it silently gets null here.
+});
+
+// Second pass — strict, declare the full set
+mock.inject('uci', {
+    strict: true,
+    data: { 'network': { 'lan': { '.type': 'interface', 'ipaddr': '192.168.1.1', 'proto': 'static' } } }
+}, (m_uci) => {
+    const result = get_lan_summary(m_uci.cursor());
+    assert.eq(result.ip, '192.168.1.1');
+    // Any key beyond what is seeded will now die() with: strict mock: 'uci.get' is not mocked
+});
+```
+
+The data map then doubles as a specification of what the code is expected to access.
 
 ---
 

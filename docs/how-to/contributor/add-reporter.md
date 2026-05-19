@@ -63,35 +63,7 @@ export function create() {
 };
 ```
 
-### Render hooks
-
-All hooks are optional. The base class calls them only if they exist.
-
-| Hook | When called | Key fields on argument |
-|---|---|---|
-| `render_suite_start(msg)` | First event from a test file | `suite`, `bundle`, `count` |
-| `render_test_result(msg)` | After each individual test | `suite`, `bundle`, `status`, `error`, `path`, `index` |
-| `render_fatal(msg)` | Worker crash or timeout | `suite`, `bundle`, `error` |
-| `render_suite_end(msg)` | After all tests in a file | `suite`, `bundle`, `duration_ms`, `stats` |
-| `render_bundle_start(name)` | Before the first file in a bundle | bundle name string |
-| `render_bundle_end(name, duration_ms, stats)` | After the last file in a bundle | name, elapsed ms, aggregate stats |
-| `render_summary(ctx)` | Once at the very end | `stats`, `failures`, `results`, `files`, `duration_ms`, `seed` |
-
-### `status` values in `render_test_result`
-
-| Value | Meaning |
-|---|---|
-| `PASS` | Test body ran and did not throw |
-| `FAIL` | `die()` was called (assertion failure) |
-| `ERROR` | An unexpected exception was thrown |
-| `SKIP` | Test was marked with `skip()` or `xit()` |
-| `IGNORE` | Test was excluded by the `--filter` regex |
-
-### Aggregate stats object
-
-The `stats` object passed to `render_bundle_end` and in `ctx.stats` at summary
-time contains: `total`, `passed`, `failed`, `errors`, `fatals`, `skipped`,
-`ignored`, `suites`.
+See [Reporter API reference](../../reference/contributor/reporter-api.md) for the full hook signatures, status values, and stats object fields.
 
 ---
 
@@ -140,9 +112,12 @@ dedicated integration test in `test/` by hand.
 
 ## Next steps
 
+- Consult hook signatures, status values, and stats fields: [Reporter API reference](../../reference/contributor/reporter-api.md)
 - Study `src/utest/runner/reporter/detailed.uc` for an example of colour
   handling using the `colors.uc` helper.
 - Study `src/utest/runner/reporter/compact.uc` for an example that buffers
   failure details and prints them after each bundle.
+- Read [About the reporter architecture](../../explanation/reporter-architecture.md)
+  to understand why two reporters exist and how `ReporterBase` handles stats.
 - Read [About the worker/coordinator architecture](../../explanation/worker-coordinator.md)
   to understand when each event fires in relation to subprocess lifecycle.

@@ -1,5 +1,29 @@
 # Source layout reference
 
+The diagram below shows how the major components relate at runtime. The coordinator spawns workers and aggregates their output; workers run test files in isolation and emit JSON events.
+
+```mermaid
+graph TD
+    CLI["cli.uc\n(entry point)"]
+    RUNNER["runner.uc\n(coordinator)"]
+    MOCK["mock/manager.uc\n(shim generator)"]
+    EXEC["runner/executor.uc\nsequential | parallel"]
+    CREPORTER["runner/reporter.uc\n(coordinator reporter)"]
+    WORKER["runner/worker/bootstrap.uc\n(subprocess)"]
+    WRUNNER["runner/worker/runner.uc\n(test executor)"]
+    WREPORTER["runner/worker/reporter.uc\n(JSON emitter)"]
+
+    CLI --> RUNNER
+    RUNNER --> MOCK
+    RUNNER --> CREPORTER
+    RUNNER --> EXEC
+    EXEC -->|"spawns"| WORKER
+    WORKER --> WRUNNER
+    WRUNNER --> WREPORTER
+    WREPORTER -->|"JSON events\nstdout"| EXEC
+    EXEC --> CREPORTER
+```
+
 ---
 
 ## `src/`

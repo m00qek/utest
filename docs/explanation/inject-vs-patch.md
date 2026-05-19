@@ -73,46 +73,13 @@ This is a deliberate trade-off. `mock.global.patch()` is more powerful but requi
 
 `mock.inject()` pushes a new layer onto a per-module layer stack. When the proxy looks up a key, it scans the stack from top to bottom and falls through to the global state if nothing matches. When the callback exits, the top layer is popped.
 
-Nested inject calls stack correctly:
-
-```js
-mock.inject('fs', { data: { '/a': '1' } }, (m_fs) => {
-    // Layer 1 is active: /a → '1'
-
-    mock.inject('fs', { data: { '/b': '2' } }, (m_fs2) => {
-        // Layer 2 is active on top of layer 1
-        // /a resolves through layer 2 (not found) → layer 1: '1'
-        // /b resolves in layer 2: '2'
-    });
-
-    // Layer 2 is gone; /b is no longer visible
-});
-```
-
 `mock.global.patch()` does not use the layer stack. It writes directly to the global state of the registry, which sits below all inject layers. This means a `global.patch()` is visible through any active `inject()` layer unless a layer explicitly overrides the same key.
-
----
-
-## When patch is appropriate
-
-Use `mock.global.patch()` when:
-
-- The code under test has its own top-level `import` of the module and you need to intercept calls made through that binding.
-- You are writing an integration-style test where you want the entire test file to behave as if the module were replaced globally, not just a single callback scope.
-- You are setting up state in a `beforeEach` hook that should be visible for the duration of the test, not just a sub-scope within it.
-
-In all other cases, reach for `mock.inject()` first.
-
----
-
-## The rule of thumb
-
-Prefer `mock.inject()`. Its scoping is automatic, its cleanup is guaranteed, and its effects are local enough that the test remains easy to reason about. Reach for `mock.global.patch()` only when `inject()` is genuinely insufficient — which in practice means when you need the real imported binding in the test file, or in a module you are testing, to be intercepted.
 
 ---
 
 ## Next steps
 
+- Decide when to use each mechanism: [How-to: Patch global state with mock.global.patch()](../how-to/mock-global-patch.md)
 - Walk through a complete inject example: [How-to: Mock a module with mock.inject()](../how-to/mock-inject.md)
 - Understand how mock state survives across tests: [About test isolation](test-isolation.md)
 - Make unmocked access fail loudly: [About strict mode](strict-mode.md)
