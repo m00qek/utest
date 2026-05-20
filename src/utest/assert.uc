@@ -109,5 +109,27 @@ export const assert = {
 			die(sprintf("assert.notMatch: expected a string, got %s", type(str)));
 		if (match(str, regex))
 			die(msg || sprintf("Expected '%s' not to match %s", str, regex));
+	},
+
+	notThrows: function(fn, msg) {
+		try {
+			fn();
+		} catch (e) {
+			die(msg || sprintf("Expected no exception but got: %s", e));
+		}
+	},
+
+	contains: function(haystack, needle, msg) {
+		if (type(haystack) == 'string') {
+			if (index(haystack, needle) < 0)
+				die(msg || sprintf("Expected string to contain '%s'", needle));
+		} else if (type(haystack) == 'array') {
+			for (let item in haystack) {
+				if (deep_equal(item, needle, [])) return;
+			}
+			die(msg || sprintf("Expected array to contain %s", sprintf('%J', needle)));
+		} else {
+			die(sprintf("assert.contains: expected a string or array, got %s", type(haystack)));
+		}
 	}
 };

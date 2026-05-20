@@ -57,6 +57,7 @@ nav:
           - Skip tests temporarily: how-to/skip-tests.md
           - Filter tests by name: how-to/filter-tests.md
           - Run tests in CI: how-to/ci.md
+          - Troubleshoot common problems: how-to/troubleshoot.md
       - Mocking:
           - Mock a module with inject(): how-to/mock-inject.md
           - Patch global state: how-to/mock-global-patch.md

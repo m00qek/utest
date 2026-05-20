@@ -35,7 +35,7 @@ describe("Router config", () => {
 | `name` | string | Label for the skipped group. |
 | `fn` | function | Body. Called immediately so nested structure is collected, but all contained tests are marked skipped. |
 
-Marks an entire suite as skipped. Equivalent to wrapping every `it` inside with `skip`. The body is still executed at collection time so syntax errors surface immediately.
+Marks an entire suite as skipped. Equivalent to wrapping every `it` inside with `skip`. The body is still executed at collection time so nested structure is collected and syntax errors surface immediately. Any side effects in the body (function calls, mutations) run unconditionally — only the test functions themselves are skipped.
 
 ```js
 xdescribe("Unfinished feature", () => {

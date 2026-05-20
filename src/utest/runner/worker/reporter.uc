@@ -31,6 +31,10 @@ export function create(suite, bundle) {
 			let status, msg;
 
 			if (error != null) {
+				// die(msg) throws a plain string → FAIL (assertion failure).
+				// Runtime interpreter exceptions (null dereference, wrong type, …)
+				// throw a typed object. If type is "Error" it is still treated as
+				// FAIL; any other type (e.g. ucode's runtime TypeError) → ERROR.
 				if (type(error) == 'object' && error.type) {
 					status = (error.type == "Error" ? "FAIL" : "ERROR");
 					msg = error.message;

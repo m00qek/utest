@@ -73,7 +73,7 @@ The regression suite compares json reporter output against a stored baseline.
 After changing the test file, update the baseline:
 
 ```bash
-./dev-utest -r json examples/unit/01_assertions_test.uc \
+make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 

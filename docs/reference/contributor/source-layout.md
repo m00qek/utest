@@ -32,7 +32,7 @@ graph TD
 |---|---|
 | `src/utest.uc` | Public entry-point. Re-exports `describe`, `it`, `skip`, `xit`, `xdescribe`, `beforeEach`, `afterEach`, `setup`, `teardown`, `mock`, `assert`. |
 | `src/utest/dsl.uc` | Implements the test-definition DSL (`describe`, `it`, `beforeEach`, …). Builds the in-memory tree of groups and tests in the worker process. |
-| `src/utest/assert.uc` | Exports the `assert` object. Contains all assertion functions (`eq`, `ok`, `match`, `throws`, `ne`, `notOk`, `notMatch`) and the private `deep_equal` helper. |
+| `src/utest/assert.uc` | Exports the `assert` object. Contains all assertion functions (`eq`, `ok`, `match`, `throws`, `ne`, `notOk`, `notMatch`, `notThrows`, `contains`) and the private `deep_equal` helper. |
 | `src/utest/cli.uc` | Command-line entry-point. Parses `ARGV`, merges config file with CLI flags, resolves bundle patterns, calls `utest.runner.run()`. |
 | `src/utest/runner.uc` | Coordinator orchestration: discovers files per bundle, invokes `MockManager.setup()` to generate shims, creates the reporter, runs execution loop, calls `reporter.summary()`. |
 | `src/utest/runner/discovery.uc` | Wraps `fs.glob()` with sort; returns the list of matching test files for a pattern. |

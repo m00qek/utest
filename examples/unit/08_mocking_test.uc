@@ -167,4 +167,45 @@ describe('FS Mocking', () => {
 			assert.eq(m_fs.error(), null);
 		});
 	});
+
+	it('access() returns true for virtual directories', () => {
+		mock.inject('fs', { data: { '/tmp/dir/file.txt': 'content' } }, (m_fs) => {
+			assert.ok(m_fs.access('/tmp/dir'), 'parent dir of a virtual file must be accessible');
+			assert.ok(m_fs.access('/tmp'), 'ancestor dir must be accessible');
+			assert.eq(m_fs.access('/tmp/other'), null, 'unrelated path must return null');
+		});
+	});
+
+	it('stat() returns directory type for virtual directories', () => {
+		mock.inject('fs', { data: { '/tmp/dir/file.txt': 'content' } }, (m_fs) => {
+			let s = m_fs.stat('/tmp/dir');
+			assert.eq(s.type, 'directory');
+			assert.eq(s.size, 0);
+			assert.eq(m_fs.stat('/tmp/missing'), null);
+		});
+	});
+
+	it('glob() supports ? wildcard for single character', () => {
+		mock.inject('fs', { data: {
+			'/tmp/test_1.uc': 'a',
+			'/tmp/test_2.uc': 'b',
+			'/tmp/test_10.uc': 'c'
+		}}, (m_fs) => {
+			const files = m_fs.glob('/tmp/test_?.uc');
+			sort(files);
+			assert.eq(files, ['/tmp/test_1.uc', '/tmp/test_2.uc']);
+		});
+	});
+
+	it('glob() supports ** globstar for recursive paths', () => {
+		mock.inject('fs', { data: {
+			'/tmp/globstar/a/b/c.txt': 'deep',
+			'/tmp/globstar/a/d.txt': 'shallow',
+			'/tmp/globstar/e.log': 'wrong-ext'
+		}}, (m_fs) => {
+			const files = m_fs.glob('/tmp/globstar/**/*.txt');
+			sort(files);
+			assert.eq(files, ['/tmp/globstar/a/b/c.txt', '/tmp/globstar/a/d.txt']);
+		});
+	});
 });

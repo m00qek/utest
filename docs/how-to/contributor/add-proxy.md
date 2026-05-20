@@ -134,12 +134,11 @@ Run the example once with the `json` reporter and capture its output as the
 regression baseline:
 
 ```bash
-./dev-utest -r json --config examples/unit/15_mymod_config.uc \
-    examples/unit/15_mymod_test.uc \
+make -f dev.mk test ARGS="-r json --config examples/unit/15_mymod_config.uc examples/unit/15_mymod_test.uc" \
     > test/json/unit/15_mymod_test.json
 ```
 
-`./dev-utest` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
+`make -f dev.mk test` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
 the output reflects the target environment.
 
 ---

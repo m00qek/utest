@@ -12,7 +12,7 @@ A config file `utest.config.uc` that declares `fs` as a mockable module, and a t
 
 ## Prerequisites
 
-- Completed [Writing your first test suite](first-test.md). You should already have `dev-utest` and be comfortable with `describe`, `it`, and `assert`.
+- Completed [Writing your first test suite](first-test.md). You should be comfortable with `describe`, `it`, and `assert`.
 - Docker running.
 
 ---
@@ -69,7 +69,7 @@ describe("virtual filesystem", () => {
 ## Step 3 — Run the tests
 
 ```bash
-./dev-utest test/unit/files_test.uc
+make -f dev.mk test ARGS="test/unit/files_test.uc"
 ```
 
 You should see:

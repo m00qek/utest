@@ -13,9 +13,9 @@ A test file `test/unit/hello_test.uc` that exercises a small arithmetic helper. 
 ## Prerequisites
 
 - **Docker** — utest runs inside the official OpenWrt 24.10 image. Install Docker and make sure the daemon is running.
-- The `dev-utest` wrapper at the root of the project. If you have just cloned the repository it is already there.
+- **GNU make** — used to invoke the Docker-based runner via `make -f dev.mk test`.
 
-You do not need an existing ucode project. You can follow along in any directory that contains the `dev-utest` script.
+You do not need an existing ucode project. You can follow along in any directory that contains the cloned repository.
 
 ---
 
@@ -58,7 +58,7 @@ describe("add()", () => {
 ## Step 2 — Run the suite
 
 ```bash
-./dev-utest test/unit/hello_test.uc
+make -f dev.mk test ARGS="test/unit/hello_test.uc"
 ```
 
 utest pulls the OpenWrt Docker image on first use, then runs your tests inside it. You should see output similar to the following:
@@ -94,7 +94,7 @@ Change the first test so it expects the wrong value:
 Run again:
 
 ```bash
-./dev-utest test/unit/hello_test.uc
+make -f dev.mk test ARGS="test/unit/hello_test.uc"
 ```
 
 The output now shows what went wrong:
@@ -133,7 +133,7 @@ Restore the correct expected value:
 Run one more time:
 
 ```bash
-./dev-utest test/unit/hello_test.uc
+make -f dev.mk test ARGS="test/unit/hello_test.uc"
 ```
 
 Both tests pass and the summary shows `Failed: 0`.

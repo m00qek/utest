@@ -141,7 +141,7 @@ function load_config(path) {
 	try {
 		return { path: resolved, data: loadfile(resolved)() || {} };
 	} catch (e) {
-		die("Failed to load configuration: " + e + "\n");
+		die(sprintf("Failed to load configuration '%s': %s\n", resolved, e));
 	}
 }
 
@@ -151,6 +151,12 @@ function main() {
 
 	if (args.flags.seed != null && !match(args.flags.seed, /^\d+$/))
 		die(sprintf("Invalid --seed value '%s': expected a non-negative integer.\n", args.flags.seed));
+	if (args.flags.jobs != null && !match(args.flags.jobs, /^\d+$/))
+		die(sprintf("Invalid --jobs value '%s': expected a positive integer.\n", args.flags.jobs));
+	if (args.flags.timeout != null && !match(args.flags.timeout, /^\d+$/))
+		die(sprintf("Invalid --timeout value '%s': expected a positive integer.\n", args.flags.timeout));
+	if (args.flags.reporter != null && !match(args.flags.reporter, /^(detailed|compact|json)$/))
+		die(sprintf("Invalid --reporter value '%s': expected one of: detailed, compact, json.\n", args.flags.reporter));
 
 	// 1. Read config file
 	let file_config = load_config(args.flags.config);

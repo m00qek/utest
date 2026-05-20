@@ -82,9 +82,18 @@ mock.inject('fs', { data: {
 
 ## glob
 
-`glob()` matches virtual paths against a shell-style pattern. Only `*` is translated; `?` and `**` are not supported for virtual path matching. Real matches are included unless strict mode suppresses them:
+`glob()` matches virtual paths against a shell-style pattern. Three wildcards are supported:
+
+| Wildcard | Matches |
+| :--- | :--- |
+| `*` | Any sequence of characters within one path component |
+| `?` | Any single character within one path component |
+| `**` | Any sequence of characters including path separators |
+
+Character classes (`[abc]`, `[0-9]`) are not supported. Real matches are merged with virtual matches unless strict mode suppresses them.
 
 ```js
+// * matches within one directory level
 mock.inject('fs', { data: {
     '/tmp/glob/a.txt': 'a',
     '/tmp/glob/b.txt': 'b',
@@ -96,20 +105,54 @@ mock.inject('fs', { data: {
 });
 ```
 
+```js
+// ? matches exactly one character — test_10 has two digits and does not match
+mock.inject('fs', { data: {
+    '/tmp/test_1.uc': 'a',
+    '/tmp/test_2.uc': 'b',
+    '/tmp/test_10.uc': 'c'
+}}, (m_fs) => {
+    const files = m_fs.glob('/tmp/test_?.uc');
+    sort(files);
+    assert.eq(files, ['/tmp/test_1.uc', '/tmp/test_2.uc']);
+});
+```
+
+```js
+// ** matches across directory boundaries
+mock.inject('fs', { data: {
+    '/etc/init/a/main.cfg': 'a',
+    '/etc/init/a/sub/extra.cfg': 'b',
+    '/etc/other.txt': 'c'
+}}, (m_fs) => {
+    const files = m_fs.glob('/etc/init/**/*.cfg');
+    sort(files);
+    assert.eq(files, ['/etc/init/a/main.cfg', '/etc/init/a/sub/extra.cfg']);
+});
+```
+
 ---
 
 ## access and stat
 
-`access()` returns `true` for any path present in the data map, `null` for absent paths. `stat()` returns `{ size, mtime, type }` for present paths (size is the byte length of the string), `null` for absent paths:
+`access()` returns `true` for any virtual file or any directory that contains one, `null` for everything else. `stat()` returns `{ size, mtime, type }` for virtual files (`type: 'regular'`, size in bytes) and `{ size: 0, mtime: 0, type: 'directory' }` for virtual directories, `null` for absent paths:
 
 ```js
-mock.inject('fs', { data: { '/tmp/data.txt': 'hello' } }, (m_fs) => {
-    assert.ok(m_fs.access('/tmp/data.txt'));
-    assert.eq(m_fs.access('/tmp/absent.txt'), null);
-
-    let s = m_fs.stat('/tmp/data.txt');
+mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
+    // virtual file
+    assert.ok(m_fs.access('/tmp/dir/data.txt'));
+    let s = m_fs.stat('/tmp/dir/data.txt');
     assert.eq(s.size, 5);
     assert.eq(s.type, 'regular');
+
+    // virtual directory — inferred from the file path above
+    assert.ok(m_fs.access('/tmp/dir'));
+    let d = m_fs.stat('/tmp/dir');
+    assert.eq(d.type, 'directory');
+
+    // absent path
+    assert.eq(m_fs.access('/tmp/absent.txt'), null);
+    assert.eq(m_fs.stat('/tmp/absent.txt'), null);
 });
 ```
 

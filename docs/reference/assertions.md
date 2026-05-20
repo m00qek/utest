@@ -150,7 +150,7 @@ assert.notMatch(log_output, /ERROR/);
 | `pattern` | regexp \| null | When provided, the stringified exception must match this pattern. |
 | `msg` | string \| null | Optional failure message. |
 
-Fails when `fn` completes without throwing. When `pattern` is given, also fails when the thrown exception's string representation does not match it.
+Fails when `fn` completes without throwing. When `pattern` is given, also fails when the thrown exception's string representation does not match it. The string representation is `sprintf('%s', e)`: for `die("msg")` calls that is the message string directly; for runtime interpreter exceptions (null dereference, type errors, etc.) it is the interpreter error message text — for example, a null dereference produces `"left-hand side expression is null"`.
 
 Failure message format — no exception thrown:
 ```
@@ -166,4 +166,53 @@ Failure message format — exception does not match pattern:
 assert.throws(() => { die("boom"); });
 assert.throws(() => { null.x; }, /null/);
 assert.throws(() => load_config("missing.uc"), /not found/, "missing config must throw");
+```
+
+---
+
+### `assert.notThrows(fn, msg)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `fn` | function | Function expected to complete without throwing. |
+| `msg` | string \| null | Optional failure message. |
+
+Fails when `fn` throws any exception. The exception's string representation is appended to the failure message.
+
+Failure message format:
+```
+<msg or "Expected no exception but got: <e>">
+```
+
+```js
+assert.notThrows(() => parse_config(valid_input));
+assert.notThrows(() => connect(), "connection must not throw");
+```
+
+---
+
+### `assert.contains(haystack, needle, msg)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `haystack` | string \| array | Value to search within. Must be a string or array; any other type causes an immediate fatal error. |
+| `needle` | string \| any | Substring to find (when `haystack` is a string), or element to find (when `haystack` is an array). Array element comparison uses deep structural equality. |
+| `msg` | string \| null | Optional failure message. |
+
+Fails when `needle` is not found in `haystack`.
+
+Failure message format — string:
+```
+<msg or "Expected string to contain '<needle>'">
+```
+
+Failure message format — array:
+```
+<msg or "Expected array to contain <JSON of needle>">
+```
+
+```js
+assert.contains("OpenWrt 24.10", "24.10");
+assert.contains(interfaces, "eth0", "eth0 must be listed");
+assert.contains(results, { status: "ok" });
 ```

@@ -27,6 +27,10 @@ return {
 			let f = ctx.get_behavior('access');
 			if (f) return f(path, mode);
 			if (ctx.get_data(path) != null) return true;
+			let prefix = (path != "/" && substr(path, length(path) - 1) != "/") ? path + "/" : path;
+			for (let vp in ctx.get_all_data_keys()) {
+				if (ctx.get_data(vp) != null && substr(vp, 0, length(prefix)) == prefix) return true;
+			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.access' called with unmocked path: " + path);
 			return real ? real.access(path, mode) : null;
@@ -39,6 +43,11 @@ return {
 			if (v != null) {
 				let size = (type(v) == 'string') ? length(v) : 0;
 				return { size, mtime: 0, type: 'regular' };
+			}
+			let prefix = (path != "/" && substr(path, length(path) - 1) != "/") ? path + "/" : path;
+			for (let vp in ctx.get_all_data_keys()) {
+				if (ctx.get_data(vp) != null && substr(vp, 0, length(prefix)) == prefix)
+					return { size: 0, mtime: 0, type: 'directory' };
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.stat' called with unmocked path: " + path);
@@ -124,8 +133,27 @@ return {
 			if (type(real_files) == "array") {
 				for (let item in real_files) files[item] = true;
 			}
-			// Only * is translated; ? and ** are not supported in virtual path matching.
-			let re_pattern = "^" + replace(replace(pattern, /\./g, "\\."), /\*/g, "[^/]*") + "$";
+			// Translate glob to regex. Escape all regex metacharacters that have
+			// no glob meaning first (\\ must be first to avoid double-escaping),
+			// then translate **, *, ? in that order. Character classes unsupported.
+			let p = pattern;
+			p = replace(p, /\\/g,  "\\\\");
+			p = replace(p, /\[/g,  "\\[");
+			p = replace(p, /\]/g,  "\\]");
+			p = replace(p, /\+/g,  "\\+");
+			p = replace(p, /\^/g,  "\\^");
+			p = replace(p, /\$/g,  "\\$");
+			p = replace(p, /\{/g,  "\\{");
+			p = replace(p, /\}/g,  "\\}");
+			p = replace(p, /\(/g,  "\\(");
+			p = replace(p, /\)/g,  "\\)");
+			p = replace(p, /\|/g,  "\\|");
+			p = replace(p, /\./g,  "\\.");
+			p = replace(p, /\*\*/g, "\x01");
+			p = replace(p, /\*/g,  "[^/]*");
+			p = replace(p, /\?/g,  "[^/]");
+			p = replace(p, /\x01/g, ".*");
+			let re_pattern = "^" + p + "$";
 			let re = regexp(re_pattern);
 			for (let vp in virtual_paths) {
 				if (ctx.get_data(vp) == null) continue;

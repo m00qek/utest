@@ -42,22 +42,20 @@ When you intentionally change behaviour, update the stored baseline after
 confirming the new output is correct:
 
 ```bash
-./dev-utest -r json examples/unit/01_assertions_test.uc \
+make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
 For tests that require a config file (mock shims), pass `--config`:
 
 ```bash
-./dev-utest -r json \
-    --config examples/unit/08_mocking_config.uc \
-    examples/unit/08_mocking_test.uc \
+make -f dev.mk test ARGS="-r json --config examples/unit/08_mocking_config.uc examples/unit/08_mocking_test.uc" \
     > test/json/unit/08_mocking_test.json
 ```
 
 The runner.sh script detects a companion config file automatically by looking for
-`examples/<prefix>_config.uc` alongside each `<prefix>_test.uc`. The `dev-utest`
-command does not do this automatically, so you must pass `--config` explicitly
+`examples/<prefix>_config.uc` alongside each `<prefix>_test.uc`. `make -f dev.mk test`
+does not do this automatically, so you must pass `--config` explicitly
 when regenerating by hand.
 
 ---
@@ -69,15 +67,13 @@ when regenerating by hand.
 3. Run the test once to confirm it passes with the detailed reporter:
 
 ```bash
-./dev-utest examples/unit/15_mymod_test.uc
+make -f dev.mk test ARGS="examples/unit/15_mymod_test.uc"
 ```
 
 4. Capture the json output as the baseline:
 
 ```bash
-./dev-utest -r json \
-    --config examples/unit/15_mymod_config.uc \
-    examples/unit/15_mymod_test.uc \
+make -f dev.mk test ARGS="-r json --config examples/unit/15_mymod_config.uc examples/unit/15_mymod_test.uc" \
     > test/json/unit/15_mymod_test.json
 ```
 

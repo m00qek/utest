@@ -101,7 +101,7 @@ The `type` string is what users pass to `--reporter` on the command line.
 Run the examples with your new reporter to check the output looks correct:
 
 ```bash
-./dev-utest --reporter tap examples/unit/
+make -f dev.mk test ARGS="--reporter tap examples/unit/"
 ```
 
 There is no baseline mechanism for reporters other than `json`. If the reporter

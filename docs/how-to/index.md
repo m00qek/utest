@@ -11,6 +11,7 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 | [Skip tests temporarily](skip-tests.md) | Disable a test or block without deleting it |
 | [Filter tests by name](filter-tests.md) | Run a subset of tests during development |
 | [Run tests in CI](ci.md) | Integrate utest into a CI pipeline |
+| [Troubleshoot common problems](troubleshoot.md) | Diagnose and fix frequent failures |
 
 ---
 

@@ -39,7 +39,8 @@ export function create() {
 						done_file: done_file,
 						pid_file: pid_file,
 						start_time: clock(),
-						offset: 0
+						offset: 0,
+						received_any: false
 					});
 				}
 
@@ -66,14 +67,27 @@ export function create() {
 						while ((line = fh.read("line")) != null) {
 							if (ord(line, length(line) - 1) != 10) break;
 							let msg;
-							try { msg = json(line); } catch (e) { worker.offset += length(line); continue; }
+							try { msg = json(line); } catch (e) {
+								warn(sprintf("[utest] warning: malformed output from worker (file: %s): %s\n",
+									worker.file, rtrim(line)));
+								worker.offset += length(line);
+								continue;
+							}
 							dispatch(msg, reporter);
 							worker.offset += length(line);
+							worker.received_any = true;
 						}
 						fh.close();
 					}
 
 					if (fs.access(worker.done_file, "r")) {
+						if (!worker.received_any) {
+							let captured = rtrim(fs.readfile(worker.out_file) || "");
+							let err = length(captured) > 0
+								? "worker produced no test output. Captured:\n" + captured
+								: "worker produced no output (possible spawn failure)";
+							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: err });
+						}
 						finished_count++;
 						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
 					} else {

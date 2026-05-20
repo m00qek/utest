@@ -34,4 +34,15 @@ describe("Assertions", () => {
 
 		assert.throws(block, /left-hand side is not a function|null/);
 	});
+
+	it("verifies no exception with assert.notThrows()", () => {
+		assert.notThrows(() => { let x = 1 + 1; });
+		assert.notThrows(() => { return "safe"; }, "safe call must not throw");
+	});
+
+	it("checks string and array containment with assert.contains()", () => {
+		assert.contains("OpenWrt 24.10", "24.10");
+		assert.contains([1, 2, 3], 2);
+		assert.contains([{ a: 1 }, { b: 2 }], { b: 2 });
+	});
 });

@@ -134,7 +134,7 @@ describe("Assertions", () => {
 Run the example once to make sure it passes before regenerating the baseline:
 
 ```bash
-./dev-utest examples/unit/01_assertions_test.uc
+make -f dev.mk test ARGS="examples/unit/01_assertions_test.uc"
 ```
 
 You should see five passing tests.
@@ -146,7 +146,7 @@ You should see five passing tests.
 The regression suite compares live JSON output against the files in `test/json/`. Because you added a test, the baseline file is now stale and must be updated:
 
 ```bash
-./dev-utest --reporter json examples/unit/01_assertions_test.uc \
+make -f dev.mk test ARGS="--reporter json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
