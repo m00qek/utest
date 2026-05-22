@@ -109,9 +109,9 @@ describe("Assertions", () => {
         assert.ok({ some: "data" });
     });
 
-    it("matches strings against regex with assert.match()", () => {
-        assert.match("OpenWrt 24.10", /24\.10/);
-        assert.match("utest@v1.0.0", /^utest/);
+    it("matches strings against regex with assert.matches()", () => {
+        assert.matches("OpenWrt 24.10", /24\.10/);
+        assert.matches("utest@v1.0.0", /^utest/);
     });
 
     it("verifies exceptions with assert.throws()", () => {

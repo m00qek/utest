@@ -71,8 +71,8 @@ mock.inject('fs', { behavior: { mkdir: (path) => {
     return true;
 }}}, (m_fs) => {
     m_fs.mkdir('/tmp/custom_path');
-    assert.eq(created, ['/tmp/custom_path']);
 });
+assert.eq(created, ['/tmp/custom_path']);
 ```
 
 ---

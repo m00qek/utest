@@ -34,7 +34,7 @@ Conventions to follow:
   produces compact JSON that is easy to read in output.
 - Call `die(message)` for failure. Never `return false` or throw manually.
 - Guard unexpected types with an explicit `die()` before the main logic, as
-  `assert.match` and `assert.notMatch` do.
+  `assert.matches` and `assert.notMatches` do.
 
 ---
 

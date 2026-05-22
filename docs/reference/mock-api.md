@@ -32,19 +32,18 @@ All mock entry points accept a `state` object that configures what the proxy doe
 | `state` | object | State object applied for the duration of `cb`. |
 | `cb` | function | Receives the proxy as its sole argument. The state layer is pushed before `cb` is called and popped when it returns or throws. |
 
-**Returns:** nothing.
+**Returns:** the value returned by `cb`.
 
 Pushes a transient state layer onto the named module's mock stack, calls `cb(proxy)`, then pops the layer. The real module is unaffected outside `cb`. Calls to `mock.inject` may be nested; inner layers shadow outer layers for matching keys while leaving unmatched keys visible to outer layers.
 
 If `cb` throws, the layer is still popped and the exception is re-raised.
 
 ```js
-mock.inject('fs', {
+const content = mock.inject('fs', {
     data: { '/tmp/config': 'enabled=1' },
     strict: true
-}, (m_fs) => {
-    assert.eq(m_fs.readfile('/tmp/config'), 'enabled=1');
-});
+}, (m_fs) => m_fs.readfile('/tmp/config'));
+assert.eq(content, 'enabled=1');
 ```
 
 ---

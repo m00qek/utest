@@ -130,8 +130,8 @@ describe('uclient Mocking', () => {
 			behavior: { new: (url) => { constructed_url = url; return {}; } }
 		}, (m_uclient) => {
 			m_uclient.new('http://custom.example.com/', null, {});
-			assert.eq(constructed_url, 'http://custom.example.com/');
 		});
+		assert.eq(constructed_url, 'http://custom.example.com/');
 	});
 
 	it('does not fire data_read for responses with no body', () => {

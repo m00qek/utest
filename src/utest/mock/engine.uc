@@ -147,14 +147,16 @@ mock_obj.inject = function(name, state, cb) {
 	const reg = get_registry(name);
 	push(reg.layers, to_layer(state));
 	let err = null;
+	let result;
 	try {
 		let proxy = build_proxy(name, get_real(name));
-		cb(proxy);
+		result = cb(proxy);
 	} catch (e) {
 		err = e;
 	}
 	pop(reg.layers);
 	if (err != null) die(err);
+	return result;
 };
 
 mock_obj.global = {

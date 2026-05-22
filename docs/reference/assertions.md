@@ -99,7 +99,7 @@ assert.notOk(has_error());
 
 ---
 
-### `assert.match(str, regex, msg)`
+### `assert.matches(str, regex, msg)`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -115,13 +115,13 @@ Failure message format:
 ```
 
 ```js
-assert.match("OpenWrt 24.10", /24\.10/);
-assert.match(body, /^{/, "body must be JSON");
+assert.matches("OpenWrt 24.10", /24\.10/);
+assert.matches(body, /^{/, "body must be JSON");
 ```
 
 ---
 
-### `assert.notMatch(str, regex, msg)`
+### `assert.notMatches(str, regex, msg)`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
@@ -137,7 +137,7 @@ Failure message format:
 ```
 
 ```js
-assert.notMatch(log_output, /ERROR/);
+assert.notMatches(log_output, /ERROR/);
 ```
 
 ---
@@ -215,4 +215,133 @@ Failure message format — array:
 assert.contains("OpenWrt 24.10", "24.10");
 assert.contains(interfaces, "eth0", "eth0 must be listed");
 assert.contains(results, { status: "ok" });
+```
+
+---
+
+### `assert.match(actual, expected, msg)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `actual` | any | Value under test. |
+| `expected` | any | A combinator, a plain value, or a nested structure mixing both. |
+| `msg` | string \| null | Optional failure message overriding the combinator's own message. |
+
+Structural matching assertion. Recursively compares `actual` against `expected`:
+
+- **Combinators** (values returned by the factories below) — delegates to the combinator's own `match` logic.
+- **Plain objects** — compared key-for-key with exact key count (no extra keys allowed). Values may themselves be combinators.
+- **Plain arrays** — compared element-by-element in order with exact length. Elements may be combinators.
+- **Scalars** — compared with deep equality.
+
+```js
+import { assert } from 'utest.assert';
+import { has, contains, any_order, any, matches, equals } from 'utest';
+
+// Plain value — behaves like assert.eq
+assert.match(status, 'ok');
+
+// Partial object — only listed keys are checked
+assert.match(response, has({ code: 200 }));
+
+// Nested combinators
+assert.match(response, has({
+    code: 200,
+    body: has({ status: 'ok' })
+}));
+
+// Array with flexible matching
+assert.match(items, any_order([
+    has({ id: 1 }),
+    has({ id: 2 })
+]));
+```
+
+---
+
+## Combinator factories
+
+Combinators are composable predicates used with `assert.match`. Import them from `'utest'`:
+
+```js
+import { equals, contains, has, any_order, any, matches } from 'utest';
+```
+
+Each factory returns a combinator object. Combinators can be nested inside each other and inside the plain-value `expected` argument of `assert.match`.
+
+---
+
+### `equals(val, msg)`
+
+Passes when `actual` is deeply equal to `val`.
+
+```js
+assert.match(result, equals(42));
+assert.match(tags, any_order([equals('a'), equals('b')]));
+```
+
+Plain scalars inside `assert.match` behave identically — `equals` is most useful inside other combinators.
+
+---
+
+### `contains(val, msg)`
+
+Passes when `actual` contains `val`.
+
+- When `actual` is a **string**: passes when `val` is a substring.
+- When `actual` is an **array**: passes when any element is deeply equal to `val`.
+
+```js
+assert.match(log_line, contains("ERROR"));
+assert.match(items, contains({ id: 3 }));
+```
+
+---
+
+### `has(obj, msg)`
+
+Passes when `actual` is an object that contains at least all the keys in `obj`, with matching values. Extra keys in `actual` are ignored.
+
+Values in `obj` may be plain values (compared with `equals`) or nested combinators.
+
+```js
+assert.match(response, has({ code: 200 }));
+assert.match(user, has({ role: 'admin', name: contains('Alice') }));
+```
+
+---
+
+### `any_order(arr, msg)`
+
+Passes when `actual` is an array of the same length as `arr` whose elements match the elements of `arr` in any order.
+
+Elements of `arr` may be plain values (wrapped in `equals`) or combinators. Matching is greedy: each matcher claims the first element it matches.
+
+```js
+assert.match(result, any_order([1, 2, 3]));
+assert.match(events, any_order([
+    has({ type: 'connect' }),
+    has({ type: 'auth' })
+]));
+```
+
+---
+
+### `any(msg)`
+
+Always passes, regardless of what `actual` is. Use it as a wildcard inside larger structures.
+
+```js
+assert.match(record, has({ id: any(), name: 'Alice' }));
+```
+
+---
+
+### `matches(re, msg)`
+
+Passes when `actual` is a string that matches the regular expression `re`.
+
+```js
+assert.match(version, matches(/^\d+\.\d+/));
+assert.match(log, has({ message: matches(/connected/) }));
 ```

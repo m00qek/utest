@@ -17,6 +17,6 @@ describe('afterEach guarantee', () => {
 	});
 
 	it('a failing test (afterEach must still run)', () => {
-		die('intentional failure');
+		assert.ok(false, 'intentional failure');
 	});
 });

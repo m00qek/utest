@@ -1,48 +1,67 @@
 import { describe, it } from 'utest';
 import { assert } from 'utest.assert';
 
-/**
- * Basic Assertions
- * 
- * This example demonstrates the fundamental assertion types provided by utest.
- */
-
 describe("Assertions", () => {
-	it("checks for deep equality with assert.eq()", () => {
-		const actual = { a: 1, b: [2, 3] };
-		const expected = { a: 1, b: [2, 3] };
-		
-		assert.eq(actual, expected, "Objects should be deeply equal");
+	it("assert.eq() passes for deeply equal values and fails otherwise", () => {
+		assert.eq({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
+		assert.throws(() => assert.eq(1, 2), /Assertion failed/);
+		assert.throws(() => assert.eq(1, 2, 'custom'), /custom/);
 	});
 
-	it("checks for truthiness with assert.ok()", () => {
+	it("assert.ne() passes when values differ and fails otherwise", () => {
+		assert.ne(1, 2);
+		assert.ne('a', 'b');
+		assert.ne({ a: 1 }, { a: 2 });
+		assert.throws(() => assert.ne(1, 1), /differ/);
+	});
+
+	it("assert.ok() passes for truthy values and fails otherwise", () => {
 		assert.ok(true);
 		assert.ok(length("hello") > 0);
-		assert.ok({ some: "data" });
+		assert.throws(() => assert.ok(false), /truthy/);
+		assert.throws(() => assert.ok(null), /truthy/);
 	});
 
-	it("matches strings against regex with assert.match()", () => {
-		assert.match("OpenWrt 24.10", /24\.10/);
-		assert.match("utest@v1.0.0", /^utest/);
+	it("assert.notOk() passes for falsy values and fails otherwise", () => {
+		assert.notOk(false);
+		assert.notOk(null);
+		assert.notOk(0);
+		assert.throws(() => assert.notOk(true), /falsy/);
 	});
 
-	it("verifies exceptions with assert.throws()", () => {
-		const block = () => {
-			let x = null;
-			return x.property; // This will throw
-		};
-
-		assert.throws(block, /left-hand side is not a function|null/);
+	it("assert.matches() passes when string matches regex and fails otherwise", () => {
+		assert.matches("OpenWrt 24.10", /24\.10/);
+		assert.matches("utest@v1.0.0", /^utest/);
+		assert.throws(() => assert.matches("hello", /^\d+/), /to match/);
 	});
 
-	it("verifies no exception with assert.notThrows()", () => {
+	it("assert.notMatches() passes when string does not match regex and fails otherwise", () => {
+		assert.notMatches("hello", /^\d+/);
+		assert.throws(() => assert.notMatches("hello", /^hello/), /not to match/);
+	});
+
+	it("assert.throws() passes when exception is thrown, with optional pattern", () => {
+		assert.throws(() => { let x = null; return x.property; }, /null/);
+		assert.throws(() => assert.throws(() => {}), /Expected exception/);
+		assert.throws(
+			() => assert.throws(() => die('boom'), /xyz/),
+			/did not match/
+		);
+	});
+
+	it("assert.notThrows() passes when no exception is thrown and fails otherwise", () => {
 		assert.notThrows(() => { let x = 1 + 1; });
-		assert.notThrows(() => { return "safe"; }, "safe call must not throw");
+		assert.throws(
+			() => assert.notThrows(() => die('boom')),
+			/Expected no exception/
+		);
 	});
 
-	it("checks string and array containment with assert.contains()", () => {
+	it("assert.contains() passes when haystack contains needle and fails otherwise", () => {
 		assert.contains("OpenWrt 24.10", "24.10");
 		assert.contains([1, 2, 3], 2);
 		assert.contains([{ a: 1 }, { b: 2 }], { b: 2 });
+		assert.throws(() => assert.contains("hello", "xyz"), /contain/);
+		assert.throws(() => assert.contains([1, 2], 3), /contain/);
 	});
 });

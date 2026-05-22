@@ -36,11 +36,20 @@ export function create(suite, bundle) {
 				// throw a typed object. If type is "Error" it is still treated as
 				// FAIL; any other type (e.g. ucode's runtime TypeError) → ERROR.
 				if (type(error) == 'object' && error.type) {
-					status = (error.type == "Error" ? "FAIL" : "ERROR");
-					msg = error.message;
-				} else {
-					status = "FAIL";
-					msg = sprintf('%s', error);
+					if (error.type == "Error") {
+						let parsed = null;
+						try { parsed = json(error.message); } catch(e) {}
+						if (type(parsed) == 'object' && parsed.__utest_fail__) {
+							status = "FAIL";
+							msg = parsed.message;
+						} else {
+							status = "ERROR";
+							msg = error.message;
+						}
+					} else {
+						status = "ERROR";
+						msg = error.message;
+					}
 				}
 			} else {
 				status = forced_status || "PASS";

@@ -16,7 +16,14 @@ describe("add()", () => {
 ```
 [test/unit/add_test.uc] add_test.uc
   [PASS] returns the sum of two numbers
-Summary: 1 total, 1 passed, 0 failed — 4 ms
+Summary:
+  Suites: 1
+  Total:  1
+  Passed: 1
+  Failed: 0
+  Errors: 0
+  Time:   4 ms
+  Seed:   ...
 ```
 
 ---
@@ -24,7 +31,7 @@ Summary: 1 total, 1 passed, 0 failed — 4 ms
 ## Features
 
 - **Jasmine-style DSL** — `describe`, `it`, `beforeEach`, `afterEach`, `setup`, `teardown`
-- **7 assertions** — `eq`, `ne`, `ok`, `notOk`, `match`, `notMatch`, `throws`
+- **9 assertions** — `eq`, `ne`, `ok`, `notOk`, `match`, `notMatch`, `throws`, `notThrows`, `contains`
 - **Built-in mock proxies** — `fs`, `uci`, `ubus`, `uloop`, `uclient`
 - **Non-invasive** — no changes to the code under test; shims are generated at startup
 - **Parallel execution** — run test files concurrently with `--jobs=N`
@@ -83,7 +90,7 @@ return { mocks: { 'fs': null } };
 ```js
 import { describe, it } from 'utest';
 import { assert } from 'utest.assert';
-import { mock } from 'utest.mock';
+import { mock } from 'utest';
 
 describe("read_config()", () => {
     it("returns file content", () => {

@@ -1,62 +1,214 @@
-function is_object(v) {
-	return type(v) == 'object' || type(v) == 'array';
+// ─── Combinator prototype ────────────────────────────────────────────────────
+
+const Combinator = { __combinator__: true };
+
+function is_combinator(v) {
+	return type(v) == 'object' && v.__combinator__;
 }
 
-function deep_equal(actual, expected, seen) {
-	if (actual === expected) {
-		return true;
-	}
+function fail(msg) {
+	die(sprintf('%J', { __utest_fail__: true, message: msg }));
+}
 
-	if (type(actual) != type(expected)) {
-		return false;
+function unwrap_error_msg(e) {
+	if (type(e) == 'object' && e.type == "Error") {
+		let parsed = null;
+		try { parsed = json(e.message); } catch(_) {}
+		if (type(parsed) == 'object' && parsed.__utest_fail__)
+			return parsed.message;
+		return e.message;
 	}
+	return sprintf('%s', e);
+}
 
-	if (!is_object(actual)) {
-		return actual == expected;
-	}
+// ─── Combinator factories ────────────────────────────────────────────────────
 
-	// Circular reference protection
-	for (let s in seen) {
-		if (s.actual === actual && s.expected === expected) {
-			return true;
+let _normalize_equals;
+
+function equals_scalar(expected, msg) {
+	return proto({
+		match: function(actual) {
+			if (actual === expected)
+				return { ok: true };
+			return { ok: false, message: msg || sprintf("Expected %J\n  got %J", expected, actual) };
 		}
+	}, Combinator);
+}
+
+function equals_object(expected, msg) {
+	const matchers = {};
+	for (let k in keys(expected)) {
+		const v = expected[k];
+		matchers[k] = is_combinator(v) ? v : _normalize_equals(v);
 	}
 
-	push(seen, { actual, expected });
-
-	if (type(actual) == 'array') {
-		if (length(actual) != length(expected)) {
-			return false;
-		}
-		for (let i = 0; i < length(actual); i++) {
-			if (!deep_equal(actual[i], expected[i], seen)) {
-				return false;
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'object')
+				return { ok: false, message: msg || sprintf("Expected an object, got %s", type(actual)) };
+			const exp_keys = keys(matchers);
+			const act_keys = keys(actual);
+			if (length(exp_keys) != length(act_keys))
+				return { ok: false, message: msg || sprintf("Expected keys %J\n  got keys %J", exp_keys, act_keys) };
+			for (let k in exp_keys) {
+				if (!exists(actual, k))
+					return { ok: false, message: msg || sprintf("Missing key '%s'", k) };
+				const r = matchers[k].match(actual[k]);
+				if (!r.ok) return { ok: false, message: msg || r.message };
 			}
+			return { ok: true };
 		}
-		return true;
-	}
-
-	// Object comparison
-	let keys_actual = keys(actual);
-	let keys_expected = keys(expected);
-
-	if (length(keys_actual) != length(keys_expected)) {
-		return false;
-	}
-
-	for (let k in keys_actual) {
-		if (!exists(expected, k) || !deep_equal(actual[k], expected[k], seen)) {
-			return false;
-		}
-	}
-
-	return true;
+	}, Combinator);
 }
+
+function equals_array(expected, msg) {
+	const matchers = [];
+	for (let el in expected)
+		push(matchers, is_combinator(el) ? el : _normalize_equals(el));
+
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'array')
+				return { ok: false, message: msg || sprintf("Expected an array, got %s", type(actual)) };
+			if (length(actual) != length(matchers))
+				return { ok: false, message: msg || sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
+			for (let i = 0; i < length(matchers); i++) {
+				const r = matchers[i].match(actual[i]);
+				if (!r.ok) return { ok: false, message: msg || r.message };
+			}
+			return { ok: true };
+		}
+	}, Combinator);
+}
+
+_normalize_equals = function(expected, msg) {
+	if (type(expected) == 'array')  return equals_array(expected, msg);
+	if (type(expected) == 'object') return equals_object(expected, msg);
+	return equals_scalar(expected, msg);
+};
+
+export function equals(expected, msg) {
+	return _normalize_equals(expected, msg);
+};
+
+function contains_string(expected, msg) {
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'string')
+				return { ok: false, message: msg || sprintf("Expected a string, got %s", type(actual)) };
+			if (index(actual, expected) >= 0)
+				return { ok: true };
+			return { ok: false, message: msg || sprintf("Expected %J to contain %J", actual, expected) };
+		}
+	}, Combinator);
+}
+
+function contains_array(expected, msg) {
+	const matchers = [];
+	for (let el in expected) {
+		if (is_combinator(el))       push(matchers, el);
+		else if (type(el) == 'array') push(matchers, contains_array(el));
+		else                          push(matchers, equals(el));
+	}
+
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'array')
+				return { ok: false, message: msg || sprintf("Expected an array, got %s", type(actual)) };
+			for (let m in matchers) {
+				let found = false;
+				for (let el in actual)
+					if (m.match(el).ok) { found = true; break; }
+				if (!found)
+					return { ok: false, message: msg || sprintf("Expected %J to contain %J", actual, expected) };
+			}
+			return { ok: true };
+		}
+	}, Combinator);
+}
+
+export function contains(expected, msg) {
+	if (type(expected) == 'string')
+		return contains_string(expected, msg);
+	return contains_array(type(expected) == 'array' ? expected : [expected], msg);
+};
+
+export function matches(expected, msg) {
+	return proto({
+		match: function(actual) {
+			if (type(actual) == 'string' && match(actual, expected))
+				return { ok: true };
+			return { ok: false, message: msg || sprintf("Expected '%s' to match %s", actual, expected) };
+		}
+	}, Combinator);
+};
+
+export function any(msg) {
+	return proto({
+		match: function(_actual) { return { ok: true }; }
+	}, Combinator);
+};
+
+export function has(expected, msg) {
+	const matchers = {};
+	for (let k in keys(expected)) {
+		const v = expected[k];
+		if (is_combinator(v))
+			matchers[k] = v;
+		else if (type(v) == 'object')
+			matchers[k] = has(v);
+		else
+			matchers[k] = equals(v);
+	}
+
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'object')
+				return { ok: false, message: msg || sprintf("Expected an object, got %s", type(actual)) };
+			for (let k in keys(matchers)) {
+				const r = matchers[k].match(actual[k]);
+				if (!r.ok) return { ok: false, message: msg || r.message };
+			}
+			return { ok: true };
+		}
+	}, Combinator);
+};
+
+export function any_order(expected, msg) {
+	const matchers = [];
+	for (let m in expected)
+		push(matchers, is_combinator(m) ? m : equals(m));
+
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'array')
+				return { ok: false, message: msg || sprintf("Expected an array, got %s", type(actual)) };
+			if (length(actual) != length(matchers))
+				return { ok: false, message: msg || sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
+
+			let matched = {};
+			for (let i = 0; i < length(matchers); i++) {
+				let found = false;
+				for (let j = 0; j < length(actual); j++) {
+					if (!matched[j] && matchers[i].match(actual[j]).ok) {
+						matched[j] = true; found = true; break;
+					}
+				}
+				if (!found)
+					return { ok: false, message: msg || sprintf("No match for expected element %d", i) };
+			}
+			return { ok: true };
+		}
+	}, Combinator);
+};
+
+
+// ─── Assert object ───────────────────────────────────────────────────────────
 
 export const assert = {
 	eq: function(actual, expected, msg) {
-		if (!deep_equal(actual, expected, [])) {
-			die(sprintf("%s\n  Actual:   %s\n  Expected: %s",
+		if (!equals(expected).match(actual).ok) {
+			fail(sprintf("%s\n  Actual:   %s\n  Expected: %s",
 				msg || "Assertion failed",
 				sprintf('%J', actual),
 				sprintf('%J', expected)
@@ -66,32 +218,34 @@ export const assert = {
 
 	ok: function(val, msg) {
 		if (!val) {
-			die(msg || sprintf("Expected truthy value, got %s", sprintf('%J', val)));
+			fail(msg || sprintf("Expected truthy value, got %s", sprintf('%J', val)));
 		}
 	},
 
-	match: function(str, regex, msg) {
+	matches: function(str, regex, msg) {
 		if (type(str) != 'string')
-			die(sprintf("assert.match: expected a string, got %s", type(str)));
+			fail(sprintf("assert.matches: expected a string, got %s", type(str)));
 		if (!match(str, regex))
-			die(msg || sprintf("Expected '%s' to match %s", str, regex));
+			fail(msg || sprintf("Expected '%s' to match %s", str, regex));
 	},
 
 	throws: function(fn, pattern, msg) {
 		try {
 			fn();
 		} catch (e) {
-			if (pattern && !match(sprintf('%s', e), pattern)) {
-				die(msg || sprintf("Exception '%s' did not match pattern %s", e, pattern));
+			if (pattern) {
+				const emsg = unwrap_error_msg(e);
+				if (!match(emsg, pattern))
+					fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pattern));
 			}
 			return;
 		}
-		die(msg || "Expected exception but none was thrown");
+		fail(msg || "Expected exception but none was thrown");
 	},
 
 	ne: function(actual, expected, msg) {
-		if (deep_equal(actual, expected, [])) {
-			die(sprintf("%s\n  Value: %s",
+		if (equals(expected).match(actual).ok) {
+			fail(sprintf("%s\n  Value: %s",
 				msg || "Expected values to differ",
 				sprintf('%J', actual)
 			));
@@ -100,36 +254,41 @@ export const assert = {
 
 	notOk: function(val, msg) {
 		if (val) {
-			die(msg || sprintf("Expected falsy value, got %s", sprintf('%J', val)));
+			fail(msg || sprintf("Expected falsy value, got %s", sprintf('%J', val)));
 		}
 	},
 
-	notMatch: function(str, regex, msg) {
+	notMatches: function(str, regex, msg) {
 		if (type(str) != 'string')
-			die(sprintf("assert.notMatch: expected a string, got %s", type(str)));
+			fail(sprintf("assert.notMatches: expected a string, got %s", type(str)));
 		if (match(str, regex))
-			die(msg || sprintf("Expected '%s' not to match %s", str, regex));
+			fail(msg || sprintf("Expected '%s' not to match %s", str, regex));
 	},
 
 	notThrows: function(fn, msg) {
 		try {
 			fn();
 		} catch (e) {
-			die(msg || sprintf("Expected no exception but got: %s", e));
+			fail(msg || sprintf("Expected no exception but got: %s", unwrap_error_msg(e)));
 		}
 	},
 
 	contains: function(haystack, needle, msg) {
 		if (type(haystack) == 'string') {
 			if (index(haystack, needle) < 0)
-				die(msg || sprintf("Expected string to contain '%s'", needle));
+				fail(msg || sprintf("Expected string to contain '%s'", needle));
 		} else if (type(haystack) == 'array') {
 			for (let item in haystack) {
-				if (deep_equal(item, needle, [])) return;
+				if (equals(needle).match(item).ok) return;
 			}
-			die(msg || sprintf("Expected array to contain %s", sprintf('%J', needle)));
+			fail(msg || sprintf("Expected array to contain %s", sprintf('%J', needle)));
 		} else {
-			die(sprintf("assert.contains: expected a string or array, got %s", type(haystack)));
+			fail(sprintf("assert.contains: expected a string or array, got %s", type(haystack)));
 		}
+	},
+
+	match: function(actual, expected, msg) {
+		const r = (is_combinator(expected) ? expected : equals(expected)).match(actual);
+		if (!r.ok) fail(msg || r.message);
 	}
 };

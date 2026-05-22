@@ -114,8 +114,8 @@ mock.inject('uloop', {
 }, (m_uloop) => {
     m_uloop.timer(100, () => {});
     m_uloop.run();
-    assert.ok(run_called);
 });
+assert.ok(run_called);
 ```
 
 ---

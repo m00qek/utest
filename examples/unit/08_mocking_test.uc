@@ -13,7 +13,7 @@ import * as fs from 'fs';
 describe('FS Mocking', () => {
 	it('real fs is unaffected by default', () => {
 		const content = fs.readfile('/etc/banner');
-		assert.match(content, /OpenWrt/);
+		assert.matches(content, /OpenWrt/);
 	});
 
 	it('patches global state via mock.global.patch()', () => {
@@ -54,8 +54,8 @@ describe('FS Mocking', () => {
 			return true;
 		}}}, (m_fs) => {
 			m_fs.mkdir('/tmp/custom_path');
-			assert.eq(created, ['/tmp/custom_path']);
 		});
+		assert.eq(created, ['/tmp/custom_path']);
 	});
 
 	it('intercepts readfile calls when enabled', () => {
