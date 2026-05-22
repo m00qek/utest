@@ -18,6 +18,7 @@ function unwrap_error_msg(e) {
 
 // ─── Combinator factories ────────────────────────────────────────────────────
 
+// Forward declaration: equals_object/equals_array reference this before it is assigned.
 let _normalize_equals;
 
 function equals_scalar(expected, msg) {
@@ -126,9 +127,10 @@ function contains_string(expected, msg) {
 function contains_array(expected, msg) {
 	const matchers = [];
 	for (let el in expected) {
-		if (is_combinator(el))       push(matchers, el);
-		else if (type(el) == 'array') push(matchers, contains_array(el));
-		else                          push(matchers, equals(el));
+		if (is_combinator(el))        push(matchers, el);
+		else if (type(el) == 'array')  push(matchers, contains_array(el));
+		else if (type(el) == 'object') push(matchers, contains_object(el));
+		else                           push(matchers, equals(el));
 	}
 
 	return proto({

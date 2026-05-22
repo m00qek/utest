@@ -18,12 +18,26 @@ export function create() {
 				}
 
 				let line;
+				let received_any = false;
+				let captured = [];
 				while ((line = proc.read("line")) != null) {
 					let msg;
-					try { msg = json(line); } catch (e) { continue; }
+					try { msg = json(line); } catch (e) {
+						warn(rtrim(line) + "\n");
+						push(captured, rtrim(line));
+						continue;
+					}
 					dispatch(msg, reporter);
+					received_any = true;
 				}
 				proc.close();
+
+				if (!received_any) {
+					let err = length(captured) > 0
+						? "worker produced no test output. Captured:\n" + join("\n", captured)
+						: "worker produced no output (possible spawn failure)";
+					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name, error: err });
+				}
 			}
 		}
 	}, ExecutorBase);

@@ -1,6 +1,8 @@
 // Loaded via loadfile() — no import/export. Circular-reference protection is
 // intentionally omitted because this is only used to compare JSON-derived data,
 // which cannot contain cycles.
+// format_path duplicates src/utest/util.uc: this file runs in program mode and
+// cannot import ES modules. Keep both in sync if the logic ever changes.
 function deep_equal(a, b) {
 	if (a === b) return true;
 	if (type(a) != type(b)) return false;
