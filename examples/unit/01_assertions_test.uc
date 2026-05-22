@@ -1,11 +1,12 @@
 import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { assert, has } from 'utest.assert';
 
 describe("Assertions", () => {
 	it("assert.eq() passes for deeply equal values and fails otherwise", () => {
 		assert.eq({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
-		assert.throws(() => assert.eq(1, 2), /Assertion failed/);
+		assert.throws(() => assert.eq(1, 2), /Expected/);
 		assert.throws(() => assert.eq(1, 2, 'custom'), /custom/);
+		assert.throws(() => assert.eq({ x: 1 }, { x: 1, y: 2 }), /keys/);
 	});
 
 	it("assert.ne() passes when values differ and fails otherwise", () => {
@@ -63,5 +64,13 @@ describe("Assertions", () => {
 		assert.contains([{ a: 1 }, { b: 2 }], { b: 2 });
 		assert.throws(() => assert.contains("hello", "xyz"), /contain/);
 		assert.throws(() => assert.contains([1, 2], 3), /contain/);
+	});
+
+	it("assert.contains() accepts a combinator as needle", () => {
+		assert.contains([{ id: 1, extra: 'ignored' }, { id: 2 }], has({ id: 1 }));
+		assert.throws(
+			() => assert.contains([{ id: 2 }], has({ id: 1 })),
+			/contain/
+		);
 	});
 });

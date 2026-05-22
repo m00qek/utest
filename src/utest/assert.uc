@@ -143,7 +143,7 @@ export function matches(expected, msg) {
 	}, Combinator);
 };
 
-export function any(msg) {
+export function any() {
 	return proto({
 		match: function(_actual) { return { ok: true }; }
 	}, Combinator);
@@ -186,17 +186,27 @@ export function any_order(expected, msg) {
 			if (length(actual) != length(matchers))
 				return { ok: false, message: msg || sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
 
-			let matched = {};
-			for (let i = 0; i < length(matchers); i++) {
-				let found = false;
+			// Backtracking search avoids the greedy false-negative when a wildcard
+			// (e.g. any()) claims an element that a later specific matcher needs.
+			const used = [];
+			for (let i = 0; i < length(actual); i++)
+				push(used, false);
+
+			let bt;
+			bt = function(i) {
+				if (i == length(matchers)) return true;
 				for (let j = 0; j < length(actual); j++) {
-					if (!matched[j] && matchers[i].match(actual[j]).ok) {
-						matched[j] = true; found = true; break;
+					if (!used[j] && matchers[i].match(actual[j]).ok) {
+						used[j] = true;
+						if (bt(i + 1)) return true;
+						used[j] = false;
 					}
 				}
-				if (!found)
-					return { ok: false, message: msg || sprintf("No match for expected element %d", i) };
-			}
+				return false;
+			};
+
+			if (!bt(0))
+				return { ok: false, message: msg || "No valid permutation found" };
 			return { ok: true };
 		}
 	}, Combinator);
@@ -207,13 +217,11 @@ export function any_order(expected, msg) {
 
 export const assert = {
 	eq: function(actual, expected, msg) {
-		if (!equals(expected).match(actual).ok) {
-			fail(sprintf("%s\n  Actual:   %s\n  Expected: %s",
-				msg || "Assertion failed",
-				sprintf('%J', actual),
-				sprintf('%J', expected)
-			));
-		}
+		const r = equals(expected).match(actual);
+		if (!r.ok)
+			fail(msg
+				? sprintf("%s\n  Actual:   %s\n  Expected: %s", msg, sprintf('%J', actual), sprintf('%J', expected))
+				: r.message);
 	},
 
 	ok: function(val, msg) {
@@ -278,8 +286,9 @@ export const assert = {
 			if (index(haystack, needle) < 0)
 				fail(msg || sprintf("Expected string to contain '%s'", needle));
 		} else if (type(haystack) == 'array') {
+			const matcher = is_combinator(needle) ? needle : equals(needle);
 			for (let item in haystack) {
-				if (equals(needle).match(item).ok) return;
+				if (matcher.match(item).ok) return;
 			}
 			fail(msg || sprintf("Expected array to contain %s", sprintf('%J', needle)));
 		} else {

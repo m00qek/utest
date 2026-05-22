@@ -42,7 +42,7 @@ while read f; do
     config_flags=""
     companion_config="examples/${rel_path%_test.uc}_config.uc"
     if [ -f "$companion_config" ]; then
-        config_flags="--config $companion_config"
+        config_flags="-c $companion_config"
     fi
 
     if run_verify "$bundle_arg" "$json_path" "$config_flags"; then

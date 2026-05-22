@@ -3,8 +3,8 @@ import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.
 
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout) {
-			let lf = build_l_flags(src_dir, shim_paths);
+		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths) {
+			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
 
 			for (let file in shuffled_files) {
 				let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed });

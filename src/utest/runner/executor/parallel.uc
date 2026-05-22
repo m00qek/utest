@@ -4,7 +4,7 @@ import { mkdir_p } from 'utest.util';
 
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout) {
+		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths) {
 			const WORKER_TIMEOUT_MS = (timeout || 60) * 1000;
 			const pipes_dir = run_dir + "/pipes";
 
@@ -16,7 +16,7 @@ export function create() {
 			let finished_count = 0;
 			let worker_id_counter = 0;
 
-			let lf = build_l_flags(src_dir, shim_paths);
+			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
 
 			while (finished_count < length(shuffled_files)) {
 				while (length(active_workers) < jobs && length(queue) > 0) {

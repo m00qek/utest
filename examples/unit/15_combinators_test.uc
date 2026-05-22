@@ -160,4 +160,13 @@ describe('Combinators', () => {
 			})
 		}));
 	});
+
+	it('any_order() backtracks when a wildcard steals a specific matcher\'s element', () => {
+		assert.match([1, 2], any_order([any(), 1]));
+		assert.match(['a', 'b', 'c'], any_order(['c', any(), 'a']));
+		assert.throws(
+			() => assert.match([2, 3], any_order([any(), 1])),
+			/permutation/
+		);
+	});
 });
