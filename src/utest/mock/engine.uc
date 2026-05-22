@@ -1,6 +1,21 @@
 if (!global.__utest_registries) global.__utest_registries = {};
 const registries = global.__utest_registries;
 
+function deep_clone(obj) {
+	if (type(obj) == 'array') {
+		let r = [];
+		for (let v in obj) push(r, deep_clone(v));
+		return r;
+	}
+	if (type(obj) == 'object') {
+		let r = {};
+		for (let k, v in obj) r[k] = deep_clone(v);
+		return r;
+	}
+	// scalars (string, int, bool, null) and functions are immutable — share the reference
+	return obj;
+}
+
 function get_registry(name) {
 	if (!registries[name]) {
 		registries[name] = {
@@ -14,8 +29,8 @@ function get_registry(name) {
 
 function to_layer(state) {
 	return {
-		data:   state.data     ? { ...state.data }     : {},
-		fns:    state.behavior ? { ...state.behavior } : {},
+		data:   state.data     ? deep_clone(state.data) : {},
+		fns:    state.behavior ? { ...state.behavior }  : {},
 		strict: state.strict   ? true : false
 	};
 }
@@ -112,7 +127,7 @@ mock_obj.snapshot = function() {
 	let snap = {};
 	for (let name, reg in registries) {
 		snap[name] = {
-			data:   { ...reg.global.data },
+			data:   deep_clone(reg.global.data),
 			fns:    { ...reg.global.fns },
 			strict: reg.global.strict,
 			proxy:  reg.global.proxy
@@ -124,7 +139,14 @@ mock_obj.snapshot = function() {
 mock_obj.restore = function(snap) {
 	reset_layers();
 	for (let name, saved in snap) {
-		get_registry(name).global = { ...saved };
+		// Deep-clone data so successive restores from the same snapshot each
+		// get an independent copy; set_data() mutations cannot corrupt the snap.
+		get_registry(name).global = {
+			data:   deep_clone(saved.data),
+			fns:    { ...saved.fns },
+			strict: saved.strict,
+			proxy:  saved.proxy
+		};
 	}
 	for (let name in keys(registries)) {
 		if (!exists(snap, name)) {
@@ -139,7 +161,7 @@ mock_obj.restore = function(snap) {
 function get_real(name) {
 	try { return require('real_' + name); } catch(e) {}
 	try { return require(name); }           catch(e) {}
-	print(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
+	warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
 	return null;
 }
 
@@ -162,8 +184,8 @@ mock_obj.inject = function(name, state, cb) {
 mock_obj.global = {
 	patch: function(name, state) {
 		const reg = get_registry(name);
-		reg.global.data   = state.data     ? { ...state.data }     : {};
-		reg.global.fns    = state.behavior ? { ...state.behavior } : {};
+		reg.global.data   = state.data     ? deep_clone(state.data) : {};
+		reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
 		reg.global.strict = state.strict   ? true : false;
 		const proxy = build_proxy(name, get_real(name));
 		reg.global.proxy = proxy;

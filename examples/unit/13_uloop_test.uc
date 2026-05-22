@@ -1,4 +1,4 @@
-import { describe, it, mock } from 'utest';
+import { describe, it, mock, truthy, falsy } from 'utest';
 import { assert } from 'utest.assert';
 import * as uloop from 'uloop';
 
@@ -16,9 +16,9 @@ describe('uloop Mocking', () => {
 		mock.inject('uloop', {}, (m_uloop) => {
 			let fired = false;
 			m_uloop.timer(1000, () => { fired = true; });
-			assert.notOk(fired);
+			assert.match(fired, falsy());
 			m_uloop.run();
-			assert.ok(fired);
+			assert.match(fired, truthy());
 		});
 	});
 
@@ -28,7 +28,7 @@ describe('uloop Mocking', () => {
 			m_uloop.timer(3000, () => push(order, 'a'));
 			m_uloop.timer(1000, () => push(order, 'b'));
 			m_uloop.run();
-			assert.eq(order, ['a', 'b']);
+			assert.match(order, ['a', 'b']);
 		});
 	});
 
@@ -38,7 +38,7 @@ describe('uloop Mocking', () => {
 			m_uloop.timer(100, () => count++);
 			m_uloop.run();
 			m_uloop.run();
-			assert.eq(count, 1);
+			assert.match(count, 1);
 		});
 	});
 
@@ -47,7 +47,7 @@ describe('uloop Mocking', () => {
 			let done = false;
 			m_uloop.timer(0, () => { m_uloop.end(); done = true; });
 			m_uloop.run();
-			assert.ok(done);
+			assert.match(done, truthy());
 		});
 	});
 
@@ -57,7 +57,7 @@ describe('uloop Mocking', () => {
 			m_uloop.init();
 			m_uloop.timer(5000, () => { m_uloop.end(); ended = true; });
 			m_uloop.run();
-			assert.ok(ended, 'sleep returned without blocking');
+			assert.match(ended, truthy(), 'sleep returned without blocking');
 		});
 	});
 
@@ -69,7 +69,7 @@ describe('uloop Mocking', () => {
 			m_uloop.timer(100, () => {});
 			m_uloop.run();
 		});
-		assert.ok(run_called);
+		assert.match(run_called, truthy());
 	});
 
 	it('patches global state via mock.global.patch()', () => {
@@ -77,7 +77,7 @@ describe('uloop Mocking', () => {
 		let fired = false;
 		uloop.timer(500, () => { fired = true; });
 		uloop.run();
-		assert.ok(fired, 'shim transparently intercepts');
+		assert.match(fired, truthy(), 'shim transparently intercepts');
 		mock.global.unpatch('uloop');
 	});
 });

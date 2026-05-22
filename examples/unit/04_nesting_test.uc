@@ -10,22 +10,22 @@ import { assert } from 'utest.assert';
 describe("User Management", () => {
 	describe("Registration", () => {
 		it("creates a new user", () => {
-			assert.ok(true);
+			assert.match(true, true);
 		});
 
 		it("prevents duplicate emails", () => {
-			assert.ok(true);
+			assert.match(true, true);
 		});
 	});
 
 	describe("Permissions", () => {
 		it("allows admins to delete users", () => {
-			assert.ok(true);
+			assert.match(true, true);
 		});
 
 		describe("Read-only users", () => {
 			it("cannot modify data", () => {
-				assert.ok(true);
+				assert.match(true, true);
 			});
 		});
 	});

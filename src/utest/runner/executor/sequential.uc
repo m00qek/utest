@@ -8,7 +8,7 @@ export function create() {
 
 			for (let file in shuffled_files) {
 				let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed });
-				let cmd = sprintf("ucode %s %s %s",
+				let cmd = sprintf("ucode %s %s %s 2>&1",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(worker_arg));
 				let proc = fs.popen(cmd, "r");
 

@@ -3,6 +3,23 @@ import * as fs from 'fs';
 
 export const q = (s) => "'" + replace(s, "'", "'\\''") + "'";
 
+// Parse a caught exception and return { is_assertion, message }.
+// is_assertion is true only for values thrown by assert.fail() (utest-controlled
+// failures); everything else is an ERROR (runtime crash or unexpected die).
+export const parse_thrown = function(e) {
+	if (type(e) == 'object' && e.type) {
+		if (e.type == "Error") {
+			let parsed = null;
+			try { parsed = json(e.message); } catch(_) {}
+			if (type(parsed) == 'object' && parsed.__utest_fail__)
+				return { is_assertion: true, message: parsed.message };
+			return { is_assertion: false, message: e.message };
+		}
+		return { is_assertion: false, message: e.message };
+	}
+	return { is_assertion: false, message: sprintf('%s', e) };
+};
+
 export const format_path = function(path) {
 	let parts = [];
 	for (let p in path) {

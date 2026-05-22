@@ -1,4 +1,4 @@
-import { describe, it, mock } from 'utest';
+import { describe, it, mock, truthy } from 'utest';
 import { assert } from 'utest.assert';
 import * as uci from 'uci';
 
@@ -38,17 +38,17 @@ describe('uci Mocking', () => {
 	it('get() reads a single option', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let c = m_uci.cursor();
-			assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
-			assert.eq(c.get('luci-sso', 'default', 'issuer_url'), 'https://idp.example.com');
-			assert.eq(c.get('luci-sso', 'default', 'missing_opt'), null);
+			assert.match(c.get('luci-sso', 'default', 'enabled'), '1');
+			assert.match(c.get('luci-sso', 'default', 'issuer_url'), 'https://idp.example.com');
+			assert.match(c.get('luci-sso', 'default', 'missing_opt'), null);
 		});
 	});
 
 	it('get() returns null for missing package or section', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let c = m_uci.cursor();
-			assert.eq(c.get('no-pkg', 'sec', 'opt'), null);
-			assert.eq(c.get('luci-sso', 'no-sec', 'opt'), null);
+			assert.match(c.get('no-pkg', 'sec', 'opt'), null);
+			assert.match(c.get('luci-sso', 'no-sec', 'opt'), null);
 		});
 	});
 
@@ -56,9 +56,9 @@ describe('uci Mocking', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let c = m_uci.cursor();
 			let sec = c.get_all('luci-sso', 'default');
-			assert.eq(sec['.type'], 'oidc');
-			assert.eq(sec.client_id, 'my-client');
-			assert.eq(c.get_all('luci-sso', 'no-sec'), null);
+			assert.match(sec['.type'], 'oidc');
+			assert.match(sec.client_id, 'my-client');
+			assert.match(c.get_all('luci-sso', 'no-sec'), null);
 		});
 	});
 
@@ -66,7 +66,7 @@ describe('uci Mocking', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let names = [];
 			m_uci.cursor().foreach('luci-sso', 'role', (s) => push(names, s['.name']));
-			assert.eq(names, ['admin_role', 'viewer_role']);
+			assert.match(names, ['admin_role', 'viewer_role']);
 		});
 	});
 
@@ -74,9 +74,9 @@ describe('uci Mocking', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let first = null;
 			m_uci.cursor().foreach('luci-sso', 'role', (s) => { if (!first) first = s; });
-			assert.eq(first['.name'], 'admin_role');
-			assert.eq(first.email[0], 'admin@example.com');
-			assert.eq(first.read[0], '*');
+			assert.match(first['.name'], 'admin_role');
+			assert.match(first.email[0], 'admin@example.com');
+			assert.match(first.read[0], '*');
 		});
 	});
 
@@ -85,15 +85,15 @@ describe('uci Mocking', () => {
 			'luci-sso': { 'default': { '.type': 'oidc', 'enabled': '0' } }
 		}}, (m_uci) => {
 			let c = m_uci.cursor();
-			assert.eq(c.get('luci-sso', 'default', 'enabled'), '0');
+			assert.match(c.get('luci-sso', 'default', 'enabled'), '0');
 			c.set('luci-sso', 'default', 'enabled', '1');
-			assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
+			assert.match(c.get('luci-sso', 'default', 'enabled'), '1');
 		});
 	});
 
 	it('commit() is a no-op returning true', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
-			assert.ok(m_uci.cursor().commit('luci-sso'));
+			assert.match(m_uci.cursor().commit('luci-sso'), truthy());
 		});
 	});
 
@@ -102,19 +102,19 @@ describe('uci Mocking', () => {
 			'luci-sso': { 'default': { '.type': 'oidc', 'enabled': '1', 'scope': 'openid' } }
 		}}, (m_uci) => {
 			let c = m_uci.cursor();
-			assert.ok(c.delete('luci-sso', 'default', 'scope'));
-			assert.eq(c.get('luci-sso', 'default', 'scope'), null);
-			assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
+			assert.match(c.delete('luci-sso', 'default', 'scope'), truthy());
+			assert.match(c.get('luci-sso', 'default', 'scope'), null);
+			assert.match(c.get('luci-sso', 'default', 'enabled'), '1');
 		});
 	});
 
 	it('delete() removes an entire section', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let c = m_uci.cursor();
-			assert.ok(c.delete('luci-sso', 'viewer_role'));
+			assert.match(c.delete('luci-sso', 'viewer_role'), truthy());
 			let names = [];
 			c.foreach('luci-sso', 'role', (s) => push(names, s['.name']));
-			assert.eq(names, ['admin_role']);
+			assert.match(names, ['admin_role']);
 		});
 	});
 
@@ -130,8 +130,8 @@ describe('uci Mocking', () => {
 		const m_uci = mock.global.patch('uci', {
 			data: { 'luci-sso': { 'default': { '.type': 'oidc', 'enabled': '1' } } }
 		});
-		assert.eq(uci.cursor().get('luci-sso', 'default', 'enabled'), '1');
+		assert.match(uci.cursor().get('luci-sso', 'default', 'enabled'), '1');
 		mock.global.unpatch('uci');
-		assert.eq(m_uci.cursor().get('luci-sso', 'default', 'enabled'), null);
+		assert.match(m_uci.cursor().get('luci-sso', 'default', 'enabled'), null);
 	});
 });

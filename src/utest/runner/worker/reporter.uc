@@ -1,3 +1,5 @@
+import { parse_thrown } from 'utest.util';
+
 export function create(suite, bundle) {
 	return {
 		suite_start: function(count) {
@@ -31,26 +33,9 @@ export function create(suite, bundle) {
 			let status, msg;
 
 			if (error != null) {
-				// die(msg) throws a plain string → FAIL (assertion failure).
-				// Runtime interpreter exceptions (null dereference, wrong type, …)
-				// throw a typed object. If type is "Error" it is still treated as
-				// FAIL; any other type (e.g. ucode's runtime TypeError) → ERROR.
-				if (type(error) == 'object' && error.type) {
-					if (error.type == "Error") {
-						let parsed = null;
-						try { parsed = json(error.message); } catch(e) {}
-						if (type(parsed) == 'object' && parsed.__utest_fail__) {
-							status = "FAIL";
-							msg = parsed.message;
-						} else {
-							status = "ERROR";
-							msg = error.message;
-						}
-					} else {
-						status = "ERROR";
-						msg = error.message;
-					}
-				}
+				const p = parse_thrown(error);
+				status = p.is_assertion ? "FAIL" : "ERROR";
+				msg = p.message;
 			} else {
 				status = forced_status || "PASS";
 				msg = null;

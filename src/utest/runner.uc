@@ -19,6 +19,9 @@ export function run(options) {
 		if (length(files) > 0) {
 			push(bundle_work, { name: b.name, files: files });
 			for (let f in files) push(all_files, f);
+		} else {
+			warn(sprintf("[utest] warning: bundle '%s' matched no files for pattern '%s'\n",
+				b.name, b.pattern));
 		}
 	}
 

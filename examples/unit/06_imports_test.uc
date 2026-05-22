@@ -12,6 +12,6 @@ import { get_test_data } from 'helper';
 describe("Helper Integration", () => {
 	it("uses data from a helper module", () => {
 		const data = get_test_data();
-		assert.eq(data.key, "value");
+		assert.match(data.key, "value");
 	});
 });

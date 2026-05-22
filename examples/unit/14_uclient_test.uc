@@ -1,4 +1,4 @@
-import { describe, it, mock } from 'utest';
+import { describe, it, mock, truthy, falsy } from 'utest';
 import { assert } from 'utest.assert';
 import * as uclient from 'uclient';
 
@@ -19,8 +19,8 @@ describe('uclient Mocking', () => {
 	it('ssl_init() and connect() return true by default', () => {
 		mock.inject('uclient', {}, (m_uclient) => {
 			let u = m_uclient.new('http://example.com/', null, {});
-			assert.ok(u.ssl_init({ verify: true }));
-			assert.ok(u.connect());
+			assert.match(u.ssl_init({ verify: true }), truthy());
+			assert.match(u.connect(), truthy());
 		});
 	});
 
@@ -36,7 +36,7 @@ describe('uclient Mocking', () => {
 				data_eof:    () => push(events, 'data_eof')
 			});
 			u.request('GET', {});
-			assert.eq(events, ['header_done', 'data_read', 'data_eof']);
+			assert.match(events, ['header_done', 'data_read', 'data_eof']);
 		});
 	});
 
@@ -56,8 +56,8 @@ describe('uclient Mocking', () => {
 				data_eof:  () => {}
 			});
 			u.request('GET', {});
-			assert.eq(got_status, 201);
-			assert.eq(got_headers['x-custom'], 'yes');
+			assert.match(got_status, 201);
+			assert.match(got_headers['x-custom'], 'yes');
 		});
 	});
 
@@ -76,7 +76,7 @@ describe('uclient Mocking', () => {
 				data_eof:    () => {}
 			});
 			u.request('GET', {});
-			assert.eq(chunks, ['hello world']);
+			assert.match(chunks, ['hello world']);
 		});
 	});
 
@@ -90,7 +90,7 @@ describe('uclient Mocking', () => {
 				error: (conn, code) => { got_error = code; }
 			});
 			u.request('GET', {});
-			assert.eq(got_error, 'connection_refused');
+			assert.match(got_error, 'connection_refused');
 		});
 	});
 
@@ -101,8 +101,8 @@ describe('uclient Mocking', () => {
 				header_done: () => { called = true; }
 			});
 			let ok = u.request('GET', {});
-			assert.eq(ok, false);
-			assert.notOk(called);
+			assert.match(ok, false);
+			assert.match(called, falsy());
 		});
 	});
 
@@ -120,7 +120,7 @@ describe('uclient Mocking', () => {
 			behavior: { connect: () => false }
 		}, (m_uclient) => {
 			let u = m_uclient.new('http://example.com/', null, {});
-			assert.eq(u.connect(), false);
+			assert.match(u.connect(), false);
 		});
 	});
 
@@ -131,7 +131,7 @@ describe('uclient Mocking', () => {
 		}, (m_uclient) => {
 			m_uclient.new('http://custom.example.com/', null, {});
 		});
-		assert.eq(constructed_url, 'http://custom.example.com/');
+		assert.match(constructed_url, 'http://custom.example.com/');
 	});
 
 	it('does not fire data_read for responses with no body', () => {
@@ -146,7 +146,7 @@ describe('uclient Mocking', () => {
 				data_eof:    () => {}
 			});
 			u.request('GET', {});
-			assert.notOk(data_read_fired);
+			assert.match(data_read_fired, falsy());
 		});
 	});
 
@@ -162,7 +162,7 @@ describe('uclient Mocking', () => {
 			data_eof: () => {}
 		});
 		u.request('GET', {});
-		assert.eq(body, 'patched', 'shim transparently intercepts global state');
+		assert.match(body, 'patched', 'shim transparently intercepts global state');
 		mock.global.unpatch('uclient');
 	});
 });

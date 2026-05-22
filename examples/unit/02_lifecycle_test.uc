@@ -36,17 +36,17 @@ describe("Lifecycle Hooks", () => {
 	});
 
 	it("sees the value from beforeEach", () => {
-		assert.eq(suite_val, 100);
+		assert.match(suite_val, 100);
 		suite_val += 50;
 	});
 
 	it("sees a reset value in the next test", () => {
 		// Even though the previous test modified suite_val, 
 		// beforeEach has run again.
-		assert.eq(suite_val, 100);
+		assert.match(suite_val, 100);
 	});
 
 	it("has access to global setup state", () => {
-		assert.eq(state[0], "GLOBAL_SETUP");
+		assert.match(state[0], "GLOBAL_SETUP");
 	});
 });

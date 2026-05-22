@@ -1,44 +1,43 @@
-import { describe, it } from 'utest';
-import { assert, has } from 'utest.assert';
+import { describe, it, equals, contains, truthy, falsy, not, regex } from 'utest';
+import { assert } from 'utest.assert';
 
 describe("Assertions", () => {
-	it("assert.eq() passes for deeply equal values and fails otherwise", () => {
-		assert.eq({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
-		assert.throws(() => assert.eq(1, 2), /Expected/);
-		assert.throws(() => assert.eq(1, 2, 'custom'), /custom/);
-		assert.throws(() => assert.eq({ x: 1 }, { x: 1, y: 2 }), /keys/);
+	it("assert.match() passes for deeply equal values", () => {
+		assert.match({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
+		assert.throws(() => assert.match(1, 2), /Expected/);
+		assert.throws(() => assert.match(1, 2, 'custom'), /custom/);
+		assert.throws(() => assert.match({ x: 1 }, { x: 1, y: 2 }), /keys/);
 	});
 
-	it("assert.ne() passes when values differ and fails otherwise", () => {
-		assert.ne(1, 2);
-		assert.ne('a', 'b');
-		assert.ne({ a: 1 }, { a: 2 });
-		assert.throws(() => assert.ne(1, 1), /differ/);
+	it("not(equals()) passes when values differ", () => {
+		assert.match(1, not(equals(2)));
+		assert.match('a', not(equals('b')));
+		assert.throws(() => assert.match(1, not(equals(1))), /not to match/);
 	});
 
-	it("assert.ok() passes for truthy values and fails otherwise", () => {
-		assert.ok(true);
-		assert.ok(length("hello") > 0);
-		assert.throws(() => assert.ok(false), /truthy/);
-		assert.throws(() => assert.ok(null), /truthy/);
+	it("truthy() passes for truthy values and fails otherwise", () => {
+		assert.match(true, truthy());
+		assert.match(1, truthy());
+		assert.throws(() => assert.match(false, truthy()), /truthy/);
+		assert.throws(() => assert.match(null, truthy()), /truthy/);
 	});
 
-	it("assert.notOk() passes for falsy values and fails otherwise", () => {
-		assert.notOk(false);
-		assert.notOk(null);
-		assert.notOk(0);
-		assert.throws(() => assert.notOk(true), /falsy/);
+	it("falsy() passes for falsy values and fails otherwise", () => {
+		assert.match(false, falsy());
+		assert.match(null, falsy());
+		assert.match(0, falsy());
+		assert.throws(() => assert.match(true, falsy()), /falsy/);
 	});
 
-	it("assert.matches() passes when string matches regex and fails otherwise", () => {
-		assert.matches("OpenWrt 24.10", /24\.10/);
-		assert.matches("utest@v1.0.0", /^utest/);
-		assert.throws(() => assert.matches("hello", /^\d+/), /to match/);
+	it("regex() passes when string matches pattern and fails otherwise", () => {
+		assert.match("OpenWrt 24.10", regex(/24\.10/));
+		assert.match("utest@v1.0.0", regex(/^utest/));
+		assert.throws(() => assert.match("hello", regex(/^\d+/)), /match/);
 	});
 
-	it("assert.notMatches() passes when string does not match regex and fails otherwise", () => {
-		assert.notMatches("hello", /^\d+/);
-		assert.throws(() => assert.notMatches("hello", /^hello/), /not to match/);
+	it("not(regex()) passes when string does not match pattern", () => {
+		assert.match("hello", not(regex(/^\d+/)));
+		assert.throws(() => assert.match("hello", not(regex(/^hello/))), /not to match/);
 	});
 
 	it("assert.throws() passes when exception is thrown, with optional pattern", () => {
@@ -50,26 +49,18 @@ describe("Assertions", () => {
 		);
 	});
 
-	it("assert.notThrows() passes when no exception is thrown and fails otherwise", () => {
-		assert.notThrows(() => { let x = 1 + 1; });
-		assert.throws(
-			() => assert.notThrows(() => die('boom')),
-			/Expected no exception/
-		);
+	it("assert.match() with contains() for substring and array containment", () => {
+		assert.match("OpenWrt 24.10", contains("24.10"));
+		assert.match([1, 2, 3], contains([2]));
+		assert.match([{ a: 1 }, { b: 2 }], contains([{ b: 2 }]));
+		assert.throws(() => assert.match("hello", contains("xyz")), /contain/);
+		assert.throws(() => assert.match([1, 2], contains([3])), /contain/);
 	});
 
-	it("assert.contains() passes when haystack contains needle and fails otherwise", () => {
-		assert.contains("OpenWrt 24.10", "24.10");
-		assert.contains([1, 2, 3], 2);
-		assert.contains([{ a: 1 }, { b: 2 }], { b: 2 });
-		assert.throws(() => assert.contains("hello", "xyz"), /contain/);
-		assert.throws(() => assert.contains([1, 2], 3), /contain/);
-	});
-
-	it("assert.contains() accepts a combinator as needle", () => {
-		assert.contains([{ id: 1, extra: 'ignored' }, { id: 2 }], has({ id: 1 }));
+	it("assert.match() with contains() accepts a combinator element", () => {
+		assert.match([{ id: 1, extra: 'ignored' }, { id: 2 }], contains([contains({ id: 1 })]));
 		assert.throws(
-			() => assert.contains([{ id: 2 }], has({ id: 1 })),
+			() => assert.match([{ id: 2 }], contains([contains({ id: 1 })])),
 			/contain/
 		);
 	});

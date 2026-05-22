@@ -18,35 +18,35 @@ import * as math from 'math';
 
 describe('Generic Proxy (math)', () => {
 	it('real module is unaffected by default', () => {
-		assert.eq(math.abs(-7), 7);
-		assert.eq(math.abs(3), 3);
+		assert.match(math.abs(-7), 7);
+		assert.match(math.abs(3), 3);
 	});
 
 	it('mock.inject() only intercepts via proxy, not imported module', () => {
 		mock.inject('math', { behavior: { abs: () => 99 } }, (m_math) => {
-			assert.eq(m_math.abs(-4), 99);
-			assert.eq(math.abs(-4), 4);
+			assert.match(m_math.abs(-4), 99);
+			assert.match(math.abs(-4), 4);
 		});
 	});
 
 	it('passes through non-overridden functions during mock.inject()', () => {
 		mock.inject('math', { behavior: { rand: () => 0 } }, (m_math) => {
-			assert.eq(m_math.abs(-5), 5);
+			assert.match(m_math.abs(-5), 5);
 		});
 	});
 
 	it('restores real function after mock.inject()', () => {
 		mock.inject('math', { behavior: { abs: () => 0 } }, (m_math) => {});
-		assert.eq(math.abs(-9), 9);
+		assert.match(math.abs(-9), 9);
 	});
 
 	it('mock.global.patch() transparently intercepts the imported module via shim', () => {
 		const m_math = mock.global.patch('math', { behavior: { abs: () => 42 } });
-		assert.eq(m_math.abs(-1), 42);
-		assert.eq(math.abs(-1), 42);
+		assert.match(m_math.abs(-1), 42);
+		assert.match(math.abs(-1), 42);
 		mock.global.unpatch('math');
 
-		assert.eq(m_math.abs(-1), 1);
-		assert.eq(math.abs(-1), 1);
+		assert.match(m_math.abs(-1), 1);
+		assert.match(math.abs(-1), 1);
 	});
 });

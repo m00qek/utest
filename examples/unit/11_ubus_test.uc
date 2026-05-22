@@ -1,4 +1,4 @@
-import { describe, it, mock } from 'utest';
+import { describe, it, mock, truthy, falsy } from 'utest';
 import { assert } from 'utest.assert';
 import * as ubus from 'ubus';
 
@@ -16,7 +16,7 @@ describe('ubus Mocking', () => {
 			data: { 'system:board': { model: 'Test Router', hostname: 'OpenWrt' } }
 		}, (m_ubus) => {
 			let conn = m_ubus.connect();
-			assert.eq(conn.call('system', 'board', {}), { model: 'Test Router', hostname: 'OpenWrt' });
+			assert.match(conn.call('system', 'board', {}), { model: 'Test Router', hostname: 'OpenWrt' });
 		});
 	});
 
@@ -25,14 +25,14 @@ describe('ubus Mocking', () => {
 			data: { 'network': { up: true } }
 		}, (m_ubus) => {
 			let conn = m_ubus.connect();
-			assert.ok(conn.call('network', 'status', {}).up);
-			assert.ok(conn.call('network', 'get_status', {}).up);
+			assert.match(conn.call('network', 'status', {}).up, truthy());
+			assert.match(conn.call('network', 'get_status', {}).up, truthy());
 		});
 	});
 
 	it('returns null for unmocked calls in non-strict mode', () => {
 		mock.inject('ubus', { data: {} }, (m_ubus) => {
-			assert.eq(m_ubus.connect().call('unmocked', 'method', {}), null);
+			assert.match(m_ubus.connect().call('unmocked', 'method', {}), null);
 		});
 	});
 
@@ -41,8 +41,8 @@ describe('ubus Mocking', () => {
 			data: { 'network:status': (args) => ({ up: args.interface == 'wan' }) }
 		}, (m_ubus) => {
 			let conn = m_ubus.connect();
-			assert.ok(conn.call('network', 'status', { interface: 'wan' }).up);
-			assert.notOk(conn.call('network', 'status', { interface: 'lan' }).up);
+			assert.match(conn.call('network', 'status', { interface: 'wan' }).up, truthy());
+			assert.match(conn.call('network', 'status', { interface: 'lan' }).up, falsy());
 		});
 	});
 
@@ -50,22 +50,22 @@ describe('ubus Mocking', () => {
 		mock.inject('ubus', {
 			behavior: { call: (obj, method, args) => ({ routed: obj + '.' + method }) }
 		}, (m_ubus) => {
-			assert.eq(m_ubus.connect().call('system', 'board', {}).routed, 'system.board');
+			assert.match(m_ubus.connect().call('system', 'board', {}).routed, 'system.board');
 		});
 	});
 
 	it('supports nesting mock.inject()', () => {
 		mock.inject('ubus', { data: { 'a:b': { val: 1 } } }, (outer) => {
 			let conn = outer.connect();
-			assert.eq(conn.call('a', 'b', {}).val, 1);
+			assert.match(conn.call('a', 'b', {}).val, 1);
 
 			mock.inject('ubus', { data: { 'c:d': { val: 2 } } }, (inner) => {
 				let conn2 = inner.connect();
-				assert.eq(conn2.call('a', 'b', {}).val, 1);
-				assert.eq(conn2.call('c', 'd', {}).val, 2);
+				assert.match(conn2.call('a', 'b', {}).val, 1);
+				assert.match(conn2.call('c', 'd', {}).val, 2);
 			});
 
-			assert.eq(conn.call('c', 'd', {}), null);
+			assert.match(conn.call('c', 'd', {}), null);
 		});
 	});
 
@@ -82,10 +82,10 @@ describe('ubus Mocking', () => {
 			data: { 'system:board': { hostname: 'patched' } }
 		});
 
-		assert.eq(m_ubus.connect().call('system', 'board', {}).hostname, 'patched');
-		assert.eq(ubus.connect().call('system', 'board', {}).hostname, 'patched', 'shim transparently intercepts');
+		assert.match(m_ubus.connect().call('system', 'board', {}).hostname, 'patched');
+		assert.match(ubus.connect().call('system', 'board', {}).hostname, 'patched', 'shim transparently intercepts');
 		mock.global.unpatch('ubus');
 
-		assert.eq(m_ubus.connect().call('system', 'board', {}), null);
+		assert.match(m_ubus.connect().call('system', 'board', {}), null);
 	});
 });

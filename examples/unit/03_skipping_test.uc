@@ -11,23 +11,23 @@ import { assert } from 'utest.assert';
 
 describe("Feature: Authentication", () => {
 	it("works with valid credentials", () => {
-		assert.ok(true);
+		assert.match(true, true);
 	});
 
 	skip("works with OAuth2 (Not implemented yet)", () => {
 		// This block is never executed.
 		// You can put failing code or TODOs here.
-		assert.ok(false);
+		assert.match(false);
 	});
 
 	xit("handles MFA (coming soon)", () => {
-		assert.ok(false);
+		assert.match(false);
 	});
 
 	describe("Legacy API", () => {
 		// Nested skip
 		skip("handles XML responses", () => {
-			assert.ok(false);
+			assert.match(false);
 		});
 	});
 });

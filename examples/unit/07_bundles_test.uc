@@ -13,6 +13,6 @@ import { assert } from 'utest.assert';
 
 describe("Bundles", () => {
 	it("demonstrates how tests are grouped into bundles", () => {
-		assert.ok(true, "This test will be reported under its assigned bundle name");
+		assert.match(true, true);
 	});
 });

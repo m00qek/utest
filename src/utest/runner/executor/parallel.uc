@@ -68,8 +68,9 @@ export function create() {
 							if (ord(line, length(line) - 1) != 10) break;
 							let msg;
 							try { msg = json(line); } catch (e) {
-								warn(sprintf("[utest] warning: malformed output from worker (file: %s): %s\n",
-									worker.file, rtrim(line)));
+								// Non-JSON lines are diagnostic output (e.g. warn() calls
+								// from engine.uc). Pass them through to stderr unchanged.
+								warn(rtrim(line) + "\n");
 								worker.offset += length(line);
 								continue;
 							}
@@ -95,7 +96,18 @@ export function create() {
 					}
 				}
 				active_workers = still_active;
-				if (finished_count < length(shuffled_files)) sleep(50);
+				if (finished_count < length(shuffled_files)) {
+					// Sleep at most 50 ms, but wake sooner if a worker is about to time out.
+					let wait_ms = 50;
+					let now = clock();
+					for (let w in active_workers) {
+						let elapsed = (now[0] - w.start_time[0]) * 1000 +
+						              int((now[1] - w.start_time[1]) / 1000000);
+						let remaining = WORKER_TIMEOUT_MS - elapsed;
+						if (remaining > 0 && remaining < wait_ms) wait_ms = remaining;
+					}
+					sleep(wait_ms);
+				}
 			}
 		}
 	}, ExecutorBase);
