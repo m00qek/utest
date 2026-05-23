@@ -5,32 +5,39 @@ return {
 		let proxy = ctx.base();
 
 		proxy.new = function(url, auth, callbacks) {
+			ctx.record_call('new', [url, auth, callbacks]);
 			let f = ctx.get_behavior('new');
 			if (f) return f(url, auth, callbacks);
 
 			let _body_served = false;
+			let u_calls = { ssl_init: [], set_timeout: [], connect: [], request: [], get_headers: [], status: [], read: [], disconnect: [] };
 
 			// u must be assigned before method bodies run so closures can reference it.
 			let u = {};
+			u.__utest__ = { calls: u_calls };
 
 			u.ssl_init = function(opts) {
+				push(u_calls.ssl_init, [opts]);
 				let f = ctx.get_behavior('ssl_init');
 				if (f) return f(opts);
 				return true;
 			};
 
 			u.set_timeout = function(ms) {
+				push(u_calls.set_timeout, [ms]);
 				let f = ctx.get_behavior('set_timeout');
 				if (f) return f(ms);
 			};
 
 			u.connect = function() {
+				push(u_calls.connect, []);
 				let f = ctx.get_behavior('connect');
 				if (f) return f();
 				return true;
 			};
 
 			u.request = function(method, opts) {
+				push(u_calls.request, [method, opts]);
 				let f = ctx.get_behavior('request');
 				if (f) return f(method, opts);
 
@@ -57,6 +64,7 @@ return {
 			};
 
 			u.get_headers = function() {
+				push(u_calls.get_headers, []);
 				let f = ctx.get_behavior('get_headers');
 				if (f) return f();
 				let response = ctx.get_data(url);
@@ -64,6 +72,7 @@ return {
 			};
 
 			u.status = function() {
+				push(u_calls.status, []);
 				let f = ctx.get_behavior('status');
 				if (f) return f();
 				let response = ctx.get_data(url);
@@ -71,6 +80,7 @@ return {
 			};
 
 			u.read = function() {
+				push(u_calls.read, []);
 				let f = ctx.get_behavior('read');
 				if (f) return f();
 				if (_body_served) return null;
@@ -80,6 +90,7 @@ return {
 			};
 
 			u.disconnect = function() {
+				push(u_calls.disconnect, []);
 				let f = ctx.get_behavior('disconnect');
 				if (f) return f();
 			};

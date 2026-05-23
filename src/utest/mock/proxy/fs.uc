@@ -4,6 +4,7 @@ return {
 		let proxy = ctx.base();
 
 		proxy.readfile = function(path) {
+			ctx.record_call('readfile', [path]);
 			let f = ctx.get_behavior('readfile');
 			if (f) return f(path);
 			let v = ctx.get_data(path);
@@ -14,6 +15,7 @@ return {
 		};
 
 		proxy.writefile = function(path, data) {
+			ctx.record_call('writefile', [path, data]);
 			let f = ctx.get_behavior('writefile');
 			if (f) return f(path, data);
 			if (ctx.is_active()) {
@@ -24,6 +26,7 @@ return {
 		};
 
 		proxy.access = function(path, mode) {
+			ctx.record_call('access', [path, mode]);
 			let f = ctx.get_behavior('access');
 			if (f) return f(path, mode);
 			if (ctx.get_data(path) != null) return true;
@@ -37,6 +40,7 @@ return {
 		};
 
 		proxy.stat = function(path) {
+			ctx.record_call('stat', [path]);
 			let f = ctx.get_behavior('stat');
 			if (f) return f(path);
 			let v = ctx.get_data(path);
@@ -55,6 +59,7 @@ return {
 		};
 
 		proxy.rename = function(old_path, new_path) {
+			ctx.record_call('rename', [old_path, new_path]);
 			let f = ctx.get_behavior('rename');
 			if (f) return f(old_path, new_path);
 			let v = ctx.get_data(old_path);
@@ -69,6 +74,7 @@ return {
 		};
 
 		proxy.unlink = function(path) {
+			ctx.record_call('unlink', [path]);
 			let f = ctx.get_behavior('unlink');
 			if (f) return f(path);
 			let v = ctx.get_data(path);
@@ -82,24 +88,28 @@ return {
 		};
 
 		proxy.mkdir = function(path, mode) {
+			ctx.record_call('mkdir', [path, mode]);
 			let f = ctx.get_behavior('mkdir');
 			if (f) return f(path, mode);
 			return true;
 		};
 
 		proxy.chmod = function(path, mode) {
+			ctx.record_call('chmod', [path, mode]);
 			let f = ctx.get_behavior('chmod');
 			if (f) return f(path, mode);
 			return true;
 		};
 
 		proxy.error = function() {
+			ctx.record_call('error', []);
 			let f = ctx.get_behavior('error');
 			if (f) return f();
 			return null;
 		};
 
 		proxy.lsdir = function(path) {
+			ctx.record_call('lsdir', [path]);
 			let f = ctx.get_behavior('lsdir');
 			if (f) return f(path);
 			let real_entries = ctx.is_strict() ? null : real.lsdir(path);
@@ -125,6 +135,7 @@ return {
 		};
 
 		proxy.glob = function(pattern) {
+			ctx.record_call('glob', [pattern]);
 			let f = ctx.get_behavior('glob');
 			if (f) return f(pattern);
 			let real_files = ctx.is_strict() ? null : real.glob(pattern);

@@ -1,5 +1,6 @@
 import * as dsl from 'utest.dsl';
 import { mock as _mock } from 'utest.mock.engine';
+import { spy as _spy } from 'utest.mock.spy';
 import { assert as _assert, equals as _equals, contains as _contains, truthy as _truthy, falsy as _falsy, not as _not, pred as _pred, any_order as _any_order, any as _any, regex as _regex } from 'utest.assert';
 
 export const describe = dsl.describe;
@@ -12,6 +13,7 @@ export const afterEach = dsl.afterEach;
 export const setup = dsl.setup;
 export const teardown = dsl.teardown;
 export const mock = _mock;
+export const spy = _spy;
 export const assert = _assert;
 export const equals = _equals;
 export const contains = _contains;

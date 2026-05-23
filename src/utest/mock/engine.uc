@@ -21,7 +21,7 @@ function get_registry(name) {
 		registries[name] = {
 			name: name,
 			layers: [],
-			global: { data: {}, fns: {}, strict: false, proxy: null }
+			global: { data: {}, fns: {}, strict: false, proxy: null, calls: {} }
 		};
 	}
 	return registries[name];
@@ -31,7 +31,8 @@ function to_layer(state) {
 	return {
 		data:   state.data     ? deep_clone(state.data) : {},
 		fns:    state.behavior ? { ...state.behavior }  : {},
-		strict: state.strict   ? true : false
+		strict: state.strict   ? true : false,
+		calls:  {}
 	};
 }
 
@@ -84,6 +85,19 @@ internal_obj.get_all_data_keys = function(name) {
 		for (let k, v in reg.layers[i].data) keys_map[k] = true;
 	for (let k, v in reg.global.data) keys_map[k] = true;
 	return keys(keys_map);
+};
+
+internal_obj.record_call = function(name, fn_name, args) {
+	const reg = get_registry(name);
+	const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
+	if (!target.calls[fn_name]) target.calls[fn_name] = [];
+	push(target.calls[fn_name], args);
+};
+
+internal_obj.get_calls = function(name) {
+	const reg = get_registry(name);
+	const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
+	return target.calls;
 };
 
 internal_obj.get_proxy_global = function(name) {
@@ -145,12 +159,13 @@ mock_obj.restore = function(snap) {
 			data:   deep_clone(saved.data),
 			fns:    { ...saved.fns },
 			strict: saved.strict,
-			proxy:  saved.proxy
+			proxy:  saved.proxy,
+			calls:  {}
 		};
 	}
 	for (let name in keys(registries)) {
 		if (!exists(snap, name)) {
-			registries[name].global = { data: {}, fns: {}, strict: false, proxy: null };
+			registries[name].global = { data: {}, fns: {}, strict: false, proxy: null, calls: {} };
 		}
 	}
 };
@@ -187,6 +202,7 @@ mock_obj.global = {
 		reg.global.data   = state.data     ? deep_clone(state.data) : {};
 		reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
 		reg.global.strict = state.strict   ? true : false;
+		reg.global.calls  = {};
 		const proxy = build_proxy(name, get_real(name));
 		reg.global.proxy = proxy;
 		return proxy;
@@ -194,7 +210,7 @@ mock_obj.global = {
 
 	unpatch: function(name) {
 		const reg = get_registry(name);
-		reg.global = { data: {}, fns: {}, strict: false, proxy: null };
+		reg.global = { data: {}, fns: {}, strict: false, proxy: null, calls: {} };
 	}
 };
 

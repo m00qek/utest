@@ -5,11 +5,13 @@ return {
 		let proxy = ctx.base();
 
 		proxy.init = function() {
+			ctx.record_call('init', []);
 			let f = ctx.get_behavior('init');
 			if (f) return f();
 		};
 
 		proxy.timer = function(ms, cb) {
+			ctx.record_call('timer', [ms, cb]);
 			let f = ctx.get_behavior('timer');
 			if (f) return f(ms, cb);
 			let pending = ctx.get_data('__pending__');
@@ -21,6 +23,7 @@ return {
 		};
 
 		proxy.run = function() {
+			ctx.record_call('run', []);
 			let f = ctx.get_behavior('run');
 			if (f) return f();
 			let pending = ctx.get_data('__pending__') || [];
@@ -29,6 +32,7 @@ return {
 		};
 
 		proxy.end = function() {
+			ctx.record_call('end', []);
 			let f = ctx.get_behavior('end');
 			if (f) return f();
 		};

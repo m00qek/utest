@@ -4,11 +4,15 @@ return {
 		let proxy = ctx.base();
 
 		proxy.connect = function() {
+			ctx.record_call('connect', []);
 			let f = ctx.get_behavior('connect');
 			if (f) return f();
 
+			let conn_calls = { call: [] };
 			return {
+				__utest__: { calls: conn_calls },
 				call: function(obj, method, args) {
+					push(conn_calls.call, [obj, method, args]);
 					let override = ctx.get_behavior('call');
 					if (override) return override(obj, method, args);
 

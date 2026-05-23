@@ -1,0 +1,655 @@
+{
+  "stats": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 9,
+          "name": "resets call records on successive global patches"
+        }
+      ],
+      "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 10,
+          "name": "on an auto-generated proxy (math)"
+        },
+        {
+          "id": 12,
+          "name": "records call even when behavior is overridden"
+        }
+      ],
+      "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 29,
+          "name": "edge cases"
+        },
+        {
+          "id": 30,
+          "name": "dies when passed a plain object"
+        }
+      ],
+      "index": 22
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 25,
+          "name": "on uclient — proxy and inner client object"
+        },
+        {
+          "id": 27,
+          "name": "starts with empty arrays for all client methods"
+        }
+      ],
+      "index": 20
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 25,
+          "name": "on uclient — proxy and inner client object"
+        },
+        {
+          "id": 26,
+          "name": "records new() on the proxy"
+        }
+      ],
+      "index": 19
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 10,
+          "name": "on an auto-generated proxy (math)"
+        },
+        {
+          "id": 11,
+          "name": "records calls via the generic ctx.base() path"
+        }
+      ],
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 13,
+          "name": "on ubus — proxy and inner connection object"
+        },
+        {
+          "id": 16,
+          "name": "records call() even when behavior is overridden"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 18,
+          "name": "on uci — proxy and inner cursor object"
+        },
+        {
+          "id": 19,
+          "name": "records cursor() on the proxy"
+        }
+      ],
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 29,
+          "name": "edge cases"
+        },
+        {
+          "id": 32,
+          "name": "dies when passed a combinator"
+        }
+      ],
+      "index": 24
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 3,
+          "name": "starts with empty arrays for all proxy methods"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 18,
+          "name": "on uci — proxy and inner cursor object"
+        },
+        {
+          "id": 22,
+          "name": "each cursor() call returns an independent call log"
+        }
+      ],
+      "index": 17
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 8,
+          "name": "records calls via mock.global.patch()"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 7,
+          "name": "resets call records between inject() scopes"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 18,
+          "name": "on uci — proxy and inner cursor object"
+        },
+        {
+          "id": 21,
+          "name": "records get(), set(), commit() on the cursor"
+        }
+      ],
+      "index": 16
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 25,
+          "name": "on uclient — proxy and inner client object"
+        },
+        {
+          "id": 28,
+          "name": "records request(), read(), disconnect() on the client"
+        }
+      ],
+      "index": 21
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 18,
+          "name": "on uci — proxy and inner cursor object"
+        },
+        {
+          "id": 20,
+          "name": "starts with empty arrays for all cursor methods"
+        }
+      ],
+      "index": 15
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 13,
+          "name": "on ubus — proxy and inner connection object"
+        },
+        {
+          "id": 15,
+          "name": "records call() on the connection object"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 13,
+          "name": "on ubus — proxy and inner connection object"
+        },
+        {
+          "id": 17,
+          "name": "each connect() call returns an independent call log"
+        }
+      ],
+      "index": 13
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 6,
+          "name": "records call even when behavior is overridden"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 29,
+          "name": "edge cases"
+        },
+        {
+          "id": 31,
+          "name": "dies when passed null"
+        }
+      ],
+      "index": 23
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 13,
+          "name": "on ubus — proxy and inner connection object"
+        },
+        {
+          "id": 14,
+          "name": "records connect() on the proxy"
+        }
+      ],
+      "index": 10
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 4,
+          "name": "records args in order for each call"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 23,
+          "name": "on uloop proxy"
+        },
+        {
+          "id": 24,
+          "name": "records init(), timer(), run(), end()"
+        }
+      ],
+      "index": 18
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_spy_test.uc",
+      "bundle": "examples/unit/16_spy_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "spy()"
+        },
+        {
+          "id": 2,
+          "name": "on a specific proxy (fs)"
+        },
+        {
+          "id": 5,
+          "name": "records multiple different methods independently"
+        }
+      ],
+      "index": 3
+    }
+  ],
+  "files": [
+    "examples/unit/16_spy_test.uc"
+  ],
+  "duration_ms": 14,
+  "seed": 666537255,
+  "bundles": {
+    "examples/unit/16_spy_test.uc": {
+      "total": 24,
+      "passed": 24,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

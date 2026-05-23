@@ -38,7 +38,7 @@ function main() {
     if (!example_file || !expected_file) exit(1);
 
     // 1. Execute Framework
-    let cmd = sprintf("src/utest.sh -r json %s %s 2>&1", extra_flags, example_file);
+    let cmd = sprintf("src/utest.sh -r json %s %s", extra_flags, example_file);
     let proc = popen(cmd);
     let actual_raw = proc.read("all");
     proc.close();

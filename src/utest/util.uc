@@ -11,8 +11,8 @@ export const parse_thrown = function(e) {
 		if (e.type == "Error") {
 			let parsed = null;
 			try { parsed = json(e.message); } catch(_) {}
-			if (type(parsed) == 'object' && parsed.__utest_fail__)
-				return { is_assertion: true, message: parsed.message };
+			if (type(parsed) == 'object' && parsed.__utest__ && parsed.__utest__.kind == 'fail')
+				return { is_assertion: true, message: parsed.__utest__.message };
 			return { is_assertion: false, message: e.message };
 		}
 		return { is_assertion: false, message: e.message };

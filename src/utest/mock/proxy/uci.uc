@@ -4,11 +4,16 @@ return {
 		let proxy = ctx.base();
 
 		proxy.cursor = function() {
+			ctx.record_call('cursor', []);
 			let f = ctx.get_behavior('cursor');
 			if (f) return f();
 
+			let cursor_calls = { get: [], get_all: [], foreach: [], set: [], commit: [], save: [], "delete": [] };
 			return {
+				__utest__: { calls: cursor_calls },
+
 				get: function(pkg, sec, opt) {
+					push(cursor_calls.get, [pkg, sec, opt]);
 					let override = ctx.get_behavior('get');
 					if (override) return override(pkg, sec, opt);
 
@@ -24,6 +29,7 @@ return {
 				},
 
 				get_all: function(pkg, sec) {
+					push(cursor_calls.get_all, [pkg, sec]);
 					let override = ctx.get_behavior('get_all');
 					if (override) return override(pkg, sec);
 
@@ -34,6 +40,7 @@ return {
 				},
 
 				foreach: function(pkg, type_name, cb) {
+					push(cursor_calls.foreach, [pkg, type_name, cb]);
 					let override = ctx.get_behavior('foreach');
 					if (override) return override(pkg, type_name, cb);
 
@@ -51,6 +58,7 @@ return {
 				},
 
 				set: function(pkg, sec, opt, val) {
+					push(cursor_calls.set, [pkg, sec, opt, val]);
 					let override = ctx.get_behavior('set');
 					if (override) return override(pkg, sec, opt, val);
 
@@ -63,18 +71,21 @@ return {
 				},
 
 				commit: function(pkg) {
+					push(cursor_calls.commit, [pkg]);
 					let override = ctx.get_behavior('commit');
 					if (override) return override(pkg);
 					return true;
 				},
 
 				save: function(pkg) {
+					push(cursor_calls.save, [pkg]);
 					let override = ctx.get_behavior('save');
 					if (override) return override(pkg);
 					return true;
 				},
 
-				delete: function(pkg, sec, opt) {
+				"delete": function(pkg, sec, opt) {
+					push(cursor_calls["delete"], [pkg, sec, opt]);
 					let override = ctx.get_behavior('delete');
 					if (override) return override(pkg, sec, opt);
 

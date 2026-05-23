@@ -2,14 +2,14 @@ import { parse_thrown } from 'utest.util';
 
 // ─── Combinator prototype ────────────────────────────────────────────────────
 
-const Combinator = { __combinator__: true };
+const Combinator = { __utest__: { kind: 'combinator' } };
 
 function is_combinator(v) {
-	return type(v) == 'object' && v.__combinator__;
+	return type(v) == 'object' && v.__utest__ != null && v.__utest__.kind == 'combinator';
 }
 
 function fail(msg) {
-	die(sprintf('%J', { __utest_fail__: true, message: msg }));
+	die(sprintf('%J', { __utest__: { kind: 'fail', message: msg } }));
 }
 
 function unwrap_error_msg(e) {
