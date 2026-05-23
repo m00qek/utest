@@ -1,1 +1,123 @@
-{ "stats": { "total": 4, "passed": 1, "failed": 0, "errors": 0, "fatals": 0, "skipped": 3, "ignored": 0, "suites": 1 }, "failures": [ ], "results": [ { "event": "TEST_RESULT", "suite": "examples/unit/03_skipping_test.uc", "bundle": "examples/unit/03_skipping_test.uc", "status": "SKIP", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "Feature: Authentication" }, { "id": 4, "name": "handles MFA (coming soon)" } ], "index": 3 }, { "event": "TEST_RESULT", "suite": "examples/unit/03_skipping_test.uc", "bundle": "examples/unit/03_skipping_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "Feature: Authentication" }, { "id": 2, "name": "works with valid credentials" } ], "index": 1 }, { "event": "TEST_RESULT", "suite": "examples/unit/03_skipping_test.uc", "bundle": "examples/unit/03_skipping_test.uc", "status": "SKIP", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "Feature: Authentication" }, { "id": 3, "name": "works with OAuth2 (Not implemented yet)" } ], "index": 2 }, { "event": "TEST_RESULT", "suite": "examples/unit/03_skipping_test.uc", "bundle": "examples/unit/03_skipping_test.uc", "status": "SKIP", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "Feature: Authentication" }, { "id": 5, "name": "Legacy API" }, { "id": 6, "name": "handles XML responses" } ], "index": 4 } ], "files": [ "examples/unit/03_skipping_test.uc" ], "duration_ms": 3, "seed": 583445085, "bundles": { "examples/unit/03_skipping_test.uc": { "total": 4, "passed": 1, "failed": 0, "errors": 0, "fatals": 0, "skipped": 3, "ignored": 0 } } }
+{
+  "stats": {
+    "total": 4,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 3,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/03_skipping_test.uc",
+      "bundle": "examples/unit/03_skipping_test.uc",
+      "status": "SKIP",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Feature: Authentication"
+        },
+        {
+          "id": 4,
+          "name": "handles MFA (coming soon)"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/03_skipping_test.uc",
+      "bundle": "examples/unit/03_skipping_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Feature: Authentication"
+        },
+        {
+          "id": 2,
+          "name": "works with valid credentials"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/03_skipping_test.uc",
+      "bundle": "examples/unit/03_skipping_test.uc",
+      "status": "SKIP",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Feature: Authentication"
+        },
+        {
+          "id": 3,
+          "name": "works with OAuth2 (Not implemented yet)"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/03_skipping_test.uc",
+      "bundle": "examples/unit/03_skipping_test.uc",
+      "status": "SKIP",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Feature: Authentication"
+        },
+        {
+          "id": 5,
+          "name": "Legacy API"
+        },
+        {
+          "id": 6,
+          "name": "handles XML responses"
+        }
+      ],
+      "index": 4
+    }
+  ],
+  "files": [
+    "examples/unit/03_skipping_test.uc"
+  ],
+  "duration_ms": 3,
+  "seed": 583445085,
+  "bundles": {
+    "examples/unit/03_skipping_test.uc": {
+      "total": 4,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 3,
+      "ignored": 0
+    }
+  }
+}
