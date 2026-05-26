@@ -1,0 +1,138 @@
+{
+  "stats": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/05_nesting_test.uc",
+      "bundle": "examples/unit/05_nesting_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "User Management"
+        },
+        {
+          "id": 2,
+          "name": "Registration"
+        },
+        {
+          "id": 3,
+          "name": "creates a new user"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/05_nesting_test.uc",
+      "bundle": "examples/unit/05_nesting_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "User Management"
+        },
+        {
+          "id": 5,
+          "name": "Permissions"
+        },
+        {
+          "id": 7,
+          "name": "Read-only users"
+        },
+        {
+          "id": 8,
+          "name": "cannot modify data"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/05_nesting_test.uc",
+      "bundle": "examples/unit/05_nesting_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "User Management"
+        },
+        {
+          "id": 5,
+          "name": "Permissions"
+        },
+        {
+          "id": 6,
+          "name": "allows admins to delete users"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/05_nesting_test.uc",
+      "bundle": "examples/unit/05_nesting_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "User Management"
+        },
+        {
+          "id": 2,
+          "name": "Registration"
+        },
+        {
+          "id": 4,
+          "name": "prevents duplicate emails"
+        }
+      ],
+      "index": 2
+    }
+  ],
+  "files": [
+    "examples/unit/05_nesting_test.uc"
+  ],
+  "duration_ms": 3,
+  "bundles": {
+    "examples/unit/05_nesting_test.uc": {
+      "total": 4,
+      "passed": 4,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

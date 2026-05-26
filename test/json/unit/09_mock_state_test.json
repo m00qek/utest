@@ -1,0 +1,141 @@
+{
+  "stats": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 6,
+          "name": "mock.reset() discards all active inject() layers"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 5,
+          "name": "mock.snapshot() and mock.restore() save and recover global state"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 4,
+          "name": "inject() layer is visible on top of a global patch"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 2,
+          "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 3,
+          "name": "mock.global.patch() intercepts the imported module via the shim"
+        }
+      ],
+      "index": 2
+    }
+  ],
+  "files": [
+    "examples/unit/09_mock_state_test.uc"
+  ],
+  "duration_ms": 7,
+  "seed": 134900581,
+  "bundles": {
+    "examples/unit/09_mock_state_test.uc": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

@@ -32,7 +32,7 @@ graph TD
 |---|---|
 | `src/utest.uc` | Public entry-point. Re-exports `describe`, `it`, `skip`, `xit`, `xdescribe`, `beforeEach`, `afterEach`, `setup`, `teardown`, `mock`, `assert`. |
 | `src/utest/dsl.uc` | Implements the test-definition DSL (`describe`, `it`, `beforeEach`, …). Builds the in-memory tree of groups and tests in the worker process. |
-| `src/utest/assert.uc` | Exports the `assert` object. Contains all assertion functions (`eq`, `ok`, `match`, `throws`, `ne`, `notOk`, `notMatch`, `notThrows`, `contains`) and the private `deep_equal` helper. |
+| `src/utest/assert.uc` | Exports the `assert` object (`throws`, `match`) and all combinator factories (`equals`, `contains`, `truthy`, `falsy`, `not`, `pred`, `regex`, `any`, `any_order`). |
 | `src/utest/cli.uc` | Command-line entry-point. Parses `ARGV`, merges config file with CLI flags, resolves bundle patterns, calls `utest.runner.run()`. |
 | `src/utest/runner.uc` | Coordinator orchestration: discovers files per bundle, invokes `MockManager.setup()` to generate shims, creates the reporter, runs execution loop, calls `reporter.summary()`. |
 | `src/utest/runner/discovery.uc` | Wraps `fs.glob()` with sort; returns the list of matching test files for a pattern. |
@@ -66,7 +66,7 @@ graph TD
 
 | Path | Responsibility |
 |---|---|
-| `test/runner.sh` | Regression harness entry-point. Iterates over `examples/*_test.uc`, resolves companion config files, invokes `test/verify.uc` inside Docker. |
+| `scripts/meta-test.sh` | Regression harness entry-point. Iterates over `examples/*_test.uc`, resolves companion config files, invokes `test/verify.uc` inside Docker. |
 | `test/verify.uc` | Single-file verifier. Runs one example with the json reporter, compares output against the stored baseline JSON, prints PASS or FAIL. |
 | `test/util.uc` | Shared utilities for the test harness (not for test files). |
 | `test/json/unit/` | Baseline JSON files for unit example tests, one per `examples/unit/*_test.uc`. |

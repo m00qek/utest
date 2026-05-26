@@ -6,9 +6,9 @@ Use `mock.global.patch()` when the code under test imports a module directly and
 
 ## When to use this instead of inject
 
-`import * as fs from 'fs'` in your production code gives that file a direct reference to the real module (or the shim, when mocks are configured). `mock.inject()` passes a proxy to the callback but leaves the shim's global state untouched, so calls made through the imported binding bypass the proxy.
+If the code under test imports a module directly and calls it through its own binding, use `mock.global.patch()`. If you only need to intercept calls made through the proxy object inside a callback, use `mock.inject()`.
 
-`mock.global.patch()` writes into the shim's global state. Any call through the imported binding — whether in the test file or in the module under test — is transparently intercepted.
+See [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md) for the full trade-off analysis.
 
 ---
 
@@ -31,16 +31,15 @@ return {
 Call `mock.global.patch()` with the module name and a state object. It returns the proxy. Call `mock.global.unpatch()` when done to clear global state:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert } from 'utest';
 import * as fs from 'fs';
 
 describe('global patch', () => {
     it('intercepts calls through the imported binding', () => {
         const m_fs = mock.global.patch('fs', { data: { '/tmp/setup.txt': 'setup' } });
 
-        assert.eq(m_fs.readfile('/tmp/setup.txt'), 'setup');
-        assert.eq(fs.readfile('/tmp/setup.txt'), 'setup', 'shim transparently intercepts global state');
+        assert.match('setup', m_fs.readfile('/tmp/setup.txt'));
+        assert.match('setup', fs.readfile('/tmp/setup.txt'), 'shim transparently intercepts global state');
 
         mock.global.unpatch('fs');
     });
@@ -57,10 +56,10 @@ After `unpatch()`, the proxy object returned by `patch()` reflects the cleared s
 
 ```js
 const m_fs = mock.global.patch('fs', { data: { '/tmp/setup.txt': 'setup' } });
-assert.eq(m_fs.readfile('/tmp/setup.txt'), 'setup');
+assert.match('setup', m_fs.readfile('/tmp/setup.txt'));
 mock.global.unpatch('fs');
 
-assert.eq(m_fs.readfile('/tmp/setup.txt'), null);
+assert.match(null, m_fs.readfile('/tmp/setup.txt'));
 ```
 
 ---

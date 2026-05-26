@@ -6,10 +6,13 @@ IMAGE_OPENWRT := openwrt/rootfs:$(SDK_ARCH)-openwrt-24.10
 
 test:
 	docker run --rm \
+		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
+		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
+		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \
 		-v $(CURDIR):/app \
 		-w /app \
 		$(IMAGE_OPENWRT) \
-		src/utest.sh $(ARGS)
+		utest $(ARGS)
 
 meta-test:
 	./scripts/meta-test.sh

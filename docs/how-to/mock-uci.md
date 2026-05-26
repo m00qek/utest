@@ -2,19 +2,7 @@
 
 Replace UCI reads and writes with an in-memory configuration tree so your tests run without a real UCI database.
 
----
-
-## Declare the module in the config file
-
-Add `uci` to the `mocks` table in the config file:
-
-```js
-return {
-    mocks: {
-        uci: null
-    }
-};
-```
+Declare `uci: null` in your `utest.config.uc` `mocks` table before using any of the patterns below. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 ---
 
@@ -59,9 +47,9 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 ```js
 mock.inject('uci', { data: uci_data }, (m_uci) => {
     let c = m_uci.cursor();
-    assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
-    assert.eq(c.get('luci-sso', 'default', 'missing_opt'), null);
-    assert.eq(c.get('no-pkg', 'sec', 'opt'), null);
+    assert.match('1', c.get('luci-sso', 'default', 'enabled'));
+    assert.match(null, c.get('luci-sso', 'default', 'missing_opt'));
+    assert.match(null, c.get('no-pkg', 'sec', 'opt'));
 });
 ```
 
@@ -75,9 +63,9 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 mock.inject('uci', { data: uci_data }, (m_uci) => {
     let c = m_uci.cursor();
     let sec = c.get_all('luci-sso', 'default');
-    assert.eq(sec['.type'], 'oidc');
-    assert.eq(sec.client_id, 'my-client');
-    assert.eq(c.get_all('luci-sso', 'no-sec'), null);
+    assert.match('oidc', sec['.type']);
+    assert.match('my-client', sec.client_id);
+    assert.match(null, c.get_all('luci-sso', 'no-sec'));
 });
 ```
 
@@ -91,7 +79,7 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 mock.inject('uci', { data: uci_data }, (m_uci) => {
     let names = [];
     m_uci.cursor().foreach('luci-sso', 'role', (s) => push(names, s['.name']));
-    assert.eq(names, ['admin_role']);
+    assert.match(['admin_role'], names);
 });
 ```
 
@@ -107,7 +95,7 @@ mock.inject('uci', { data: {
 }}, (m_uci) => {
     let c = m_uci.cursor();
     c.set('luci-sso', 'default', 'enabled', '1');
-    assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
+    assert.match('1', c.get('luci-sso', 'default', 'enabled'));
 });
 ```
 
@@ -124,8 +112,8 @@ mock.inject('uci', { data: {
 }}, (m_uci) => {
     let c = m_uci.cursor();
     c.delete('luci-sso', 'default', 'scope');
-    assert.eq(c.get('luci-sso', 'default', 'scope'), null);
-    assert.eq(c.get('luci-sso', 'default', 'enabled'), '1');
+    assert.match(null, c.get('luci-sso', 'default', 'scope'));
+    assert.match('1', c.get('luci-sso', 'default', 'enabled'));
 });
 
 // Delete an entire section
@@ -134,7 +122,7 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
     c.delete('luci-sso', 'admin_role');
     let names = [];
     c.foreach('luci-sso', 'role', (s) => push(names, s['.name']));
-    assert.eq(names, []);
+    assert.match([], names);
 });
 ```
 
@@ -146,7 +134,7 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ```js
 mock.inject('uci', { data: uci_data }, (m_uci) => {
-    assert.ok(m_uci.cursor().commit('luci-sso'));
+    assert.match(true, m_uci.cursor().commit('luci-sso'));
 });
 ```
 

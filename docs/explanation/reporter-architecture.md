@@ -2,9 +2,11 @@
 
 utest uses two separate reporter objects: a worker-side emitter that serialises
 events as JSON, and a coordinator-side renderer that turns those events into
-human- or machine-readable output. Understanding why they are split, and how the
-coordinator-side hook model works, makes the reporter interface easier to reason
-about when adding a new output format.
+human- or machine-readable output. The coordinator-side renderer is built
+around a shared base class (`ReporterBase`) that accumulates statistics and
+calls optional `render_*` hooks on the concrete reporter for each event type.
+Understanding why the two sides are split, and how the hook model works, makes
+the reporter interface easier to reason about when adding a new output format.
 
 ---
 
@@ -26,6 +28,18 @@ part that users can extend.
 The split means that all output formatting is centralised in one process and one
 module hierarchy, regardless of how many workers ran in parallel or how their
 output was interleaved.
+
+```mermaid
+graph LR
+    W1["Worker 1\nreporter.uc"] -->|"JSON lines\nstdout"| EX["Executor\n(coordinator)"]
+    W2["Worker 2\nreporter.uc"] -->|"JSON lines\nstdout"| EX
+    WN["Worker N\n…"] -->|"JSON lines\nstdout"| EX
+    EX --> BASE["ReporterBase\nstats · failures · timing"]
+    BASE --> DET["detailed.uc\nrender_* hooks"]
+    BASE --> COM["compact.uc\nrender_* hooks"]
+    BASE --> JSON["json.uc\nrender_* hooks"]
+    BASE --> CUST["custom reporter\nrender_* hooks"]
+```
 
 ---
 

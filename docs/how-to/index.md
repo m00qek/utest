@@ -28,6 +28,15 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 | [Mock HTTP requests](mock-uclient.md) | Return canned responses for outbound HTTP |
 | [Use strict mode](strict-mode.md) | Fail loudly on any unmocked call |
 | [Write a custom proxy](custom-proxy.md) | Build a proxy for a module with no built-in support |
+| [Inspect calls with spy()](spy.md) | Assert which functions were called, with which arguments |
+
+---
+
+## Assertions
+
+| Guide | Goal |
+| :--- | :--- |
+| [Use combinators with assert.match()](combinators.md) | Write flexible, composable assertions beyond exact equality |
 
 ---
 

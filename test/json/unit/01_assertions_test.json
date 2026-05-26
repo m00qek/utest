@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 9,
-    "passed": 9,
+    "total": 2,
+    "passed": 2,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -27,30 +27,8 @@
           "name": "Assertions"
         },
         {
-          "id": 2,
-          "name": "assert.match() passes for deeply equal values"
-        }
-      ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
           "id": 3,
-          "name": "not(equals()) passes when values differ"
+          "name": "assert.throws() passes when exception is thrown, with optional pattern"
         }
       ],
       "index": 2
@@ -71,154 +49,22 @@
           "name": "Assertions"
         },
         {
-          "id": 4,
-          "name": "truthy() passes for truthy values and fails otherwise"
+          "id": 2,
+          "name": "assert.match() passes for deeply equal values"
         }
       ],
-      "index": 3
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 5,
-          "name": "falsy() passes for falsy values and fails otherwise"
-        }
-      ],
-      "index": 4
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 6,
-          "name": "regex() passes when string matches pattern and fails otherwise"
-        }
-      ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 7,
-          "name": "not(regex()) passes when string does not match pattern"
-        }
-      ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 8,
-          "name": "assert.throws() passes when exception is thrown, with optional pattern"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 9,
-          "name": "assert.match() with contains() for substring and array containment"
-        }
-      ],
-      "index": 8
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 10,
-          "name": "assert.match() with contains() accepts a combinator element"
-        }
-      ],
-      "index": 9
+      "index": 1
     }
   ],
   "files": [
     "examples/unit/01_assertions_test.uc"
   ],
-  "duration_ms": 0,
-  "seed": 0,
+  "duration_ms": 5,
+  "seed": 763078580,
   "bundles": {
     "examples/unit/01_assertions_test.uc": {
-      "total": 9,
-      "passed": 9,
+      "total": 2,
+      "passed": 2,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

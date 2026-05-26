@@ -2,21 +2,7 @@
 
 Replace outgoing HTTP calls with canned responses so your tests run without a network connection.
 
----
-
-## Declare the module in the config file
-
-Add `uclient` to the `mocks` table in the config file:
-
-```js
-return {
-    mocks: {
-        uclient: null
-    }
-};
-```
-
-`uclient` is not available on all rootfs environments. Like `uloop`, the framework generates a stub shim from the built-in proxy's `api` list when the real module is absent.
+Declare `uclient: null` in your `utest.config.uc` `mocks` table. `uclient` is absent from some rootfs variants — declaring it is still enough because the framework generates a stub shim from the known API list. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the general setup steps.
 
 ---
 
@@ -27,8 +13,7 @@ Each key in the `data` map is a full request URL. The value describes the respon
 For a successful response, supply `{ status, headers, body }`:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert, falsy } from 'utest';
 
 describe('uclient mock', () => {
     it('fires callbacks for a successful response', () => {
@@ -43,7 +28,7 @@ describe('uclient mock', () => {
                 data_eof:    () => push(events, 'data_eof')
             });
             u.request('GET', {});
-            assert.eq(events, ['header_done', 'data_read', 'data_eof']);
+            assert.match(['header_done', 'data_read', 'data_eof'], events);
         });
     });
 });
@@ -60,7 +45,7 @@ mock.inject('uclient', {
         error: (conn, code) => { got_error = code; }
     });
     u.request('GET', {});
-    assert.eq(got_error, 'connection_refused');
+    assert.match('connection_refused', got_error);
 });
 ```
 
@@ -98,8 +83,8 @@ mock.inject('uclient', {
         data_eof:  () => {}
     });
     u.request('GET', {});
-    assert.eq(got_status, 201);
-    assert.eq(got_headers['x-custom'], 'yes');
+    assert.match(201, got_status);
+    assert.match('yes', got_headers['x-custom']);
 });
 ```
 
@@ -124,7 +109,7 @@ mock.inject('uclient', {
         data_eof:    () => {}
     });
     u.request('GET', {});
-    assert.eq(chunks, ['hello world']);
+    assert.match(['hello world'], chunks);
 });
 ```
 
@@ -146,7 +131,7 @@ mock.inject('uclient', {
         data_eof:    () => {}
     });
     u.request('GET', {});
-    assert.notOk(data_read_fired);
+    assert.match(falsy(), data_read_fired);
 });
 ```
 
@@ -161,7 +146,7 @@ mock.inject('uclient', {
     behavior: { connect: () => false }
 }, (m_uclient) => {
     let u = m_uclient.new('http://example.com/', null, {});
-    assert.eq(u.connect(), false);
+    assert.match(false, u.connect());
 });
 ```
 

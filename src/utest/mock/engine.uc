@@ -118,13 +118,24 @@ function build_proxy(name, real) {
 
 	// Module-specific proxy factory (e.g. utest/mock/proxy/fs.uc)
 	let factory;
+	let m = null;
 	try {
-		let m = require('utest.mock.proxy.' + name);
+		m = require('utest.mock.proxy.' + name);
 		factory = m ? m.create : null;
 	} catch(e) {
 		factory = null;
 	}
-	if (factory) return factory(name, real, ctx);
+	if (factory) {
+		const proxy = factory(name, real, ctx);
+		// Pre-initialize calls for declared API methods so spy(proxy).calls.X is
+		// always [] and never undefined, even before the first call is made.
+		if (m && type(m.api) == 'array') {
+			const calls = internal_obj.get_calls(name);
+			for (let fn_name in m.api)
+				if (!calls[fn_name]) calls[fn_name] = [];
+		}
+		return proxy;
+	}
 
 	// Generic proxy: behavior overrides, passthrough to real otherwise
 	return ctx.base();
@@ -145,6 +156,7 @@ mock_obj.snapshot = function() {
 			fns:    { ...reg.global.fns },
 			strict: reg.global.strict,
 			proxy:  reg.global.proxy
+			// calls intentionally omitted — restore() always resets them to {}
 		};
 	}
 	return snap;

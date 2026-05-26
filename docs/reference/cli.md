@@ -13,7 +13,7 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `--pattern=<glob>` | `-p` | string | `*_test.uc` | Glob pattern appended to bundle directories to find test files. |
 | `--jobs=<n>` | `-j` | integer | `1` | Number of parallel worker processes. |
 | `--filter=<regex>` | `-f` | string | — | Run only tests whose full name matches the regex. |
-| `--config=<path>` | `-c` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. |
+| `--config=<path>` | `-c` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared — no error is raised. |
 | `--seed=<n>` | — | integer | current timestamp sub-second | Shuffle seed for reproducible test ordering. Must be a non-negative integer. |
 | `--timeout=<s>` | — | integer | `60` | Worker timeout in seconds. A worker that exceeds this limit is killed. |
 | `--no-color` | — | boolean | — | Disable ANSI colour in reporter output. |

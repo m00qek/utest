@@ -103,20 +103,25 @@ If the failure disappears, the tests share state that needs to be isolated per t
 
 ---
 
-## `assert.eq` reports a mismatch but the values look identical
+## `assert.match` reports a mismatch but the values look identical
 
-**Symptom**: A failing test prints both the actual and expected values, and they appear to be the same string or number.
+**Symptom**: A failing test prints both the expected and actual values, and they appear to be the same string or number.
 
-**Cause**: The values differ in type. ucode distinguishes `"5"` (string) from `5` (integer). `assert.eq` uses structural equality, so type mismatches fail even when the printed representations look the same.
+**Cause**: The values differ in type. ucode distinguishes `"5"` (string) from `5` (integer). `assert.match` uses structural equality, so type mismatches fail even when the printed representations look the same.
 
 **Fix**: Check the types explicitly. `type()` returns the type name as a string:
 
 ```js
-assert.eq(type(actual), "int");
-assert.eq(actual, 5);
+assert.match("int", type(actual));
+assert.match(5, actual);
 ```
 
-Alternatively, use `assert.ok` with an explicit comparison that coerces as intended.
+Alternatively, use `pred()` with an explicit comparison that coerces as intended:
+
+```js
+import { assert, pred } from 'utest';
+assert.match(pred(x => x == 5), actual, 'expected 5 (any type)');
+```
 
 ---
 

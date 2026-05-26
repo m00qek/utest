@@ -21,6 +21,28 @@ graph LR
 
 ---
 
+## The layer model
+
+`mock.inject()` pushes a new layer onto a per-module stack. The proxy searches the stack top-down on every call, then falls back to global state (set by `mock.global.patch()`). When the callback exits the layer is popped, restoring the state beneath it automatically.
+
+```mermaid
+graph TD
+    subgraph "module registry (e.g. 'fs')"
+        L2["layer 2  ← innermost inject()"]
+        L1["layer 1  ← outer inject()"]
+        GL["global state  ← mock.global.patch()"]
+        REAL["real module"]
+
+        L2 -. "key not found → fall through" .-> L1
+        L1 -. "key not found → fall through" .-> GL
+        GL -. "no proxy / non-strict → fall through" .-> REAL
+    end
+
+    T["Test body"] -->|"m_fs.readfile('/a')"| L2
+```
+
+---
+
 ## Why three layers?
 
 Each part has a single, narrow responsibility.
@@ -48,4 +70,4 @@ The alternative — a flat mutable map — would require explicit save/restore i
 - Term definitions: [Reference: Glossary](../reference/glossary.md)
 - How shims are generated at startup: [About shim generation](shim-generation.md)
 - How inject() and patch() differ at the shim level: [About mock.inject() vs mock.global.patch()](inject-vs-patch.md)
-- The layer stack and registry internals: [About the mock engine](mock-engine.md)
+- The layer stack and registry internals (contributor-level detail): [About the mock engine](mock-engine.md)

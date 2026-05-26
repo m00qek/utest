@@ -1,143 +1,52 @@
 # Assertions Reference
 
-The `assert` object is imported from `'utest.assert'`.
+The `assert` object and all combinator factories are exported from `'utest'`. Import each symbol by name:
 
 ```js
-import { assert } from 'utest.assert';
+import { assert } from 'utest';                                    // assertion methods
+import { contains, truthy, falsy, any } from 'utest';             // combinator factories
+// All factories are imported the same way — see the full list below.
 ```
 
 All assertions call `die()` on failure. They do not return a value. A passing assertion is silent.
 
-Equality checks use deep structural equality: arrays and objects are compared recursively. Strict type comparison (`===`) is used for scalars. Circular references are handled safely.
-
 ---
 
-### `assert.eq(actual, expected, msg)`
+### `assert.match(expected, actual, msg)`
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
+| `expected` | any | A combinator, a plain value, or a nested structure mixing both. |
 | `actual` | any | Value under test. |
-| `expected` | any | Expected value. |
-| `msg` | string \| null | Optional failure message. |
+| `msg` | string \| null | Optional failure message overriding the combinator's own message. |
 
-Fails when `actual` is not deeply equal to `expected`.
+Structural matching assertion. Recursively compares `actual` against `expected`:
 
-Failure message format:
-```
-<msg or "Assertion failed">
-  Actual:   <JSON of actual>
-  Expected: <JSON of expected>
-```
+- **Combinators** (values returned by the factories below) — delegates to the combinator's own `match` logic.
+- **Plain objects** — compared key-for-key with exact key count (no extra keys allowed). Values may themselves be combinators.
+- **Plain arrays** — compared element-by-element in order with exact length. Elements may be combinators.
+- **Scalars** — compared with deep equality.
 
 ```js
-assert.eq({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
-assert.eq(result, 42, "counter must be 42");
-```
+import { assert, contains, any_order, any, regex, equals } from 'utest';
 
----
+// Plain value — deep equality check
+assert.match('ok', status);
 
-### `assert.ne(actual, expected, msg)`
+// Partial object — only listed keys are checked
+assert.match(contains({ code: 200 }), response);
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `actual` | any | Value under test. |
-| `expected` | any | Value that `actual` must not equal. |
-| `msg` | string \| null | Optional failure message. |
+// Nested combinators
+assert.match(contains({
+    code: 200,
+    body: contains({ status: 'ok' })
+}), response);
 
-Fails when `actual` is deeply equal to `expected`.
-
-Failure message format:
-```
-<msg or "Expected values to differ">
-  Value: <JSON of actual>
-```
-
-```js
-assert.ne(status, 'error');
-```
-
----
-
-### `assert.ok(val, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `val` | any | Value that must be truthy. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `val` is falsy (`false`, `null`, `0`, `""`, or `undefined`).
-
-Failure message format:
-```
-<msg or "Expected truthy value, got <JSON of val>">
-```
-
-```js
-assert.ok(is_connected());
-assert.ok(length(items) > 0, "items must not be empty");
-```
-
----
-
-### `assert.notOk(val, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `val` | any | Value that must be falsy. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `val` is truthy.
-
-Failure message format:
-```
-<msg or "Expected falsy value, got <JSON of val>">
-```
-
-```js
-assert.notOk(has_error());
-```
-
----
-
-### `assert.matches(str, regex, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `str` | string | String to test. Must be of type `string`; a non-string causes an immediate fatal error. |
-| `regex` | regexp | Pattern that `str` must match. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `str` does not match `regex`.
-
-Failure message format:
-```
-<msg or "Expected '<str>' to match <regex>">
-```
-
-```js
-assert.matches("OpenWrt 24.10", /24\.10/);
-assert.matches(body, /^{/, "body must be JSON");
-```
-
----
-
-### `assert.notMatches(str, regex, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `str` | string | String to test. Must be of type `string`; a non-string causes an immediate fatal error. |
-| `regex` | regexp | Pattern that `str` must not match. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `str` matches `regex`.
-
-Failure message format:
-```
-<msg or "Expected '<str>' not to match <regex>">
-```
-
-```js
-assert.notMatches(log_output, /ERROR/);
+// Array with flexible matching
+assert.match(any_order([
+    contains({ id: 1 }),
+    contains({ id: 2 })
+]), items);
 ```
 
 ---
@@ -170,178 +79,132 @@ assert.throws(() => load_config("missing.uc"), /not found/, "missing config must
 
 ---
 
-### `assert.notThrows(fn, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `fn` | function | Function expected to complete without throwing. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `fn` throws any exception. The exception's string representation is appended to the failure message.
-
-Failure message format:
-```
-<msg or "Expected no exception but got: <e>">
-```
-
-```js
-assert.notThrows(() => parse_config(valid_input));
-assert.notThrows(() => connect(), "connection must not throw");
-```
-
----
-
-### `assert.contains(haystack, needle, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `haystack` | string \| array | Value to search within. Must be a string or array; any other type causes an immediate fatal error. |
-| `needle` | string \| any | Substring to find (when `haystack` is a string), or element to find (when `haystack` is an array). Array element comparison uses deep structural equality. |
-| `msg` | string \| null | Optional failure message. |
-
-Fails when `needle` is not found in `haystack`.
-
-Failure message format — string:
-```
-<msg or "Expected string to contain '<needle>'">
-```
-
-Failure message format — array:
-```
-<msg or "Expected array to contain <JSON of needle>">
-```
-
-```js
-assert.contains("OpenWrt 24.10", "24.10");
-assert.contains(interfaces, "eth0", "eth0 must be listed");
-assert.contains(results, { status: "ok" });
-```
-
----
-
-### `assert.match(actual, expected, msg)`
-
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `actual` | any | Value under test. |
-| `expected` | any | A combinator, a plain value, or a nested structure mixing both. |
-| `msg` | string \| null | Optional failure message overriding the combinator's own message. |
-
-Structural matching assertion. Recursively compares `actual` against `expected`:
-
-- **Combinators** (values returned by the factories below) — delegates to the combinator's own `match` logic.
-- **Plain objects** — compared key-for-key with exact key count (no extra keys allowed). Values may themselves be combinators.
-- **Plain arrays** — compared element-by-element in order with exact length. Elements may be combinators.
-- **Scalars** — compared with deep equality.
-
-```js
-import { assert } from 'utest.assert';
-import { has, contains, any_order, any, matches, equals } from 'utest';
-
-// Plain value — behaves like assert.eq
-assert.match(status, 'ok');
-
-// Partial object — only listed keys are checked
-assert.match(response, has({ code: 200 }));
-
-// Nested combinators
-assert.match(response, has({
-    code: 200,
-    body: has({ status: 'ok' })
-}));
-
-// Array with flexible matching
-assert.match(items, any_order([
-    has({ id: 1 }),
-    has({ id: 2 })
-]));
-```
-
----
-
 ## Combinator factories
 
 Combinators are composable predicates used with `assert.match`. Import them from `'utest'`:
 
 ```js
-import { equals, contains, has, any_order, any, matches } from 'utest';
+import { equals, contains, truthy, falsy, not, pred, regex, any, any_order } from 'utest';
 ```
 
 Each factory returns a combinator object. Combinators can be nested inside each other and inside the plain-value `expected` argument of `assert.match`.
 
 ---
 
-### `equals(val, msg)`
+### `equals(expected)`
 
-Passes when `actual` is deeply equal to `val`.
+Passes when `actual` is deeply equal to `expected`.
 
 ```js
-assert.match(result, equals(42));
-assert.match(tags, any_order([equals('a'), equals('b')]));
+assert.match(equals(42), result);
+assert.match(any_order([equals('a'), equals('b')]), tags);
 ```
 
 Plain scalars inside `assert.match` behave identically — `equals` is most useful inside other combinators.
 
 ---
 
-### `contains(val, msg)`
+### `contains(expected)`
 
-Passes when `actual` contains `val`.
+A partial-match combinator with three modes:
 
-- When `actual` is a **string**: passes when `val` is a substring.
-- When `actual` is an **array**: passes when any element is deeply equal to `val`.
+- **String `actual`**: passes when `expected` is a substring of `actual`.
+- **Array `actual`**: passes when `expected` (an array) is an ordered subsequence of `actual`. Elements of `expected` may themselves be combinators.
+- **Object `actual`**: passes when `actual` contains at least all the keys in `expected`, with matching values. Extra keys in `actual` are ignored. Values in `expected` may be combinators.
 
 ```js
-assert.match(log_line, contains("ERROR"));
-assert.match(items, contains({ id: 3 }));
+assert.match(contains("ERROR"), log_line);
+assert.match(contains([1, 3]), [1, 2, 3]);
+assert.match(contains({ code: 200 }), response);
+assert.match(contains({ name: contains('Alice') }), user);
 ```
 
 ---
 
-### `has(obj, msg)`
+### `truthy()`
 
-Passes when `actual` is an object that contains at least all the keys in `obj`, with matching values. Extra keys in `actual` are ignored.
-
-Values in `obj` may be plain values (compared with `equals`) or nested combinators.
+Passes when `actual` is truthy (`true`, non-zero number, non-empty string, object, etc.).
 
 ```js
-assert.match(response, has({ code: 200 }));
-assert.match(user, has({ role: 'admin', name: contains('Alice') }));
+assert.match(truthy(), is_connected);
+assert.match(truthy(), items);
 ```
 
 ---
 
-### `any_order(arr, msg)`
+### `falsy()`
 
-Passes when `actual` is an array of the same length as `arr` whose elements match the elements of `arr` in any order.
-
-Elements of `arr` may be plain values (wrapped in `equals`) or combinators. Matching is greedy: each matcher claims the first element it matches.
+Passes when `actual` is falsy (`false`, `null`, `0`, `""`, or `undefined`).
 
 ```js
-assert.match(result, any_order([1, 2, 3]));
-assert.match(events, any_order([
-    has({ type: 'connect' }),
-    has({ type: 'auth' })
-]));
+assert.match(falsy(), error_flag);
+assert.match(falsy(), m_fs.readfile('/absent'));
 ```
 
 ---
 
-### `any(msg)`
+### `not(combinator)`
 
-Always passes, regardless of what `actual` is. Use it as a wildcard inside larger structures.
+Inverts a combinator — passes when `combinator` would fail.
 
 ```js
-assert.match(record, has({ id: any(), name: 'Alice' }));
+assert.match(not(equals(4)), 5);
+assert.match(not(regex(/^\d+/)), 'hello');
+assert.match(not(contains({ code: 200 })), { code: 404 });
 ```
 
 ---
 
-### `matches(re, msg)`
+### `pred(fn)`
+
+Passes when the predicate function `fn(actual)` returns a truthy value.
+
+```js
+assert.match(pred(x => x % 2 == 0), 4);
+assert.match(contains([pred(x => x > 2)]), [1, 2, 3]);
+```
+
+When the predicate fails, the `msg` argument of `assert.match` is used as the failure message if provided; otherwise the default is `"Predicate failed for <value>"`.
+
+```js
+assert.match(pred(x => x % 2 == 0), 3, 'expected even');
+// → fails with: expected even
+```
+
+---
+
+### `regex(re)`
 
 Passes when `actual` is a string that matches the regular expression `re`.
 
 ```js
-assert.match(version, matches(/^\d+\.\d+/));
-assert.match(log, has({ message: matches(/connected/) }));
+assert.match(regex(/^\d+\.\d+/), version);
+assert.match(contains({ message: regex(/connected/) }), log);
+```
+
+---
+
+### `any_order(expected)`
+
+Passes when `actual` is an array of the same length as `expected` whose elements match the elements of `expected` in any order.
+
+Elements of `expected` may be plain values (compared with `equals`) or combinators. The matcher backtracks: a wildcard (`any()`) will not permanently block a later specific matcher from claiming its element.
+
+```js
+assert.match(any_order([1, 2, 3]), [3, 1, 2]);
+assert.match(any_order([
+    contains({ type: 'connect' }),
+    contains({ type: 'auth' })
+]), events);
+```
+
+---
+
+### `any()`
+
+Always passes, regardless of what `actual` is. Use it as a wildcard inside larger structures.
+
+```js
+assert.match(contains({ id: any(), name: 'Alice' }), record);
+assert.match(any_order([any(), 1]), [1, 2]);
 ```

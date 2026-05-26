@@ -6,7 +6,7 @@ In this tutorial, we will make a small, self-contained change to the utest frame
 
 ## What we will build
 
-A new assertion, `assert.notNull`, that is an alias for the existing `assert.ok`. We will add it to `src/utest/assert.uc`, cover it with a test in `examples/unit/01_assertions_test.uc`, regenerate the JSON baseline for that example, and confirm that the regression suite is green.
+A new combinator factory, `not_null()`, that passes when the actual value is not `null`. We will add it to `src/utest/assert.uc`, re-export it from `src/utest.uc`, cover it with a test in `examples/unit/01_assertions_test.uc`, regenerate the JSON baseline for that example, and confirm that the regression suite is green.
 
 ---
 
@@ -31,7 +31,7 @@ cd utest
 Before touching anything, confirm that the baseline is clean:
 
 ```bash
-./test/runner.sh
+make -f dev.mk meta-test
 ```
 
 The script runs every example in `examples/` through the JSON reporter and compares the output against the stored baselines in `test/json/`. A passing run ends with:
@@ -48,85 +48,100 @@ If any baseline mismatches, the script prints `FAILURE: Regressions found in: ..
 
 ---
 
-## Step 3 — Add `assert.notNull`
+## Step 3 — Add `not_null()`
 
-Open `src/utest/assert.uc`. The file exports a single `assert` object. Find the `notOk` function near the end of the object literal:
-
-```js
-    notOk: function(val, msg) {
-        if (val) {
-            die(msg || sprintf("Expected falsy value, got %s", sprintf('%J', val)));
-        }
-    },
-```
-
-Add `notNull` immediately after it, before the closing `notMatch` entry:
+Open `src/utest/assert.uc`. The file exports the `assert` object and a set of combinator factories (`equals`, `contains`, `truthy`, `falsy`, and others). Add `not_null` after the `falsy` factory:
 
 ```js
-    notOk: function(val, msg) {
-        if (val) {
-            die(msg || sprintf("Expected falsy value, got %s", sprintf('%J', val)));
+export function not_null() {
+    return {
+        match: function(actual) {
+            if (actual !== null)
+                return { ok: true };
+            return { ok: false, message: 'Expected a non-null value' };
         }
-    },
-
-    notNull: function(val, msg) {
-        if (!val) {
-            die(msg || sprintf("Expected non-null value, got %s", sprintf('%J', val)));
-        }
-    },
+    };
+}
 ```
 
-`assert.notNull` behaves identically to `assert.ok` — it fails when `val` is falsy. The separate name makes tests more readable when the intent is specifically to check that a value is not `null`.
+A combinator factory returns an object with a `match(actual)` method. Returning `{ ok: true }` signals success; returning `{ ok: false, message: '...' }` signals failure and provides the error text that `assert.match` will display. Custom failure messages are passed as the third argument to `assert.match`, not to the factory itself.
 
 ---
 
-## Step 4 — Write a test for the new assertion
+## Step 4 — Re-export from `utest.uc`
+
+Open `src/utest.uc`. It re-exports each combinator individually using explicit `export const` statements. Two edits are needed.
+
+First, add `not_null as _not_null` to the existing destructuring import on line 4:
+
+```js
+// existing line 4 — add not_null as _not_null to the end
+import { assert as _assert, equals as _equals, /* … */ regex as _regex,
+         not_null as _not_null } from 'utest.assert';
+```
+
+Then add the export after the other combinator exports:
+
+```js
+export const not_null = _not_null;
+```
+
+After both edits, users can import it from `'utest'` as `import { not_null } from 'utest'`.
+
+---
+
+## Step 5 — Write a test for the new combinator
 
 Open `examples/unit/01_assertions_test.uc` and add a new `it` block inside the existing `describe("Assertions", ...)` block:
 
 ```js
-    it("checks for non-null values with assert.notNull()", () => {
-        assert.notNull("hello");
-        assert.notNull(42);
-        assert.notNull({ key: "value" });
+    it("not_null() passes for non-null values and fails for null", () => {
+        assert.match(not_null(),    "hello");
+        assert.match(not_null(),         42);
+        assert.match(not_null(), { key: 1 });
+        assert.throws(
+            () => assert.match(not_null(), null),
+            /non-null/
+        );
     });
+```
+
+Update the import at the top of the file to include `not_null`:
+
+```js
+import { describe, it, assert, not_null } from 'utest';
 ```
 
 The full describe block should now look like this:
 
 ```js
+import { describe, it, assert, not_null } from 'utest';
+
 describe("Assertions", () => {
-    it("checks for deep equality with assert.eq()", () => {
-        const actual = { a: 1, b: [2, 3] };
-        const expected = { a: 1, b: [2, 3] };
-
-        assert.eq(actual, expected, "Objects should be deeply equal");
+    it("assert.match() passes for deeply equal values", () => {
+        assert.match({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
+        assert.throws(() => assert.match(2, 1), /Expected/);
+        assert.throws(() => assert.match(2, 1, 'custom'), /custom/);
+        assert.throws(() => assert.match({ x: 1, y: 2 }, { x: 1 }), /keys/);
     });
 
-    it("checks for truthiness with assert.ok()", () => {
-        assert.ok(true);
-        assert.ok(length("hello") > 0);
-        assert.ok({ some: "data" });
+    it("assert.throws() passes when exception is thrown, with optional pattern", () => {
+        assert.throws(() => { let x = null; return x.property; }, /null/);
+        assert.throws(() => assert.throws(() => {}), /Expected exception/);
+        assert.throws(
+            () => assert.throws(() => die('boom'), /xyz/),
+            /did not match/
+        );
     });
 
-    it("matches strings against regex with assert.matches()", () => {
-        assert.matches("OpenWrt 24.10", /24\.10/);
-        assert.matches("utest@v1.0.0", /^utest/);
-    });
-
-    it("verifies exceptions with assert.throws()", () => {
-        const block = () => {
-            let x = null;
-            return x.property;
-        };
-
-        assert.throws(block, /left-hand side is not a function|null/);
-    });
-
-    it("checks for non-null values with assert.notNull()", () => {
-        assert.notNull("hello");
-        assert.notNull(42);
-        assert.notNull({ key: "value" });
+    it("not_null() passes for non-null values and fails for null", () => {
+        assert.match(not_null(),    "hello");
+        assert.match(not_null(),         42);
+        assert.match(not_null(), { key: 1 });
+        assert.throws(
+            () => assert.match(not_null(), null),
+            /non-null/
+        );
     });
 });
 ```
@@ -137,16 +152,16 @@ Run the example once to make sure it passes before regenerating the baseline:
 make -f dev.mk test ARGS="examples/unit/01_assertions_test.uc"
 ```
 
-You should see five passing tests.
+You should see three passing tests.
 
 ---
 
-## Step 5 — Regenerate the baseline
+## Step 6 — Regenerate the baseline
 
 The regression suite compares live JSON output against the files in `test/json/`. Because you added a test, the baseline file is now stale and must be updated:
 
 ```bash
-make -f dev.mk test ARGS="--reporter json examples/unit/01_assertions_test.uc" \
+make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
@@ -155,10 +170,10 @@ make -f dev.mk test ARGS="--reporter json examples/unit/01_assertions_test.uc" \
 
 ---
 
-## Step 6 — Run the regression suite again
+## Step 7 — Run the regression suite again
 
 ```bash
-./test/runner.sh
+make -f dev.mk meta-test
 ```
 
 The suite should end with:
@@ -173,8 +188,9 @@ If it does, your patch is complete and self-consistent.
 
 ## What we just built
 
-- A new `assert.notNull` entry in `src/utest/assert.uc`, added after `notOk`.
-- A new `it` block in `examples/unit/01_assertions_test.uc` that exercises the new assertion.
+- A new `not_null()` combinator factory in `src/utest/assert.uc`.
+- A re-export in `src/utest.uc` (import alias + `export const`) so users can import it from `'utest'`.
+- A new `it` block in `examples/unit/01_assertions_test.uc` that exercises the new combinator.
 - An updated JSON baseline at `test/json/unit/01_assertions_test.json`.
 - A full regression run confirming nothing regressed.
 

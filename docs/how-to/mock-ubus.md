@@ -2,19 +2,7 @@
 
 Replace ubus IPC calls with canned responses so your tests run without a running ubus daemon.
 
----
-
-## Declare the module in the config file
-
-Add `ubus` to the `mocks` table in the config file:
-
-```js
-return {
-    mocks: {
-        ubus: null
-    }
-};
-```
+Declare `ubus: null` in your `utest.config.uc` `mocks` table before using any of the patterns below. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 ---
 
@@ -23,8 +11,7 @@ return {
 Each key in the `data` map uses `'object:method'` format. The value is returned as the result of `conn.call(object, method, args)`:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert, truthy, falsy } from 'utest';
 
 describe('ubus mock', () => {
     it('returns mocked data for object:method key', () => {
@@ -32,7 +19,7 @@ describe('ubus mock', () => {
             data: { 'system:board': { model: 'Test Router', hostname: 'OpenWrt' } }
         }, (m_ubus) => {
             let conn = m_ubus.connect();
-            assert.eq(conn.call('system', 'board', {}), { model: 'Test Router', hostname: 'OpenWrt' });
+            assert.match({ model: 'Test Router', hostname: 'OpenWrt' }, conn.call('system', 'board', {}));
         });
     });
 });
@@ -49,8 +36,8 @@ mock.inject('ubus', {
     data: { 'network': { up: true } }
 }, (m_ubus) => {
     let conn = m_ubus.connect();
-    assert.ok(conn.call('network', 'status', {}).up);
-    assert.ok(conn.call('network', 'get_status', {}).up);
+    assert.match(truthy(), conn.call('network', 'status', {}).up);
+    assert.match(truthy(), conn.call('network', 'get_status', {}).up);
 });
 ```
 
@@ -65,8 +52,8 @@ mock.inject('ubus', {
     data: { 'network:status': (args) => ({ up: args.interface == 'wan' }) }
 }, (m_ubus) => {
     let conn = m_ubus.connect();
-    assert.ok(conn.call('network', 'status', { interface: 'wan' }).up);
-    assert.notOk(conn.call('network', 'status', { interface: 'lan' }).up);
+    assert.match(truthy(), conn.call('network', 'status', { interface: 'wan' }).up);
+    assert.match(falsy(), conn.call('network', 'status', { interface: 'lan' }).up);
 });
 ```
 
@@ -78,7 +65,7 @@ In non-strict mode, calling an unmocked object/method returns `null`:
 
 ```js
 mock.inject('ubus', { data: {} }, (m_ubus) => {
-    assert.eq(m_ubus.connect().call('unmocked', 'method', {}), null);
+    assert.match(null, m_ubus.connect().call('unmocked', 'method', {}));
 });
 ```
 
@@ -92,7 +79,7 @@ Supply a `behavior.call` function to intercept all `call()` invocations regardle
 mock.inject('ubus', {
     behavior: { call: (obj, method, args) => ({ routed: obj + '.' + method }) }
 }, (m_ubus) => {
-    assert.eq(m_ubus.connect().call('system', 'board', {}).routed, 'system.board');
+    assert.match('system.board', m_ubus.connect().call('system', 'board', {}).routed);
 });
 ```
 

@@ -9,6 +9,9 @@ run_verify() {
     expected=$2
     extra_flags=${3:-""}
     docker run --rm \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
         -v "$PROJECT_ROOT:/app" \
         -w /app \
         openwrt/rootfs:x86-64-openwrt-24.10 \
@@ -34,7 +37,7 @@ while read f; do
 
     # Pass custom bundle name for the bundle test
     bundle_arg="$f"
-    if [ "$rel_path" = "unit/07_bundles_test.uc" ]; then
+    if [ "$rel_path" = "unit/08_bundles_test.uc" ]; then
         bundle_arg="MyBundle:$f"
     fi
 

@@ -9,8 +9,7 @@ Add `strict: true` to the state object so the mock dies immediately when code ca
 Pass `strict: true` alongside `data` and/or `behavior`:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert } from 'utest';
 
 describe('strict mode', () => {
     it('dies on an unmocked ubus call', () => {
@@ -52,31 +51,29 @@ assert.throws(() => {
 
 ---
 
-## Start without strict mode, then add it
+## Discover required keys before enabling strict mode
 
-When you are unsure which keys your code accesses, run once without strict mode to let the code exercise freely and observe the behaviour. Then enable strict mode and seed only the keys you confirmed it needs:
+If you are unsure which keys your code accesses, run without strict mode first. Any unmocked key returns `null` silently, so the code runs freely and you can observe its behaviour. Then enable strict mode and seed exactly the keys you confirmed it needs:
 
 ```js
-// First pass — no strict, learn what the code reads
+// Without strict — unmocked keys return null silently
 mock.inject('uci', {
     data: { 'network': { 'lan': { '.type': 'interface', 'ipaddr': '192.168.1.1' } } }
 }, (m_uci) => {
     const result = get_lan_summary(m_uci.cursor());
-    // If get_lan_summary also reads 'proto', it silently gets null here.
 });
 
-// Second pass — strict, declare the full set
+// With strict — every accessed key must be seeded
 mock.inject('uci', {
     strict: true,
     data: { 'network': { 'lan': { '.type': 'interface', 'ipaddr': '192.168.1.1', 'proto': 'static' } } }
 }, (m_uci) => {
     const result = get_lan_summary(m_uci.cursor());
-    assert.eq(result.ip, '192.168.1.1');
-    // Any key beyond what is seeded will now die() with: strict mock: 'uci.get' is not mocked
+    assert.match('192.168.1.1', result.ip);
 });
 ```
 
-The data map then doubles as a specification of what the code is expected to access.
+The data map then doubles as a specification of what the code under test is expected to access.
 
 ---
 
@@ -91,7 +88,7 @@ mock.inject('ubus', {
 }, (m_ubus) => {
     let conn = m_ubus.connect();
     // This call is allowed — the key is seeded:
-    assert.eq(conn.call('system', 'board', {}).model, 'Test Router');
+    assert.match('Test Router', conn.call('system', 'board', {}).model);
 
     // Any call to an unseeded object/method would die here.
 });

@@ -93,3 +93,21 @@ See [About strict mode](../explanation/strict-mode.md).
 utest runs each test file in its own subprocess (the **worker**). A separate process (the **coordinator**) spawns workers, reads their JSON output, and feeds events to the reporter.
 
 See [About the worker/coordinator architecture](../explanation/worker-coordinator.md).
+
+---
+
+## Spy
+
+A **spy** is the call log attached to every proxy object. `spy(proxy)` returns an object whose `calls` map records every method invocation — method name → array of argument arrays. It is used with `assert.match` and combinators to assert that specific functions were called, with specific arguments, and in a specific order.
+
+See [Reference: Mock API — spy](mock-api.md#call-inspection) and [How-to: Inspect calls with spy()](../how-to/spy.md).
+
+---
+
+## Combinator
+
+A **combinator** is a composable predicate object used with `assert.match`. It is created by a factory function (`contains`, `truthy`, `falsy`, `any`, etc.) and has a single `match(actual)` method that returns `{ ok: true }` on success or `{ ok: false, message: '...' }` on failure.
+
+Combinators can be nested inside each other and inside plain object or array values passed to `assert.match`. This lets you build complex assertions from simple, reusable parts — for example, `contains({ code: 200, body: regex(/ok/) })` is a single combinator composed from two others.
+
+See [Reference: Assertions — Combinator factories](assertions.md#combinator-factories).

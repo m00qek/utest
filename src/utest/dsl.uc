@@ -27,8 +27,10 @@ export function describe(name, fn) {
 	};
 	push(parent.groups, group);
 	push(stack, group);
-	fn();
+	let _err = null;
+	try { fn(); } catch(e) { _err = e; }
 	pop(stack);
+	if (_err != null) die(_err);
 };
 
 export function it(name, fn) {

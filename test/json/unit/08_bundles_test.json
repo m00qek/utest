@@ -1,0 +1,52 @@
+{
+  "stats": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/08_bundles_test.uc",
+      "bundle": "MyBundle",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Bundles"
+        },
+        {
+          "id": 2,
+          "name": "demonstrates how tests are grouped into bundles"
+        }
+      ],
+      "index": 1
+    }
+  ],
+  "files": [
+    "examples/unit/08_bundles_test.uc"
+  ],
+  "duration_ms": 3,
+  "bundles": {
+    "MyBundle": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

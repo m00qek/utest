@@ -50,6 +50,7 @@ nav:
       - Overview: tutorials/index.md
       - Writing your first test: tutorials/user/first-test.md
       - Writing your first mock: tutorials/user/first-mock.md
+      - Writing flexible assertions: tutorials/user/first-combinators.md
       - Contributing your first patch: tutorials/contributor/first-patch.md
   - How-to Guides:
       - Overview: how-to/index.md
@@ -68,6 +69,9 @@ nav:
           - Mock HTTP requests: how-to/mock-uclient.md
           - Use strict mode: how-to/strict-mode.md
           - Write a custom proxy: how-to/custom-proxy.md
+          - Inspect calls with spy(): how-to/spy.md
+      - Assertions:
+          - Use combinators with assert.match(): how-to/combinators.md
       - Contributing:
           - Add a built-in proxy: how-to/contributor/add-proxy.md
           - Add an assertion: how-to/contributor/add-assertion.md

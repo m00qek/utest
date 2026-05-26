@@ -16,7 +16,7 @@ entire test run with it.
 Running each file in its own subprocess means the blast radius of any single
 failure is bounded to that file. The coordinator receives a FATAL event, marks
 the file as errored, and continues with the remaining files. A crash in
-`09_standard_shim_test.uc` cannot prevent `10_aftereach_guarantee_test.uc` from
+`10_standard_shim_test.uc` cannot prevent `03_aftereach_guarantee_test.uc` from
 running.
 
 Subprocess isolation also gives each test file a clean address space. Global
@@ -27,16 +27,16 @@ cannot bleed into another file's execution.
 
 ## How the coordinator discovers files
 
-The coordinator is the process started by `src/utest/cli.uc`. It:
+The coordinator parses each bundle argument from the command line (`[Name:]path`),
+expands any directory paths using the active glob pattern, and sorts the resulting
+file list for stable ordering.
 
-1. Parses bundle arguments from the command line (`[Name:]path`).
-2. For each bundle, calls `utest.runner.discovery.find_files(pattern)`, which
-   runs `fs.glob()` and sorts the results.
-3. Passes the file list to `utest.runner.executor.execute_suites()`.
-
-Before spawning any workers, the coordinator calls `MockManager.setup()` to
-generate shim files for every module listed in `config.mocks`. The shim
-directory is then prepended to every worker's `-L` search path.
+Before spawning any workers, the coordinator runs the shim generator, which
+produces a shim file for every module listed in `config.mocks` and places them in
+a temporary directory. That directory is then prepended to every worker's `-L`
+module search path so the shims shadow the real modules. See
+[Reference: Source layout](../reference/contributor/source-layout.md) for which
+modules implement each phase.
 
 ---
 
@@ -101,70 +101,14 @@ polling and temporary storage.
 
 ## Why the parallel executor polls at a fixed 50 ms interval
 
-The coordinator wakes every 50 ms to read new output from active workers. This
-is a deliberate choice, not a placeholder for a future event-driven
-implementation.
-
-### Why not block on file descriptors?
-
-The natural alternative is to block on a file descriptor until a worker writes
-something — the same mechanism the sequential executor uses with `fs.popen()`.
-Two standard approaches exist, and neither is available here:
-
-**inotify / kqueue**: OS APIs that wake a process when a file changes. Neither
-is exposed by ucode's standard library. Adding a native extension would work,
-but it would introduce a C dependency that must be rebuilt for every new OpenWrt
-SDK version — significant maintenance cost for a test tool that is supposed to
-require nothing beyond ucode itself.
-
-**Named pipes (FIFOs)**: `fs.popen()` gives the sequential executor a blocking
-pipe handle. In principle the parallel executor could open a FIFO per worker
-instead of a regular file. The obstacle is the worker spawn command:
-
-```bash
-( ucode … > out_file 2>&1 & echo $! > pid_file; wait; touch done_file ) &
-```
-
-The outer subshell is detached (`&`), so the coordinator never holds a file
-descriptor to it. This structure was chosen because it lets the coordinator
-kill the worker on timeout with a single `kill -9 $pid` aimed at the ucode
-process directly — a FIFO-based protocol would require a different spawn
-strategy and a different teardown path, adding complexity with no other benefit.
-
-### Why 50 ms specifically?
-
-The sleep fires at most 20 times per second, only while work remains. The
-overhead is bounded by job count, not by test count:
-
-| Jobs | Polls / sec | File ops / sec |
-| ---- | ----------- | -------------- |
-| 1    | 20          | 20             |
-| 4    | 20          | 80             |
-| 8    | 20          | 160            |
-
-On the target hardware — OpenWrt routers and SDK containers running on MIPS or
-ARM Cortex-A — 160 file operations per second is invisible in any profiler.
-
-The 50 ms value sits between two thresholds:
-
-- **Above ~5 ms per wake**: at 4–8 jobs, polling overhead becomes measurable
-  on low-power embedded hardware.
-- **Below ~100 ms per wake**: reporter output feels live to a human watching
-  the terminal. Lines appear as a stream, not in visible bursts.
-
-50 ms is 20× below the human perception threshold and 10× above the embedded
-overhead threshold. There is no value in making it tunable at runtime: the
-sweet spot is wide enough that changing it would never make a practical
-difference.
-
-### The actual worst case
-
-The only scenario where 50 ms polling is a noticeable cost is a suite of many
-very fast test files. If 20 files each take 10 ms, the parallel run finishes
-in ~10 ms of actual work, but the coordinator may sleep up to 50 ms after the
-last file completes before detecting it. In practice, test files on OpenWrt
-hardware load modules, build mock state, and run assertions — sub-20 ms per
-file is rare. The detection lag is a rounding error in any realistic suite.
+The coordinator wakes every 50 ms to read new output from active workers. The
+interval was chosen to balance two constraints: below ~100 ms, reporter output
+feels live to a human watching the terminal; above ~5 ms per wake, polling
+overhead is negligible on the low-power embedded hardware utest targets. An
+event-driven alternative (inotify, FIFOs) would require either a native C
+extension or a significantly different worker spawn strategy — both introduce
+maintenance cost that the 50 ms interval avoids without any practical
+performance difference for realistic test suites.
 
 ```mermaid
 flowchart TD

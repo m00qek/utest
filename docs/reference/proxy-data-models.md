@@ -8,6 +8,8 @@ The `behavior` field (function overrides) and `strict` flag apply uniformly to a
 
 ## fs
 
+*See also: [How-to: Mock the filesystem](../how-to/mock-fs.md)*
+
 **Declare in config:**
 
 ```js
@@ -56,6 +58,8 @@ mock.inject('fs', {
 ---
 
 ## uci
+
+*See also: [How-to: Mock UCI configuration](../how-to/mock-uci.md)*
 
 **Declare in config:**
 
@@ -109,6 +113,8 @@ mock.inject('uci', {
 
 ## ubus
 
+*See also: [How-to: Mock ubus calls](../how-to/mock-ubus.md)*
+
 **Declare in config:**
 
 ```js
@@ -152,6 +158,8 @@ mock.inject('ubus', {
 ---
 
 ## uloop
+
+*See also: [How-to: Mock the event loop](../how-to/mock-uloop.md)*
 
 **Declare in config:**
 
@@ -197,6 +205,8 @@ mock.inject('uloop', {
 ---
 
 ## uclient
+
+*See also: [How-to: Mock HTTP requests with uclient](../how-to/mock-uclient.md)*
 
 **Declare in config:**
 

@@ -19,7 +19,7 @@ function generate_standard_shim(name, shim_dir) {
 	let real;
 	try { real = require(name); } catch(e) { real = null; }
 	if (!real) {
-		print(sprintf("[utest] warning: could not inspect '%s'; the shim will have no interceptable functions\n", name));
+		warn(sprintf("[utest] warning: could not inspect '%s'; the shim will have no interceptable functions\n", name));
 	}
 	let lines = [
 		sprintf("import * as _real from 'real_%s';", name),

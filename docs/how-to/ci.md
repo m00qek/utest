@@ -83,10 +83,10 @@ make -f dev.mk test ARGS="--jobs=4"
 
 ## Run the regression suite
 
-For a full regression check that also validates the framework's own internals, use the bundled runner script directly:
+For a full regression check that also validates the framework's own internals, use the meta-test target:
 
 ```bash
-./test/runner.sh
+make -f dev.mk meta-test
 ```
 
 This is what the project's own CI pipeline runs on every push.

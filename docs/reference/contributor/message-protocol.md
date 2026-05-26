@@ -77,7 +77,7 @@ Emitted once per test, in shuffle order.
   "path": [
     {"id": 0, "name": "root"},
     {"id": 1, "name": "Assertions"},
-    {"id": 2, "name": "checks for deep equality with assert.eq()"}
+    {"id": 2, "name": "checks for deep equality with assert.match()"}
   ],
   "index": 1
 }

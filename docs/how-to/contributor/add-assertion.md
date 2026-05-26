@@ -1,93 +1,85 @@
 # How to add an assertion
 
-Assertions live in a single object exported from `src/utest/assert.uc`. Adding a
-new one takes three steps: implement the function, test it, regenerate the
-baseline.
+The correct extension point for new assertions is a **combinator factory** exported from `src/utest/assert.uc`. Combinators integrate with `assert.match` and compose freely with all existing combinators.
+
+For a step-by-step walkthrough of adding a combinator from scratch, see [Tutorial: Contributing your first patch](../../tutorials/contributor/first-patch.md).
 
 ---
 
-## 1. Add the function to `assert.uc`
+## 1. Add the combinator factory to `assert.uc`
 
-Open `src/utest/assert.uc` and add a new key to the `assert` object. Use `die()`
-to signal failure — the runner catches it and records the test as FAIL.
+Open `src/utest/assert.uc` and add your factory alongside `equals`, `contains`, `truthy`, and the others. Each factory returns an object with a `match(actual)` method:
 
 ```js
-// src/utest/assert.uc  (excerpt)
-export const assert = {
-    // ... existing assertions ...
-
-    includes: function(haystack, needle, msg) {
-        if (type(haystack) != 'array')
-            die(sprintf("assert.includes: expected an array, got %s", type(haystack)));
-        for (let item in haystack) {
-            if (item === needle) return;
+export function not_null() {
+    return {
+        match: function(actual) {
+            if (actual !== null)
+                return { ok: true };
+            return { ok: false, message: 'Expected a non-null value' };
         }
-        die(msg || sprintf("Expected array to include %s", sprintf('%J', needle)));
-    }
-};
+    };
+}
 ```
 
-Conventions to follow:
+Conventions:
 
-- Accept an optional trailing `msg` parameter for caller-supplied context.
-- Prefer `sprintf('%J', value)` to serialise values in error messages — it
-  produces compact JSON that is easy to read in output.
-- Call `die(message)` for failure. Never `return false` or throw manually.
-- Guard unexpected types with an explicit `die()` before the main logic, as
-  `assert.matches` and `assert.notMatches` do.
+- Return only `{ ok: true }` or `{ ok: false, message: '...' }` — nothing else.
+- Use `sprintf('%J', value)` to serialise values in failure messages.
+- Mark the factory `export` so it can be re-exported from `src/utest.uc`.
+- Do not accept a `msg` parameter — callers pass custom failure messages as the third argument to `assert.match`.
 
 ---
 
-## 2. Add a test in the assertions example
+## 2. Re-export from `utest.uc`
 
-Open `examples/unit/01_assertions_test.uc` and add an `it` block that covers
-both the passing and the failing case:
+Open `src/utest.uc`. Two edits are required.
+
+Add the new name to the existing destructuring import on line 4:
 
 ```js
-// examples/unit/01_assertions_test.uc  (excerpt)
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { assert as _assert, equals as _equals, /* … */ not_null as _not_null } from 'utest.assert';
+```
 
-describe("Assertions", () => {
-    // ... existing tests ...
+Add an export constant after the other combinator exports:
 
-    it("checks array membership with assert.includes()", () => {
-        assert.includes([1, 2, 3], 2);
-        assert.throws(
-            () => assert.includes([1, 2, 3], 99),
-            /Expected array to include/
-        );
-    });
+```js
+export const not_null = _not_null;
+```
+
+---
+
+## 3. Cover both paths in the assertions example
+
+Open `examples/unit/01_assertions_test.uc` and add an `it` block that tests the passing case and the failing case:
+
+```js
+it("not_null() passes for non-null values and fails for null", () => {
+    assert.match(not_null(), 'hello');
+    assert.match(not_null(),      42);
+    assert.throws(
+        () => assert.match(not_null(), null),
+        /non-null/
+    );
 });
 ```
 
-Covering both the success path and the failure path in the same test file keeps
-the baseline predictable: a broken implementation shows up as a FAIL rather than
-as an unexpected exception.
+Update the import at the top to include the new factory.
 
 ---
 
-## 3. Regenerate the baseline JSON
-
-The regression suite compares json reporter output against a stored baseline.
-After changing the test file, update the baseline:
+## 4. Regenerate the baseline and verify
 
 ```bash
 make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
-```
 
-Then verify the full suite still passes:
-
-```bash
-./test/runner.sh
+make -f dev.mk meta-test
 ```
 
 ---
 
 ## Next steps
 
-- Run `./test/runner.sh` to confirm no existing baselines regressed.
-- If your assertion requires deep equality, reuse the module-private
-  `deep_equal()` helper already present in `assert.uc` rather than writing a
-  new recursive comparator.
+- See all existing combinator factories: [Reference: Assertions — Combinator factories](../../reference/assertions.md#combinator-factories)
+- Run `make -f dev.mk meta-test` after every change to catch regressions early.

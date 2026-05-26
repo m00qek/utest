@@ -25,14 +25,13 @@ The framework reads this file and generates a shim for `fs` before running any t
 Import `mock` from `'utest'` in your test file, then call `mock.inject()` with three arguments: the module name, a state object, and a callback that receives the proxy:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert } from 'utest';
 import * as fs from 'fs';
 
 describe('my feature', () => {
     it('reads from virtual path', () => {
         mock.inject('fs', { data: { '/tmp/config.txt': 'hello' } }, (m_fs) => {
-            assert.eq(m_fs.readfile('/tmp/config.txt'), 'hello');
+            assert.match('hello', m_fs.readfile('/tmp/config.txt'));
         });
     });
 });
@@ -42,16 +41,16 @@ The proxy object `m_fs` is the mock. All calls go through it.
 
 ---
 
-## Understand the callback scope
+## Confirm the mock does not affect the real imported binding
 
-The mock state is active only for the duration of the callback. Once the callback returns, the state layer is removed.
+The state layer is active only for the duration of the callback. Once the callback returns, the layer is removed.
 
 The real imported binding (`fs`) is never intercepted by `mock.inject()`. Calls on it always reach the real module, even from inside the callback:
 
 ```js
 mock.inject('fs', { data: { '/tmp/scoped': 'data' } }, (m_fs) => {
-    assert.eq(m_fs.readfile('/tmp/scoped'), 'data');
-    assert.ok(fs.readfile('/tmp/scoped') == null, 'real fs is unaffected inside callback');
+    assert.match('data', m_fs.readfile('/tmp/scoped'));
+    assert.match(null, fs.readfile('/tmp/scoped'), 'real fs is unaffected inside callback');
 });
 ```
 
@@ -72,7 +71,7 @@ mock.inject('fs', { behavior: { mkdir: (path) => {
 }}}, (m_fs) => {
     m_fs.mkdir('/tmp/custom_path');
 });
-assert.eq(created, ['/tmp/custom_path']);
+assert.match(['/tmp/custom_path'], created);
 ```
 
 ---
@@ -83,15 +82,15 @@ assert.eq(created, ['/tmp/custom_path']);
 
 ```js
 mock.inject('fs', { data: { '/a': '1' } }, (m_fs) => {
-    assert.eq(m_fs.readfile('/a'), '1');
+    assert.match('1', m_fs.readfile('/a'));
 
     mock.inject('fs', { data: { '/b': '2' } }, (m_fs2) => {
-        assert.eq(m_fs2.readfile('/a'), '1');
-        assert.eq(m_fs2.readfile('/b'), '2');
+        assert.match('1', m_fs2.readfile('/a'));
+        assert.match('2', m_fs2.readfile('/b'));
     });
 
-    assert.eq(m_fs.readfile('/a'), '1');
-    assert.ok(m_fs.readfile('/b') == null, 'inner state is gone after inner callback');
+    assert.match('1', m_fs.readfile('/a'));
+    assert.match(null, m_fs.readfile('/b'), 'inner state is gone after inner callback');
 });
 ```
 

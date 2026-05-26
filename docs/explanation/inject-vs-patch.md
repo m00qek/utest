@@ -10,7 +10,6 @@ utest provides two mechanisms for mocking modules: `mock.inject()` and `mock.glo
 
 `mock.global.patch()` affects the module's shim. The shim is a generated file that sits in front of the real module and is what `import * as fs from 'fs'` actually loads inside the worker process. When you patch the global state, every call to the shim — including calls made through the top-level `fs` binding in your test file — is intercepted.
 
-This distinction is what the example in the mocking test file is demonstrating.
 The diagram below shows how each path reaches (or bypasses) the proxy:
 
 ```mermaid
@@ -42,15 +41,15 @@ sequenceDiagram
 ```js
 it('patches global state via mock.global.patch()', () => {
     const m_fs = mock.global.patch('fs', { data: { '/tmp/setup.txt': 'setup' } });
-    assert.eq(m_fs.readfile('/tmp/setup.txt'), 'setup');
-    assert.eq(fs.readfile('/tmp/setup.txt'), 'setup', 'shim transparently intercepts global state');
+    assert.match('setup', m_fs.readfile('/tmp/setup.txt'));
+    assert.match('setup', fs.readfile('/tmp/setup.txt'), 'shim transparently intercepts global state');
     mock.global.unpatch('fs');
 });
 
 it('injects scoped mock via mock.inject()', () => {
     mock.inject('fs', { data: { '/tmp/scoped': 'data' } }, (m_fs) => {
-        assert.eq(m_fs.readfile('/tmp/scoped'), 'data');
-        assert.ok(fs.readfile('/tmp/scoped') == null, 'real fs is unaffected inside callback');
+        assert.match('data', m_fs.readfile('/tmp/scoped'));
+        assert.match(null, fs.readfile('/tmp/scoped'), 'real fs is unaffected inside callback');
     });
 });
 ```

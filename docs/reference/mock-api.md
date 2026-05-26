@@ -1,9 +1,9 @@
 # Mock API Reference
 
-The `mock` object is importable from `'utest'`.
+The `mock` object and `spy()` function are importable from `'utest'`.
 
 ```js
-import { mock } from 'utest';
+import { mock, spy } from 'utest';
 ```
 
 A module must be declared in the `mocks` key of `utest.config.uc` before it can be intercepted. See [CLI and Configuration — The `mocks` key](cli.md#the-mocks-key).
@@ -43,7 +43,7 @@ const content = mock.inject('fs', {
     data: { '/tmp/config': 'enabled=1' },
     strict: true
 }, (m_fs) => m_fs.readfile('/tmp/config'));
-assert.eq(content, 'enabled=1');
+assert.match('enabled=1', content);
 ```
 
 ---
@@ -67,7 +67,7 @@ Global state is independent of scoped layers. `mock.inject` layers shadow global
 const m_fs = mock.global.patch('fs', {
     data: { '/etc/myapp.conf': 'debug=0' }
 });
-assert.eq(m_fs.readfile('/etc/myapp.conf'), 'debug=0');
+assert.match('debug=0', m_fs.readfile('/etc/myapp.conf'));
 mock.global.unpatch('fs');
 ```
 
@@ -85,6 +85,57 @@ Removes all global state for the named module and clears the stored proxy. Scope
 
 ```js
 mock.global.unpatch('ubus');
+```
+
+---
+
+## Call inspection
+
+### `spy(proxy)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `proxy` | object | A proxy returned by `mock.inject()` or `mock.global.patch()`, or a nested object returned by the proxy (e.g. a UCI cursor or a ubus connection). |
+
+**Returns:** an object `{ calls: { <method>: [[args], ...] } }`.
+
+Returns the call log for a proxy object. `calls` is a plain object keyed by method name; each value is an array of argument arrays — one element per invocation, in call order.
+
+Call records are fresh for each `mock.inject()` scope: a new `inject()` call starts with empty records even if the same module was previously injected. Records from `mock.global.patch()` accumulate until `mock.global.unpatch()` is called.
+
+```js
+import { mock, spy, assert, contains, any } from 'utest';
+
+mock.inject('fs', { data: { '/a': 'x', '/b': 'y' } }, (m_fs) => {
+    m_fs.readfile('/a');
+    m_fs.readfile('/b');
+
+    // each element is the argument list for one call
+    assert.match([ ['/a'], ['/b'] ], spy(m_fs).calls.readfile);
+
+    // contains matches a subset of calls keys
+    assert.match(contains({
+        readfile: [ ['/a'], ['/b'] ]
+    }), spy(m_fs).calls);
+
+    // use any() to ignore specific arguments
+    assert.match([
+        [ any() ],
+        [ any() ]
+    ], spy(m_fs).calls.readfile);
+});
+```
+
+For proxies that return inner objects (UCI cursor, ubus connection, uclient instance), call `spy()` on the inner object:
+
+```js
+mock.inject('uci', {
+    data: { network: { wan: { '.type': 'interface', proto: 'dhcp' } } }
+}, (m_uci) => {
+    let cursor = m_uci.cursor();
+    cursor.get('network', 'wan', 'proto');
+    assert.match([ ['network', 'wan', 'proto'] ], spy(cursor).calls.get);
+});
 ```
 
 ---
@@ -121,3 +172,11 @@ mock.global.patch('uci', { data: { 'myapp': { 'cfg': { '.type': 'opts', 'x': '1'
 // … test code …
 mock.restore(snap);
 ```
+
+---
+
+## See also
+
+- How mocking works end-to-end: [About the mocking architecture](../explanation/concepts.md)
+- When to use inject vs patch: [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md)
+- Data key format for each built-in proxy: [Proxy Data Models](proxy-data-models.md)

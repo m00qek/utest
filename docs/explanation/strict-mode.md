@@ -8,6 +8,17 @@ Strict mode changes what happens when code calls a proxied function for a module
 
 Every mock proxy sits in front of a real module. When a call arrives for a function that has no overridden behavior and no data entry, the proxy normally falls through to the real module implementation. If the real module is unavailable (for example, a hardware module that does not exist in the Docker environment), the fallthrough returns `null`.
 
+```mermaid
+flowchart TD
+    A["call arrives at proxy"] --> B{"behavior\noverride?"}
+    B -->|yes| C["invoke override\nreturn result"]
+    B -->|no| D{"data entry\nfor key?"}
+    D -->|yes| E["return data value"]
+    D -->|no| F{"strict: true?"}
+    F -->|yes| G["die() → test FAIL\n'strict mock: … is not mocked'"]
+    F -->|no| H["fall through to\nreal module / null"]
+```
+
 With strict mode enabled, there is no fallthrough. Any call whose key is not explicitly covered by the mock configuration causes an immediate `die()` with a message like:
 
 ```
@@ -27,7 +38,7 @@ mock.inject('uci', {
         }
     }
 }, (m_uci) => {
-    assert.eq(m_uci.cursor().get('system', '@system[0]', 'hostname'), 'myrouter');
+    assert.match('myrouter', m_uci.cursor().get('system', '@system[0]', 'hostname'));
     // Any call for an unmocked package will die() here.
 });
 ```

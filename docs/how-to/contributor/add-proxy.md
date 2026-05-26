@@ -45,13 +45,7 @@ return {
 };
 ```
 
-The three-argument signature `create(name, real, ctx)` is mandatory:
-
-| Argument | Value |
-|---|---|
-| `name` | The module name string (e.g. `"mymod"`) |
-| `real` | The real module object, or `null` if absent from rootfs |
-| `ctx` | The context object — see the proxy context API reference |
+The `create(name, real, ctx)` signature is mandatory. `ctx` exposes the mock engine's registry operations for this module; see [Proxy context API reference](../../reference/contributor/proxy-ctx-api.md) for the full method list.
 
 ---
 
@@ -81,28 +75,27 @@ Add a test file in `examples/unit/` that exercises the new proxy. Follow the
 existing numbering convention (`NN_<name>_test.uc`):
 
 ```js
-// examples/unit/15_mymod_test.uc
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+// examples/unit/18_mymod_test.uc
+import { describe, it, mock, assert } from 'utest';
 import * as mymod from 'mymod';
 
 describe('mymod mocking', () => {
     it('returns mocked data for read()', () => {
         mock.inject('mymod', { data: { mykey: 'hello' } }, (m) => {
-            assert.eq(m.read('mykey'), 'hello');
+            assert.match('hello', m.read('mykey'));
         });
     });
 
     it('records writes when active', () => {
         mock.inject('mymod', {}, (m) => {
             m.write('x', 42);
-            assert.eq(m.read('x'), 42);
+            assert.match(42, m.read('x'));
         });
     });
 
     it('patches global state via mock.global.patch()', () => {
         const m = mock.global.patch('mymod', { data: { greeting: 'hi' } });
-        assert.eq(mymod.read('greeting'), 'hi');
+        assert.match('hi', mymod.read('greeting'));
         mock.global.unpatch('mymod');
     });
 });
@@ -115,7 +108,7 @@ describe('mymod mocking', () => {
 Create a companion config file so the test runner knows to shim `mymod`:
 
 ```js
-// examples/unit/15_mymod_config.uc
+// examples/unit/18_mymod_config.uc
 return {
     mocks: {
         mymod: null
@@ -124,7 +117,7 @@ return {
 ```
 
 The runner looks for `<NN>_<name>_config.uc` alongside the test file
-automatically when `test/runner.sh` is used.
+automatically when `make -f dev.mk meta-test` is used.
 
 ---
 
@@ -134,8 +127,8 @@ Run the example once with the `json` reporter and capture its output as the
 regression baseline:
 
 ```bash
-make -f dev.mk test ARGS="-r json --config examples/unit/15_mymod_config.uc examples/unit/15_mymod_test.uc" \
-    > test/json/unit/15_mymod_test.json
+make -f dev.mk test ARGS="-r json --config examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+    > test/json/unit/18_mymod_test.json
 ```
 
 `make -f dev.mk test` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
@@ -149,4 +142,4 @@ the output reflects the target environment.
   for the full `ctx` method list.
 - Read [About shim generation](../../explanation/shim-generation.md) to understand
   why the config file is required.
-- Run the full regression suite with `./test/runner.sh` to confirm nothing is broken.
+- Run the full regression suite with `make -f dev.mk meta-test` to confirm nothing is broken.

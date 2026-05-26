@@ -1,13 +1,6 @@
-import { describe, it, beforeEach, afterEach, setup, teardown } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, assert, beforeEach, afterEach, setup, teardown } from 'utest';
 
-/**
- * Test Lifecycle Hooks
- * 
- * utest provides hooks at two levels:
- * 1. Global (Module) level: setup(), teardown()
- * 2. Suite level: beforeEach(), afterEach()
- */
+// Demonstrates setup(), teardown(), beforeEach(), and afterEach() hooks.
 
 let state = [];
 
@@ -36,17 +29,17 @@ describe("Lifecycle Hooks", () => {
 	});
 
 	it("sees the value from beforeEach", () => {
-		assert.match(suite_val, 100);
+		assert.match(100, suite_val);
 		suite_val += 50;
 	});
 
 	it("sees a reset value in the next test", () => {
 		// Even though the previous test modified suite_val, 
 		// beforeEach has run again.
-		assert.match(suite_val, 100);
+		assert.match(100, suite_val);
 	});
 
 	it("has access to global setup state", () => {
-		assert.match(state[0], "GLOBAL_SETUP");
+		assert.match("GLOBAL_SETUP", state[0]);
 	});
 });

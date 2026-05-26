@@ -30,7 +30,7 @@ endef
 
 define Package/ucode-utest/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./files/utest $(1)/usr/bin/utest
+	$(INSTALL_BIN) ./src/utest.sh $(1)/usr/bin/utest
 
 	$(INSTALL_DIR) $(1)/usr/share/ucode
 	$(CP) ./src/utest.uc $(1)/usr/share/ucode/

@@ -38,8 +38,7 @@ For why a config file is required and what a shim is, see [About shim generation
 Create `test/unit/files_test.uc`:
 
 ```js
-import { describe, it, mock } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, mock, assert } from 'utest';
 
 describe("virtual filesystem", () => {
     it("reads a seeded file", () => {
@@ -49,20 +48,20 @@ describe("virtual filesystem", () => {
                 '/etc/banner':   'Welcome to OpenWrt\n'
             }
         }, (m_fs) => {
-            assert.eq(m_fs.readfile('/etc/hostname'), 'myrouter\n');
-            assert.eq(m_fs.readfile('/etc/banner'),   'Welcome to OpenWrt\n');
+            assert.match('myrouter\n', m_fs.readfile('/etc/hostname'));
+            assert.match('Welcome to OpenWrt\n',   m_fs.readfile('/etc/banner'));
         });
     });
 
     it("returns null for an unseeded path", () => {
         mock.inject('fs', { data: { '/etc/hostname': 'myrouter\n' } }, (m_fs) => {
-            assert.eq(m_fs.readfile('/tmp/absent.txt'), null);
+            assert.match(null, m_fs.readfile('/tmp/absent.txt'));
         });
     });
 });
 ```
 
-`mock.inject()` takes three arguments: the module name, a state object containing `data`, and a callback that receives the proxy. Inside the callback, `m_fs.readfile()` returns the seeded string rather than touching the real filesystem.
+Inside the callback `m_fs` is the proxy. Reads return the seeded strings; the real filesystem is untouched.
 
 ---
 
@@ -102,11 +101,11 @@ Add a third test that captures the proxy and then calls it outside the callback:
 
         mock.inject('fs', { data: { '/etc/hostname': 'mocked' } }, (m_fs) => {
             proxy = m_fs;
-            assert.eq(m_fs.readfile('/etc/hostname'), 'mocked');
+            assert.match('mocked', m_fs.readfile('/etc/hostname'));
         });
 
         // The layer has been popped — no mock data is active any more.
-        assert.eq(proxy.readfile('/etc/hostname'), null);
+        assert.match(null, proxy.readfile('/etc/hostname'));
     });
 ```
 

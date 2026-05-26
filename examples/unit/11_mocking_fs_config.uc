@@ -1,0 +1,5 @@
+return {
+	mocks: {
+		fs: null
+	}
+};

@@ -6,7 +6,7 @@ In this tutorial, we will write a utest test suite from scratch, run it, observe
 
 ## What we will build
 
-A test file `test/unit/hello_test.uc` that exercises a small arithmetic helper. The suite will contain two tests: one that checks a return value with `assert.eq`, and one that checks a condition with `assert.ok`.
+A test file `test/unit/hello_test.uc` that exercises a small arithmetic helper. The suite will contain two tests that check return values with `assert.match`.
 
 ---
 
@@ -31,8 +31,7 @@ touch test/unit/hello_test.uc
 Open `test/unit/hello_test.uc` and add the following:
 
 ```js
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, assert } from 'utest';
 
 // The function under test — inline here for simplicity.
 function add(a, b) {
@@ -41,17 +40,17 @@ function add(a, b) {
 
 describe("add()", () => {
     it("returns the sum of two positive numbers", () => {
-        assert.eq(add(2, 3), 5);
+        assert.match(5, add(2, 3));
     });
 
     it("returns a negative result when the sum is negative", () => {
-        assert.ok(add(-10, 3) < 0);
+        assert.match(-7, add(-10, 3));
     });
 });
 ```
 
 !!! note
-    All DSL functions (`describe`, `it`, etc.) are imported from `'utest'`. All assertion functions come from `'utest.assert'`.
+    Everything needed in a test file — DSL functions, assertions, and mocks — is imported from `'utest'`.
 
 ---
 
@@ -77,7 +76,7 @@ Summary:
   Seed:   ...
 ```
 
-The default reporter is `detailed`. Each test is shown on its own line with a `[PASS]`, `[FAIL]`, `[SKIP]`, or `[ERR!]` prefix.
+The default reporter is `detailed`. Each test is shown on its own line with a `[PASS]`, `[FAIL]`, `[SKIP]`, or `[ERROR]` prefix.
 
 ---
 
@@ -87,7 +86,7 @@ Change the first test so it expects the wrong value:
 
 ```js
     it("returns the sum of two positive numbers", () => {
-        assert.eq(add(2, 3), 99);  // wrong expected value
+        assert.match(99, add(2, 3));  // wrong expected value
     });
 ```
 
@@ -102,9 +101,8 @@ The output now shows what went wrong:
 ```
 [test/unit/hello_test.uc] test/unit/hello_test.uc
   [FAIL] returns the sum of two positive numbers
-         Assertion failed
-           Actual:   5
-           Expected: 99
+         Expected 99
+           got 5
   [PASS] returns a negative result when the sum is negative
 Summary:
   Suites: 1
@@ -116,7 +114,7 @@ Summary:
   Seed:   ...
 ```
 
-`assert.eq` prints both the actual and expected values when the check fails, so you can see the mismatch at a glance. The process exits with a non-zero status, which signals failure to CI systems.
+`assert.match` prints both the expected and actual values when the check fails, so you can see the mismatch at a glance. The process exits with a non-zero status, which signals failure to CI systems.
 
 ---
 
@@ -126,7 +124,7 @@ Restore the correct expected value:
 
 ```js
     it("returns the sum of two positive numbers", () => {
-        assert.eq(add(2, 3), 5);
+        assert.match(5, add(2, 3));
     });
 ```
 
@@ -142,16 +140,16 @@ Both tests pass and the summary shows `Failed: 0`.
 
 ## What we just built
 
-- A test file that imports from `'utest'` and `'utest.assert'`.
+- A test file that imports everything from `'utest'`.
 - A `describe` block containing two `it` tests.
-- One test using `assert.eq` for an exact value check.
-- One test using `assert.ok` for a condition check.
+- Two tests using `assert.match` for exact value checks.
 - Familiarity with the `detailed` reporter's pass and failure output.
 
 ---
 
 ## Next steps
 
+- Write flexible assertions for structured data: [Tutorial: Writing flexible assertions with combinators](first-combinators.md)
 - Learn to skip tests temporarily: [How-to: Skip tests](../../how-to/skip-tests.md)
 - Filter which tests run by name: [How-to: Filter tests by name](../../how-to/filter-tests.md)
 - Understand available assertions: [Reference: Assertions](../../reference/assertions.md)

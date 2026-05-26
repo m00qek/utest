@@ -64,8 +64,8 @@ let counter = 0;
 describe("my suite", () => {
     beforeEach(() => { counter = 0; });
 
-    it("increments", () => { counter++; assert.eq(counter, 1); });
-    it("still starts at zero", () => { assert.eq(counter, 0); });
+    it("increments", () => { counter++; assert.match(1, counter); });
+    it("still starts at zero", () => { assert.match(0, counter); });
 });
 ```
 

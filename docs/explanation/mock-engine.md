@@ -1,130 +1,102 @@
 # About the mock engine
 
-The mock engine is the machinery behind `mock.inject()` and `mock.global.patch()`.
-It lives in `src/utest/mock/engine.uc` and exposes two global objects:
-`__utest_mock_instance` (the public `mock` API used by tests) and
-`__utest_internal_instance` (the lower-level API used by proxies).
+The mock engine owns two things: the per-module state registry and the
+snapshot/restore cycle that keeps tests isolated from each other. Understanding
+why it is structured the way it is makes the mock API's behaviour — especially
+around nested `inject()` calls and forgotten `unpatch()` calls — predictable.
 
 ---
 
-## One registry per module
+## Why one registry per module
 
-The engine stores state in `global.__utest_registries`, a plain object keyed by
-module name. Each registry looks like this:
+The shim, the proxy, and the test body are three separate objects that need to
+share the same mock state without being directly coupled to each other. A global
+registry keyed by module name is the simplest structure that satisfies this:
+the shim asks "is there a proxy for `fs`?" by name, the proxy reads and writes
+data by name, and the test body addresses everything by name. None of the three
+needs to hold a reference to either of the others.
 
-```js
-{
-    name: "fs",
-    layers: [],
-    global: { data: {}, fns: {}, strict: false, proxy: null }
-}
-```
-
-Registries are created lazily on first access. Because `global.__utest_registries`
-is a JavaScript global, it persists for the lifetime of the worker process and
-is shared by every module that `require()`s `engine.uc` in the same interpreter.
-This is intentional: it is how the shim, the proxy, and the test body all see
-the same state without being directly coupled.
-
-```mermaid
-graph TD
-    G["global.__utest_registries"] --> FS["registry 'fs'"]
-    G --> UCI["registry 'uci'"]
-    G --> DOT["…"]
-
-    FS --> GL["global\n{ data, fns, strict, proxy }"]
-    FS --> LS["layers stack"]
-    LS --> L2["layer 2  ← innermost inject()"]
-    LS --> L1["layer 1  ← outer inject()"]
-
-    L2 -. "lookup falls through" .-> L1
-    L1 -. "lookup falls through" .-> GL
-```
+The registry is stored as `global.__utest_registries` so it persists for the
+lifetime of the worker process and is visible to every module loaded into the
+same interpreter, regardless of import order. Registries are created lazily —
+a module that is never mocked in a given test file never gets a registry entry.
 
 ---
 
-## The layer stack: how inject() works
+## Why `inject()` uses a stack instead of replacing state
 
-`mock.inject(name, state, cb)` pushes a new layer onto `registry.layers` before
-calling `cb`, then pops it when `cb` returns (or throws). A layer is a snapshot
-of the `state` argument:
+When a test calls `mock.inject('fs', state, cb)`, the engine *pushes* a new
+layer rather than overwriting the current state. This means nested `inject()`
+calls work correctly: the inner layer shadows the outer one for keys it
+defines, and the outer values become visible again the moment the inner
+callback returns.
 
-```js
-{ data: { ...state.data }, fns: { ...state.behavior }, strict: state.strict }
-```
+If the engine used a flat mutable map instead, every test that needed to nest
+mocks would have to save and restore state manually. A missed restore would
+silently corrupt every test that ran after it. The stack makes restore
+automatic and unconditional — even when the callback throws.
 
-Layers are a stack, not a flat map. `get_data` and `get_fn` search from the top
-of the stack downward, then fall back to `registry.global`. This means `inject()`
-calls can nest: an inner `inject()` that sets `data.x = 2` shadows an outer
-`inject()`'s `data.x = 1` without modifying it. When the inner callback returns,
-its layer is popped and the outer value is visible again.
-
-`set_data` always writes to the innermost active layer (the top of the stack).
-If no layers are active it writes to global state, which is the behaviour used
-by `mock.global.patch()`.
+`set_data` always writes to the top of the stack (the innermost active layer).
+`get_data` and `get_fn` search from top to bottom and fall back to global
+state. This means an inner inject can add a key without knowing or affecting
+what the outer inject declared.
 
 ---
 
-## Global state: how patch() works
+## Why `patch()` writes to global state, not a layer
 
-`mock.global.patch(name, state)` writes directly to `registry.global` and builds
-a proxy, storing it as `registry.global.proxy`. The shim reads `global.proxy` via
-`__internal__.get_proxy_global(name)` on every call. This is the mechanism that
-allows production code — code that has already imported the shim — to have its
-module calls intercepted transparently, without the test body holding a reference
-to the proxy object.
+`mock.global.patch()` is designed for the case where production code already
+holds an imported binding to the shim. A layer pushed by `inject()` is only
+visible to the proxy object passed to the callback — it does not affect the
+shim's global slot. `patch()` writes to the global slot that the shim reads on
+every call, which is the only way to intercept calls made through a binding
+that was resolved before the test body ran.
 
-`mock.global.unpatch(name)` resets `registry.global` to empty and clears the
-stored proxy. If `unpatch()` is not called explicitly, `mock.restore()` will
-clean it up.
+This is why `patch()` requires a matching `unpatch()`: there is no callback
+scope to pop from. The snapshot/restore cycle provides the safety net — a
+forgotten `unpatch()` is cleaned up automatically between tests.
 
 ---
 
-## Snapshot and restore: automatic cleanup between tests
+## Why snapshot/restore runs around every test
 
-Before running the first test, the worker runner takes a snapshot of all
-registries:
+Mock state is global within a worker process. Without a reset between tests,
+a `global.patch()` that is not explicitly unpatched would affect every
+subsequent test in the file. Even a correct test that calls `unpatch()` might
+crash before reaching it, leaving state dirty.
 
-```js
-const mock_snap = mock.snapshot();
-```
+The runner takes a snapshot before each test body and restores it
+unconditionally after the test (and after `afterEach` hooks). The sequence is:
 
-`snapshot()` captures the `data`, `fns`, `strict`, and `proxy` of every
-registry's `global` at that moment. After each test, `mock.restore(mock_snap)`
-resets all layers to empty and restores every registry's global to the snapshotted
-values. This means:
+1. Run `beforeEach` hooks.
+2. Snapshot global mock state.
+3. Run the test body.
+4. If the test threw, restore the snapshot immediately so `afterEach` sees clean state.
+5. Run `afterEach` hooks.
+6. Restore the snapshot unconditionally.
 
-- A test that calls `mock.global.patch()` without calling `unpatch()` does not
-  leak state to the next test.
-- A test that modifies global data via `set_data()` does not affect subsequent
-  tests.
-- If a test throws mid-way through a mock operation, cleanup still happens because
-  `restore()` is called unconditionally after the test body.
-
-The runner takes a second snapshot after `beforeEach` hooks run and before the
-test body. If the test body throws, this second snapshot is restored immediately
-so that `afterEach` hooks see clean mock state.
+This two-phase restore (step 4 and step 6) guarantees that `afterEach` hooks
+always run in a predictable mock environment, even when the test itself leaked
+a patch.
 
 ---
 
 ## The proxy building chain
 
-When `inject()` or `patch()` needs a proxy object, it calls the internal
-`build_proxy(name, real)` function. This function:
+When `inject()` or `patch()` needs a proxy, it resolves one in priority order:
 
-1. Calls `proxy_base.context(name, real)` to create the `ctx` object that exposes
-   the engine's registry operations for `name`.
-2. Attempts `require('utest.mock.proxy.' + name)` to find a module-specific
-   proxy factory. If the shim dir or the proxy dir is in the `-L` path, user or
-   built-in proxy files will be found here.
-3. If a factory is found, calls `factory.create(name, real, ctx)` and returns the
-   result.
-4. If no factory is found, falls back to `ctx.base()`, which wraps every exported
-   function of `real` with a generic behavior-override check.
+1. A user-supplied proxy factory found via `require('utest.mock.proxy.' + name)`.
+2. A built-in proxy factory (same path, ships with utest).
+3. A generic passthrough wrapper around every exported function of the real module.
 
-The `real` argument to `build_proxy` is loaded by `get_real(name)`. Because the
-shim for `name` is already on the search path when the worker starts, a plain
-`require(name)` would find the shim — which is an ES-module and fails in program
-mode. `get_real` tries `require('real_' + name)` first, which resolves to the
-symlink the shim generator created alongside the shim, pointing to the actual
-module file.
+This means a project can override any built-in proxy by placing a file at the
+right path without modifying the framework. The resolution is the same
+`require()` mechanism used everywhere else in ucode — no special registry.
+
+---
+
+## See also
+
+- How the shim is generated before workers start: [About shim generation](shim-generation.md)
+- The public `ctx` API exposed to proxy factories: [Proxy context API reference](../reference/contributor/proxy-ctx-api.md)
+- How the layer model looks from a test author's perspective: [About mock.inject() vs mock.global.patch()](inject-vs-patch.md)

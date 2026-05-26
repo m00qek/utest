@@ -58,7 +58,7 @@ Registers one test case in the enclosing group. The test is executed in a worker
 
 ```js
 it("returns the configured hostname", () => {
-    assert.eq(get_hostname(), "OpenWrt");
+    assert.match("OpenWrt", get_hostname());
 });
 ```
 
@@ -75,7 +75,7 @@ Registers a test that is unconditionally skipped. The test appears in output as 
 
 ```js
 skip("feature not yet implemented", () => {
-    assert.ok(false);
+    assert.match(true, false);
 });
 ```
 
@@ -108,8 +108,9 @@ Registers a setup function that runs before each test in scope. Multiple `before
 
 ```js
 describe("with state", () => {
+    let state;
     beforeEach(() => { state = new_state(); });
-    it("uses fresh state", () => { assert.ok(state); });
+    it("each test sees a fresh instance", () => { /* state is always re-initialised */ });
 });
 ```
 
@@ -161,3 +162,13 @@ teardown(() => {
     disconnect_db();
 });
 ```
+
+---
+
+## Mock API
+
+### `mock`
+
+The mock object — `mock.inject()`, `mock.global.patch()`, `mock.snapshot()`, and `mock.restore()` — is importable from `'utest'` alongside the DSL functions but is documented separately.
+
+See [Mock API reference](mock-api.md).

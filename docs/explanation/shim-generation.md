@@ -1,8 +1,9 @@
 # About shim generation
 
 Shims are the bridge between the static import system and the dynamic mock
-engine. Understanding why they exist, and how they are built, explains the
-requirement for a config file whenever a module needs to be mockable.
+engine. Understanding why they are necessary, and what constraints their
+design must satisfy, explains why a config file is required before a module
+can be mocked.
 
 ---
 
@@ -16,112 +17,81 @@ import * as fs from 'fs';
 ```
 
 ucode resolves and compiles `fs` immediately. By the time the test body calls
-`mock.inject('fs', ...)`, the `fs` name in the test file already refers to the
-real module object — there is no runtime hook point.
+`mock.inject('fs', ...)`, the `fs` name already refers to the real module
+object — there is no runtime hook point.
 
 A shim solves this by inserting a thin ES-module between the test file and the
-real module. The shim is placed in a directory that is prepended to the worker's
-`-L` search path, so the worker finds the shim before it finds the real module.
-Every function call that would have gone to `fs` goes to the shim instead. The
-shim checks on every call whether a proxy is active and, if so, delegates to it.
-If no proxy is active, the shim delegates to the real module as if it were not
-there.
+real module. The shim is placed in a directory that is prepended to the
+worker's module search path, so the worker finds the shim before it finds the
+real module. Every call that would have gone to `fs` goes to the shim instead.
+The shim checks on every call whether a proxy is active; if one is, it
+delegates to it; if not, it delegates to the real module unchanged.
 
 ---
 
-## How `manager.uc` generates standard shims
+## Why the config file is required
 
-The coordinator calls `MockManager.setup(config)` before spawning any workers.
-For each module name in `config.mocks`, `setup_shim(name, shim_dir)` runs:
+The shim must be generated before any worker starts, because workers compile
+their imports at load time. The coordinator generates shims during its startup
+phase, before spawning any workers.
 
-1. It checks the ucode module search path (`REQUIRE_SEARCH_PATH`) for the real
-   module file.
+To generate a shim for a module, the coordinator needs to know two things:
+which modules to shim, and what functions those modules export. The `mocks`
+key of `utest.config.uc` provides the first. For the second, the coordinator
+loads the real module in its own process (where no shim is yet on the path)
+and inspects its exports. A shim is then written that re-exports each function
+with a proxy check inserted around the call.
 
-2. If the real module is found, `generate_standard_shim(name, shim_dir)` is
-   called. This function `require()`s the real module (in the coordinator process,
-   where no shim is yet on the path), inspects its exported keys, and writes an
-   ES-module that looks like:
-
-```js
-import * as _real from 'real_fs';
-import { __internal__ } from 'utest.mock.engine';
-
-export const readfile = function(...args) {
-    let p = __internal__.get_proxy_global('fs');
-    return p ? p.readfile(...args) : _real.readfile(...args);
-};
-export const writefile = function(...args) {
-    let p = __internal__.get_proxy_global('fs');
-    return p ? p.writefile(...args) : _real.writefile(...args);
-};
-// ... one entry per exported function
-```
-
-   Non-function exports are re-exported as simple assignments
-   (`export const X = _real.X`).
-
-3. A symlink `real_<name>.uc` is created in the shim directory, pointing at the
-   real module file. This allows `engine.uc`'s `get_real()` helper to load the
-   real module by requiring `real_fs` rather than `fs`, avoiding the shim.
+This is why adding a new module to `mocks` takes effect immediately with no
+other changes: the coordinator generates the shim automatically from the live
+module's export list.
 
 ---
 
 ## Stub shims for absent modules
 
 Some modules — `uloop`, `uclient` — are not present on every rootfs variant.
-The coordinator cannot inspect a module that does not exist, so it cannot generate
-a standard shim.
+The coordinator cannot inspect a module that does not exist, so it cannot
+generate a shim from its exports.
 
-If the built-in proxy for the module declares an `api` array (as `uloop.uc` and
-`uclient.uc` do), the manager generates a stub shim instead. A stub shim contains
-only the functions listed in `api` and always delegates to the active proxy; it
-has no real-module fallback:
+For these modules, the built-in proxy declares an explicit `api` list. The
+coordinator uses that list to write a stub shim — one that contains only the
+listed functions and always routes through the proxy with no real-module
+fallback. The module can be imported and mocked in tests even when it is not
+physically present on the system running the tests.
 
-```js
-import { __internal__ } from 'utest.mock.engine';
-
-export const init = function(...args) {
-    let p = __internal__.get_proxy_global('uloop');
-    if (p) return p.init(...args);
-};
-export const timer = function(...args) {
-    let p = __internal__.get_proxy_global('uloop');
-    if (p) return p.timer(...args);
-};
-// ...
-```
-
-Without `api`, the module is left unshimmed when absent. Importing it in a test
-file then fails at worker startup.
+Without an `api` list, an absent module is left unshimmed. Importing it in a
+test file fails at worker startup.
 
 ---
 
 ## Why the shim directory is prepended to the search path
 
-The worker is launched with the shim directory first in its `-L` flag list. ucode
-resolves modules in search-path order, so the shim shadows the real module at the
-path level — no changes to the test file or the real module are needed.
+The shim must shadow the real module at the path level so no changes to the
+test file or to the production code are required. Prepending the shim
+directory to the worker's search path achieves this: ucode resolves modules
+in order and picks the first match.
 
-The proxy directory (`$run_dir/proxy/`) is prepended before the shim directory.
-This ensures that a user-supplied proxy (configured via `{ proxy: 'path' }` in
-`config.mocks`) shadows any built-in proxy of the same name. The full search
-order seen by a worker is therefore:
+The full search order seen by a worker is:
 
-1. `$run_dir/proxy/` — user proxies and, transitively, built-in proxies via the
-   `utest.mock.proxy.*` namespace
-2. `$run_dir/shims/` — generated shims and `real_<name>` symlinks
-3. `src/` — utest framework source
-4. project root — test helpers and application source
+1. User and built-in proxy files
+2. Generated shims and real-module symlinks
+3. utest framework source
+4. Project root (test helpers and application source)
+
+A `real_<name>` symlink is written alongside each shim, pointing at the
+actual module file. This allows the proxy to load the real module by requiring
+`real_fs` rather than `fs`, bypassing the shim.
 
 ```mermaid
 flowchart LR
     IMP["import 'fs'"] --> P1
 
     subgraph "worker -L search path (first match wins)"
-        P1["1 · $run_dir/proxy/\nuser & built-in proxies"]
-        P2["2 · $run_dir/shims/\ngenerated shims\nreal_* symlinks"]
-        P3["3 · src/\nframework source"]
-        P4["4 · project root\ntest helpers / app source"]
+        P1["1 · proxy files"]
+        P2["2 · shims + real_* symlinks"]
+        P3["3 · framework source"]
+        P4["4 · project root"]
         P1 -->|"not found"| P2
         P2 -->|"not found"| P3
         P3 -->|"not found"| P4
@@ -132,3 +102,11 @@ flowchart LR
     P3 -->|"found"| RES
     P4 -->|"found"| RES
 ```
+
+---
+
+## See also
+
+- Why calling the same module from production code requires `mock.global.patch()`: [About mock.inject() vs mock.global.patch()](inject-vs-patch.md)
+- How the mock engine uses the generated proxy: [About the mock engine](mock-engine.md)
+- How to add a proxy for a new module: [How-to: Add a built-in proxy](../how-to/contributor/add-proxy.md)

@@ -10,8 +10,8 @@ export const ReporterBase = {
 	files: null,
 	seed: null,
 	_bundle_start_times: null,
-	_suite_stats: {},
-	_bundle_stats: {},
+	_suite_stats: null,
+	_bundle_stats: null,
 
 	init: function(use_color, files, seed) {
 		this.use_color = use_color;

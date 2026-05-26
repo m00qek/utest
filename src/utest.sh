@@ -1,6 +1,6 @@
 #!/bin/sh
 
-UTEST_SRC=$(cd "$(dirname "$0")" && pwd)
+UTEST_SRC=/usr/share/ucode
 UTEST_RUN_DIR=$(mktemp -d /tmp/utest_XXXXXX)
 cleanup() { rm -rf "$UTEST_RUN_DIR"; }
 trap cleanup EXIT

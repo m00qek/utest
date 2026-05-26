@@ -9,21 +9,20 @@ Mark a test or an entire describe block as skipped so it is excluded from the cu
 Replace `it()` with `skip()` or its alias `xit()`. Both are equivalent — use whichever reads more naturally in context:
 
 ```js
-import { describe, it, skip, xit } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, skip, xit, assert } from 'utest';
 
 describe("Authentication", () => {
     it("works with valid credentials", () => {
-        assert.ok(true);
+        assert.match(true, true);
     });
 
     skip("works with OAuth2 (not implemented yet)", () => {
         // This body is never executed.
-        assert.ok(false);
+        assert.match(true, false);
     });
 
     xit("handles MFA (coming soon)", () => {
-        assert.ok(false);
+        assert.match(true, false);
     });
 });
 ```
@@ -37,22 +36,21 @@ The test body is registered but never called. You can leave failing assertions, 
 Use `xdescribe()` instead of `describe()` to register every test inside the block as skipped:
 
 ```js
-import { describe, it, xdescribe } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, xdescribe, assert } from 'utest';
 
 describe("Stable feature", () => {
     it("works", () => {
-        assert.ok(true);
+        assert.match(true, true);
     });
 });
 
 xdescribe("Experimental feature", () => {
     it("does something unfinished", () => {
-        assert.ok(false);
+        assert.match(true, false);
     });
 
     it("does something else unfinished", () => {
-        assert.ok(false);
+        assert.match(true, false);
     });
 });
 ```
