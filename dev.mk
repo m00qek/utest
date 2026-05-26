@@ -1,8 +1,10 @@
+SDK_VERSION ?= 24.10.6
 SDK_ARCH ?= x86-64
 
-IMAGE_OPENWRT := openwrt/rootfs:$(SDK_ARCH)-openwrt-24.10
+OPENWRT_VERSION := $(shell echo $(SDK_VERSION) | sed 's/\.[^.]*$$//')
+IMAGE_OPENWRT := openwrt/rootfs:$(SDK_ARCH)-openwrt-$(OPENWRT_VERSION)
 
-.PHONY: test meta-test package
+.PHONY: test shell meta-test package
 
 test:
 	docker run --rm \
@@ -13,6 +15,16 @@ test:
 		-w /app \
 		$(IMAGE_OPENWRT) \
 		utest $(ARGS)
+
+shell:
+	docker run --rm -it \
+		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
+		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
+		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \
+		-v $(CURDIR):/app \
+		-w /app \
+		$(IMAGE_OPENWRT) \
+		sh
 
 meta-test:
 	./scripts/meta-test.sh

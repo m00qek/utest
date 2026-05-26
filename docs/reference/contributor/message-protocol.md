@@ -56,7 +56,7 @@ Emitted once per test, in shuffle order.
 | `FAIL` | `die()` was called (assertion failure); `error` is the message string |
 | `ERROR` | An unexpected exception was thrown; `error` is the exception string |
 | `SKIP` | Test was declared with `skip()` or `xit()` |
-| `IGNORE` | Test path did not match the `--filter` regex |
+| `IGNORE` | Test path did not match the `-f` filter regex |
 
 **`path` element**
 
@@ -146,7 +146,7 @@ Within a single suite the coordinator always receives events in this order:
 2. `TEST_RESULT` (zero or more, in shuffled test order)
 3. `SUITE_END` (exactly once) — **or** `FATAL` if the worker aborted early
 
-When `--jobs` is greater than 1, events from different suites may be interleaved.
+When `jobs` (from `utest.config.uc`) is greater than 1, events from different suites may be interleaved.
 Reporters must use the `suite` field to demultiplex per-file state.
 
 ```mermaid

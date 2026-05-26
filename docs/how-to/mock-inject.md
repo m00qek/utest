@@ -4,9 +4,32 @@ Use `mock.inject()` to replace a module's behaviour inside a single callback sco
 
 ---
 
+## Prefer dependency injection
+
+If your code receives a module as a parameter rather than importing it directly, pass the proxy straight to it. No `utest.config.uc` is needed:
+
+```js
+// src/reader.uc
+export function read_config(fs, path) {
+    return fs.readfile(path);
+}
+```
+
+```js
+// test
+import { read_config } from 'reader';
+
+mock.inject('fs', { data: { '/etc/config': 'mode=prod' } }, (m_fs) => {
+    assert.match('mode=prod', read_config(m_fs, '/etc/config'));
+});
+```
+
+
+---
+
 ## Declare the module in the config file
 
-Create a config file alongside your test file (e.g. `my_config.uc`) and list the module under `mocks`. Use `null` to request the built-in proxy:
+Create `utest.config.uc` at the project root and list the module under `mocks`:
 
 ```js
 return {
@@ -15,8 +38,6 @@ return {
     }
 };
 ```
-
-The framework reads this file and generates a shim for `fs` before running any tests.
 
 ---
 

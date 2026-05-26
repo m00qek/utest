@@ -46,16 +46,16 @@ make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
-For tests that require a config file (mock shims), pass `--config`:
+For tests that require a config file (mock shims), pass `-c`:
 
 ```bash
-make -f dev.mk test ARGS="-r json --config examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
+make -f dev.mk test ARGS="-r json -c examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
     > test/json/unit/11_mocking_fs_test.json
 ```
 
 The meta-test script detects a companion config file automatically by looking for
 `examples/<prefix>_config.uc` alongside each `<prefix>_test.uc`. `make -f dev.mk test`
-does not do this automatically, so you must pass `--config` explicitly
+does not do this automatically, so you must pass `-c` explicitly
 when regenerating by hand.
 
 ---
@@ -73,7 +73,7 @@ make -f dev.mk test ARGS="examples/unit/15_mymod_test.uc"
 4. Capture the json output as the baseline:
 
 ```bash
-make -f dev.mk test ARGS="-r json --config examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make -f dev.mk test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 
@@ -94,7 +94,7 @@ for `<prefix>_config.uc`. For example:
 |---|---|
 | `examples/unit/11_mocking_fs_test.uc` | `examples/unit/11_mocking_fs_config.uc` |
 | `examples/unit/14_uloop_test.uc` | `examples/unit/14_uloop_config.uc` |
-| `examples/unit/01_assertions_test.uc` | *(none — file absent, no `--config` passed)* |
+| `examples/unit/01_assertions_test.uc` | *(none — file absent, no `-c` passed)* |
 
 The bundle test (`08_bundles_test.uc`) is a special case: `scripts/meta-test.sh` passes a
 `MyBundle:` prefix to exercise named-bundle parsing.

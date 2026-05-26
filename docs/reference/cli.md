@@ -4,19 +4,15 @@
 
 ## CLI flags
 
-Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle in the form `[Name:]path`. If `path` does not end in `.uc` it is treated as a directory prefix and the active `--pattern` is appended. When no positional arguments are given, utest scans `test/unit/<pattern>`.
+Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle in the form `[Name:]path`. If `path` does not end in `.uc` it is treated as a directory prefix and the active `pattern` (from config) is appended. When no positional arguments are given, utest scans `test/unit/*_test.uc`.
 
-| Flag | Short | Type | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `--help` | `-h` | boolean | — | Print usage and exit. |
-| `--reporter=<fmt>` | `-r` | string | `detailed` | Output format. Accepted values: `detailed`, `compact`, `json`. |
-| `--pattern=<glob>` | `-p` | string | `*_test.uc` | Glob pattern appended to bundle directories to find test files. |
-| `--jobs=<n>` | `-j` | integer | `1` | Number of parallel worker processes. |
-| `--filter=<regex>` | `-f` | string | — | Run only tests whose full name matches the regex. |
-| `--config=<path>` | `-c` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared — no error is raised. |
-| `--seed=<n>` | — | integer | current timestamp sub-second | Shuffle seed for reproducible test ordering. Must be a non-negative integer. |
-| `--timeout=<s>` | — | integer | `60` | Worker timeout in seconds. A worker that exceeds this limit is killed. |
-| `--no-color` | — | boolean | — | Disable ANSI colour in reporter output. |
+| Flag | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `-h` | boolean | — | Print usage and exit. |
+| `-r <fmt>` | string | `detailed` | Output format. Accepted values: `detailed`, `compact`, `json`. |
+| `-f <regex>` | string | — | Run only tests whose full name matches the regex. |
+| `-c <path>` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared. |
+| `-l <path>` | string | — | Prepend a directory to the module search path. Repeatable. |
 
 ---
 

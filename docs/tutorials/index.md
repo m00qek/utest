@@ -10,8 +10,8 @@ Do these in order — each one builds on the previous.
 
 | Tutorial | Description |
 |---|---|
-| [Writing your first test suite](user/first-test.md) | Go from zero to a passing test file using `describe`, `it`, and `assert`. **Start here.** |
-| [Writing your first mock](user/first-mock.md) | Declare a mock module, seed virtual file content, and verify behavior with `mock.inject()`. |
+| [Writing your first test suite](user/first-test.md) | Create a source module, import it from a test file, and run the suite with `-l`. **Start here.** |
+| [Writing your first mock](user/first-mock.md) | Use dependency injection to pass a mock proxy directly to your code — no config file needed. |
 | [Writing flexible assertions with combinators](user/first-combinators.md) | Use `contains`, `any_order`, `truthy`, `regex`, and `not` to assert what matters without over-specifying what doesn't. |
 
 ---

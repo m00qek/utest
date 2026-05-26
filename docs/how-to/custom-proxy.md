@@ -40,26 +40,7 @@ return {
 };
 ```
 
----
-
-## The ctx API
-
-See [Proxy context API reference](../reference/contributor/proxy-ctx-api.md) for the full method list.
-
-Every proxy method that handles a keyed lookup should follow this decision order:
-
-```mermaid
-flowchart TD
-    A["call arrives at proxy method"] --> B{"behavior\noverride?"}
-    B -->|yes| C["invoke override\nreturn result"]
-    B -->|no| D{"data entry\nfor key?"}
-    D -->|yes| E["return data value"]
-    D -->|no| F{"strict: true?"}
-    F -->|yes| G["die()\n'strict mock: … is not mocked'"]
-    F -->|no| H["fall through to\nreal module / null"]
-```
-
-This is the pattern used by all built-in proxies. See [About strict mode](../explanation/strict-mode.md) for a full explanation of why the diagram is shaped this way.
+Every proxy method that handles a keyed lookup should follow this decision order: behavior override → data entry → strict die → real module/null. See [About strict mode](../explanation/strict-mode.md) for why. For the full list of `ctx` methods, see [Proxy context API reference](../reference/contributor/proxy-ctx-api.md).
 
 ---
 
@@ -133,5 +114,5 @@ return {
 ## Next steps
 
 - Understand scoped vs global mocking: [How-to: Mock a module with mock.inject()](mock-inject.md)
-- See where built-in proxies live in the source tree: [Reference: Source layout](../reference/contributor/source-layout.md)
 - Fail on unmocked calls in your proxy: [How-to: Use strict mode](strict-mode.md)
+- Add a custom proxy as a built-in for contributors: [How-to: Add a built-in proxy](contributor/add-proxy.md)

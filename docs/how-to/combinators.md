@@ -1,6 +1,8 @@
 # How to use combinators with assert.match()
 
-Use combinators to write flexible, composable assertions that go beyond exact equality.
+Use combinators to write flexible, composable assertions that go beyond exact equality. This guide covers when to reach for each combinator and how to compose them.
+
+For the full signature of each combinator, see [Reference: Assertions](../reference/assertions.md#combinator-factories).
 
 ---
 
@@ -15,125 +17,113 @@ import { describe, it, assert, equals, contains, truthy, falsy,
 
 ---
 
-## Match a partial object
+## When to use contains instead of a plain object
 
-`contains({...})` passes when the actual object contains at least the listed keys. Extra keys are ignored:
+A plain object passed to `assert.match` requires an **exact** key count. If the actual value has extra keys, the assertion fails. Use `contains({...})` whenever the code under test may return fields you do not need to verify:
 
 ```js
-describe('partial object matching', () => {
-    it('checks a response without caring about extra fields', () => {
-        const response = { code: 200, body: 'ok', latency_ms: 12 };
-        assert.match(contains({ code: 200, body: 'ok' }), response);
-    });
-});
+const response = { code: 200, body: 'ok', latency_ms: 12, request_id: 'abc' };
+
+// fails — extra keys not allowed in a plain object match
+// assert.match({ code: 200, body: 'ok' }, response);
+
+// passes — extra keys are ignored
+assert.match(contains({ code: 200, body: 'ok' }), response);
 ```
 
-Plain object expected values in `assert.match` require **exact** key count. Use `contains` whenever the code under test may return fields you do not need to verify.
-
----
-
-## Match a substring or array subsequence
-
-`contains` also works on strings and arrays:
+`contains` also works on strings (substring match) and arrays (ordered subsequence):
 
 ```js
-// substring
 assert.match(contains('24.10'), 'OpenWrt 24.10');
-
-// ordered subsequence — elements must appear in order, not necessarily adjacent
 assert.match(contains([1, 3]), [1, 2, 3, 4]);
 ```
 
-Array elements inside `contains([...])` may themselves be combinators:
-
-```js
-assert.match(contains([contains({ id: 1 })]),[{ id: 1, extra: 'ignored' }, { id: 2 }]);
-```
-
 ---
 
-## Match regardless of array order
+## When to use any_order vs contains for arrays
 
-`any_order([...])` passes when the actual array has the same elements as the expected array in any order:
+Use `any_order([...])` when you need all elements present but order varies. Use `contains([...])` when you need a subset in order.
 
 ```js
+// any_order — same elements, any sequence, exact count
 assert.match(any_order([1, 2, 3]), [3, 1, 2]);
-assert.match(any_order([contains({ name: 'A' }), contains({ name: 'B' })]),[{ name: 'B' }, { name: 'A' }]);
+
+// contains — elements must appear in this relative order, others allowed
+assert.match(contains([1, 3]), [1, 2, 3, 4]);
 ```
 
-The length must match exactly. Use `contains` when you want a subset; use `any_order` when you want all elements without caring about sequence.
+Both accept nested combinators as elements:
+
+```js
+assert.match(any_order([
+    contains({ name: 'A' }),
+    contains({ name: 'B' })
+]), [{ name: 'B', id: 2 }, { name: 'A', id: 1 }]);
+```
 
 ---
 
-## Match against a regex
+## When to use truthy/falsy instead of exact values
 
-`regex(re)` passes when the actual value is a string matching the pattern:
-
-```js
-assert.match(regex(/^utest/), 'utest@v1.2.3');
-assert.match(contains({ version: regex(/^\d+\.\d+/) }),{ version: '1.2.3' });
-```
-
----
-
-## Check truthiness or falsiness
-
-`truthy()` and `falsy()` test the truthiness of the actual value:
+Use `truthy()` and `falsy()` when you care about truth value but not the exact representation:
 
 ```js
+// avoid — brittle if the function ever returns 1 or "yes" instead of true
+// assert.match(true, is_connected());
+
+// prefer
 assert.match(truthy(), is_connected());
-assert.match(falsy(), error_code);
+assert.match(falsy(),  error_code);
+
+// compose inside contains
 assert.match(contains({ success: truthy(), error: falsy() }), result);
 ```
 
 ---
 
-## Invert a combinator
+## When to use regex for generated or formatted strings
 
-`not(combinator)` passes when the wrapped combinator would fail:
+Use `regex(re)` when the value's exact content is not predictable but its shape or content is:
 
 ```js
-assert.match(not(equals(4)), 5);
-assert.match(not(regex(/^\d+/)), 'hello');
-assert.match(not(contains({ code: 200 })), { code: 404 });
+assert.match(regex(/^\d+\.\d+\.\d+/), version_string);
+assert.match(contains({ id: regex(/^[0-9a-f]{8}$/) }), record);
 ```
 
 ---
 
-## Apply a custom predicate
+## When to use not
 
-`pred(fn)` passes when the predicate function returns truthy. Use this when no built-in combinator fits:
-
-```js
-assert.match(pred(x => x % 2 == 0), 4);
-assert.match(contains([pred(x => x > 2)]), [1, 2, 3]);
-```
-
-Pass a message via `assert.match` to make failures readable:
+`not(combinator)` is most useful for asserting invariants — values that must never have a certain property:
 
 ```js
-assert.match(pred(t => t > 0), timestamp, 'timestamp must be positive');
+// a 5xx response must never be ok
+assert.match(contains({ ok: not(equals(true)) }), build_response(500, ''));
+
+// a hostname must not be empty
+assert.match(not(equals('')), hostname);
+assert.match(not(regex(/^\s*$/)), hostname);
 ```
 
 ---
 
-## Use any() as a wildcard
+## When to use any() as a wildcard
 
-`any()` always passes. Use it to ignore specific fields or positions:
+`any()` always passes. Use it to ignore fields or positions you do not care about:
 
 ```js
-// ignore the id field — only check name
+// only check name — ignore id and timestamp
 assert.match(contains({ id: any(), name: 'Alice' }), record);
 
-// first element can be anything, second must be 1
+// first element can be anything; second must be 1
 assert.match(any_order([any(), 1]), [2, 1]);
 ```
 
 ---
 
-## Compose combinators
+## How to compose combinators into complex assertions
 
-Combinators nest freely. Build complex assertions by composing simple ones:
+Combinators nest freely. Build complex assertions from simple parts:
 
 ```js
 const event = {
@@ -153,10 +143,17 @@ assert.match(contains({
 }), event);
 ```
 
+If no built-in combinator fits, reach for `pred(fn)`:
+
+```js
+assert.match(pred(x => x % 2 == 0), value, 'expected even number');
+assert.match(contains([pred(x => x > 2)]), items);
+```
+
 ---
 
 ## Next steps
 
-- See every combinator's signature: [Reference: Assertions](../reference/assertions.md#combinator-factories)
-- Use combinators with mock spy call logs: [How-to: Inspect calls with spy()](spy.md)
-- Understand the full `assert.match` semantics: [Reference: Assertions — assert.match](../reference/assertions.md#assertmatchexpected-actual-msg)
+- Full signatures for all combinators: [Reference: Assertions](../reference/assertions.md#combinator-factories)
+- Use combinators with mock call logs: [How-to: Inspect calls with spy()](spy.md)
+- Learn combinators through a worked example: [Tutorial: Writing flexible assertions with combinators](../tutorials/user/first-combinators.md)

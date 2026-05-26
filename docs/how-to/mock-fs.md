@@ -6,9 +6,9 @@ Declare `fs: null` in your `utest.config.uc` `mocks` table before using any of t
 
 ---
 
-## Seed the data map
+## Seed virtual files and read them back
 
-Pass a `data` object whose keys are absolute paths and whose values are the file contents as strings. `null` as a value marks a path as absent (deleted):
+Pass a `data` object whose keys are absolute paths and whose values are the file contents as strings. `null` marks a path as explicitly absent:
 
 ```js
 import { describe, it, mock, assert, truthy } from 'utest';
@@ -17,19 +17,18 @@ describe('fs mock', () => {
     it('reads virtual files', () => {
         mock.inject('fs', { data: {
             '/tmp/config.txt': 'enabled=1',
-            '/tmp/other.txt':  'data'
+            '/tmp/other.txt':  'data',
+            '/tmp/deleted.txt': null
         }}, (m_fs) => {
             assert.match('enabled=1', m_fs.readfile('/tmp/config.txt'));
+            assert.match(null,         m_fs.readfile('/tmp/deleted.txt'));
+            assert.match(null,         m_fs.readfile('/tmp/absent.txt'));
         });
     });
 });
 ```
 
----
-
-## readfile and writefile
-
-`readfile()` returns the seeded string, or `null` for an unmocked path. `writefile()` stores the data so subsequent reads return the new value:
+`writefile()` stores the data so subsequent reads return the new value:
 
 ```js
 mock.inject('fs', { data: { '/tmp/writable.txt': 'initial' } }, (m_fs) => {
@@ -49,9 +48,9 @@ mock.inject('fs', { data: { '/tmp/seed.txt': 'seed' } }, (m_fs) => {
 
 ---
 
-## lsdir
+## List and search virtual directories
 
-`lsdir()` returns the immediate children of a path. Virtual entries are merged with real entries from the underlying filesystem (unless strict mode is active, which suppresses the real entries):
+`lsdir()` returns the immediate children of a virtual directory. Virtual entries are merged with real entries from the underlying filesystem (unless strict mode is active, which suppresses the real entries):
 
 ```js
 mock.inject('fs', { data: {
@@ -65,19 +64,7 @@ mock.inject('fs', { data: {
 });
 ```
 
----
-
-## glob
-
-`glob()` matches virtual paths against a shell-style pattern. Three wildcards are supported:
-
-| Wildcard | Matches |
-| :--- | :--- |
-| `*` | Any sequence of characters within one path component |
-| `?` | Any single character within one path component |
-| `**` | Any sequence of characters including path separators |
-
-Character classes (`[abc]`, `[0-9]`) are not supported. Real matches are merged with virtual matches unless strict mode suppresses them.
+`glob()` matches virtual paths against a shell-style pattern (see [Reference: Proxy Data Models — fs](../reference/proxy-data-models.md#fs) for the wildcard syntax). Real matches are merged with virtual matches unless strict mode suppresses them.
 
 ```js
 // * matches within one directory level
@@ -89,19 +76,6 @@ mock.inject('fs', { data: {
     const files = m_fs.glob('/tmp/glob/*.txt');
     sort(files);
     assert.match(['/tmp/glob/a.txt', '/tmp/glob/b.txt'], files);
-});
-```
-
-```js
-// ? matches exactly one character — test_10 has two digits and does not match
-mock.inject('fs', { data: {
-    '/tmp/test_1.uc': 'a',
-    '/tmp/test_2.uc': 'b',
-    '/tmp/test_10.uc': 'c'
-}}, (m_fs) => {
-    const files = m_fs.glob('/tmp/test_?.uc');
-    sort(files);
-    assert.match(['/tmp/test_1.uc', '/tmp/test_2.uc'], files);
 });
 ```
 
@@ -120,9 +94,9 @@ mock.inject('fs', { data: {
 
 ---
 
-## access and stat
+## Check whether a path exists or get its metadata
 
-`access()` returns `true` for any virtual file or any directory that contains one, `null` for everything else. `stat()` returns `{ size, mtime, type }` for virtual files (`type: 'regular'`, size in bytes) and `{ size: 0, mtime: 0, type: 'directory' }` for virtual directories, `null` for absent paths:
+`access()` returns `true` for any virtual file or any directory that contains one, `null` for everything else. `stat()` returns `{ size, mtime, type }` for virtual files (`type: 'regular'`, size in bytes), `{ size: 0, mtime: 0, type: 'directory' }` for virtual directories, or `null` for absent paths:
 
 ```js
 mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
@@ -134,8 +108,7 @@ mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
 
     // virtual directory — inferred from the file path above
     assert.match(truthy(), m_fs.access('/tmp/dir'));
-    let d = m_fs.stat('/tmp/dir');
-    assert.match('directory', d.type);
+    assert.match('directory', m_fs.stat('/tmp/dir').type);
 
     // absent path
     assert.match(null, m_fs.access('/tmp/absent.txt'));
@@ -145,7 +118,7 @@ mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
 
 ---
 
-## rename and unlink
+## Move or remove virtual files
 
 `rename()` moves a virtual file by copying the data to the new path and setting the old path to `null`. `unlink()` removes a virtual file by setting its path to `null`, which also removes it from `lsdir()`:
 
@@ -153,7 +126,7 @@ mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
 mock.inject('fs', { data: { '/tmp/old.txt': 'content' } }, (m_fs) => {
     assert.match(truthy(), m_fs.rename('/tmp/old.txt', '/tmp/new.txt'));
     assert.match('content', m_fs.readfile('/tmp/new.txt'));
-    assert.match(null, m_fs.readfile('/tmp/old.txt'));
+    assert.match(null,       m_fs.readfile('/tmp/old.txt'));
 });
 
 mock.inject('fs', { data: {
@@ -167,7 +140,7 @@ mock.inject('fs', { data: {
 
 ---
 
-## mkdir and chmod
+## Satisfy code that creates directories or changes permissions
 
 `mkdir()` and `chmod()` are no-ops that return `true`. They exist so code that creates directories or changes permissions does not fail under the mock:
 
@@ -180,17 +153,9 @@ mock.inject('fs', {}, (m_fs) => {
 
 ---
 
-## error
+## Simulate an error condition
 
-`error()` returns `null` by default, indicating no error:
-
-```js
-mock.inject('fs', {}, (m_fs) => {
-    assert.match(null, m_fs.error());
-});
-```
-
-Supply a `behavior` override to simulate error states:
+`error()` returns `null` by default, indicating no error. Supply a `behavior` override to simulate error states:
 
 ```js
 mock.inject('fs', { behavior: { error: () => 'ENOENT' } }, (m_fs) => {
@@ -204,4 +169,4 @@ mock.inject('fs', { behavior: { error: () => 'ENOENT' } }, (m_fs) => {
 
 - Control what happens on unmocked paths: [How-to: Use strict mode](strict-mode.md)
 - Intercept calls through the imported `fs` binding: [How-to: Patch global state with mock.global.patch()](mock-global-patch.md)
-- Mock UCI configuration: [How-to: Mock UCI](mock-uci.md)
+- See the full `data` key format and behavior override list: [Reference: Proxy Data Models — fs](../reference/proxy-data-models.md#fs)

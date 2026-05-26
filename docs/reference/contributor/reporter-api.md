@@ -30,7 +30,7 @@ The `status` field on `render_test_result` messages:
 | `FAIL` | `die()` was called (assertion failure) |
 | `ERROR` | An unexpected exception was thrown |
 | `SKIP` | Test was declared with `skip()` or `xit()` |
-| `IGNORE` | Test was excluded by the `--filter` regex |
+| `IGNORE` | Test was excluded by the `-f` regex |
 
 ---
 
@@ -46,5 +46,5 @@ The `stats` object present in `render_bundle_end` and in `ctx.stats` at summary 
 | `errors` | integer | Tests that threw unexpectedly |
 | `fatals` | integer | Suites that produced a FATAL event |
 | `skipped` | integer | Tests declared with `skip()` or `xit()` |
-| `ignored` | integer | Tests filtered out by `--filter` |
+| `ignored` | integer | Tests filtered out by `-f` |
 | `suites` | integer | Number of test files processed |

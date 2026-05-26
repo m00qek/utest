@@ -23,7 +23,11 @@ graph LR
 
 ## The layer model
 
-`mock.inject()` pushes a new layer onto a per-module stack. The proxy searches the stack top-down on every call, then falls back to global state (set by `mock.global.patch()`). When the callback exits the layer is popped, restoring the state beneath it automatically.
+`mock.inject()` pushes a new layer onto a per-module stack rather than overwriting current state. An inner inject call can override specific keys without destroying what outer layers declared, and each layer is popped automatically when its callback exits — even if the callback throws.
+
+The alternative, a flat mutable map, would require every test to save and restore state explicitly around any nested mock. A forgotten restore would silently corrupt all subsequent tests in the file. The stack makes cleanup unconditional and invisible to the test author.
+
+The proxy searches the stack top-down on every call, then falls back to global state (set by `mock.global.patch()`).
 
 ```mermaid
 graph TD
@@ -54,14 +58,6 @@ The **proxy** only handles mock logic — it looks up data, invokes behavior ove
 The **mock engine** only owns the layer stack and snapshot/restore cycle. It has no knowledge of any specific module, which means the same isolation guarantee applies uniformly across all proxied modules.
 
 Collapsing any two of these into one would couple concerns that need to evolve independently.
-
----
-
-## Why the layer model
-
-`mock.inject()` pushes a layer rather than replacing the mock state outright. An inner `inject()` call can override specific keys without destroying the outer context's state, and the layer is removed automatically when the callback exits — even if the callback throws.
-
-The alternative — a flat mutable map — would require explicit save/restore in every test that nests mocks, and a forgotten restore would silently corrupt subsequent tests.
 
 ---
 

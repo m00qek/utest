@@ -127,7 +127,7 @@ Run the example once with the `json` reporter and capture its output as the
 regression baseline:
 
 ```bash
-make -f dev.mk test ARGS="-r json --config examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make -f dev.mk test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 

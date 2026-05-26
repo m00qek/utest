@@ -8,13 +8,13 @@ Practical fixes for the most frequent issues encountered when running or configu
 
 **Symptom**: utest reports `0 total` and exits 0, even though test files exist.
 
-**Cause**: utest scans `test/unit/<pattern>` by default, where `<pattern>` is `*_test.uc`. Files outside that directory or with a different naming suffix are not discovered.
+**Cause**: utest scans `test/unit/*_test.uc` by default. Files outside that directory or with a different naming suffix are not discovered.
 
 **Fix**: Pass the file or directory explicitly:
 
 ```bash
-make -f dev.mk test ARGS="test/my_suite_test.uc"
-make -f dev.mk test ARGS="test/integration/"
+utest test/my_suite_test.uc
+utest test/integration/
 ```
 
 Or change the pattern in `utest.config.uc`:
@@ -23,19 +23,13 @@ Or change the pattern in `utest.config.uc`:
 return { pattern: '*_spec.uc' };
 ```
 
-Or pass it on the command line:
-
-```bash
-make -f dev.mk test ARGS="--pattern='*_spec.uc'"
-```
-
 ---
 
 ## A module import is not being intercepted
 
 **Symptom**: Inside a test, `import * as fs from 'fs'` returns the real filesystem module even though a mock is set up with `mock.inject()` or `mock.global.patch()`.
 
-**Cause**: The module was not listed in the `mocks` key of `utest.config.uc`. utest only intercepts modules that are declared there; all other imports resolve to the real module unchanged.
+**Cause**: The module was not listed in the `mocks` key of `utest.config.uc`.
 
 **Fix**: Add the module to your config file:
 
@@ -65,13 +59,7 @@ return {
 return { mocks: { 'uloop': null } };
 ```
 
-If the test genuinely needs more time (e.g. a slow integration fixture), raise the timeout:
-
-```bash
-make -f dev.mk test ARGS="--timeout=120"
-```
-
-Or set it in `utest.config.uc`:
+If the test genuinely needs more time, raise the timeout in `utest.config.uc`:
 
 ```js
 return { timeout: 120 };
@@ -81,20 +69,22 @@ return { timeout: 120 };
 
 ## Tests pass locally but fail in CI
 
-**Symptom**: All tests pass when run with `make -f dev.mk test` on a developer machine, but the same commit fails in the CI pipeline.
+**Symptom**: All tests pass locally but the same commit fails in CI.
 
 **Possible causes and fixes**:
 
-**Non-deterministic test ordering**: By default, utest shuffles test files. A random seed is printed in the summary. Reproduce the CI failure locally by passing the same seed:
+**Non-deterministic test ordering**: By default, utest shuffles tests. The seed is printed in the summary. Reproduce the CI failure locally by fixing the seed in `utest.config.uc`:
 
-```bash
-make -f dev.mk test ARGS="--seed=1234567890"
+```js
+return { seed: 1234567890 };
 ```
 
-**Parallel race condition**: Tests that share mutable global state can interfere when run concurrently. Set `--jobs=1` to confirm the failure is order-dependent:
+Remove the line once you have diagnosed the problem.
 
-```bash
-make -f dev.mk test ARGS="--jobs=1"
+**Parallel race condition**: Tests that share mutable global state can interfere when run concurrently. Set `jobs: 1` in `utest.config.uc` to confirm the failure is order-dependent:
+
+```js
+return { jobs: 1 };
 ```
 
 If the failure disappears, the tests share state that needs to be isolated per test (use `beforeEach`/`afterEach` to set up and tear down).
@@ -146,19 +136,23 @@ On OpenWrt, `/tmp` is a `tmpfs` mount sized to half of available RAM. If it is f
 
 **Symptom**: The `detailed` reporter output contains no ANSI color codes, making pass/fail lines hard to distinguish at a glance.
 
-**Cause**: Color is disabled either automatically (when stdout is not a TTY, e.g. in CI or when piped to a file) or explicitly via `--no-color`.
+**Cause**: Color is disabled either automatically (when stdout is not a TTY, e.g. in CI or when piped to a file) or explicitly via `color: false` in the config.
 
-**Fix**: If you are viewing output directly in a terminal and still see no color, check that your `utest.config.uc` does not set `color: false`. To force color on unconditionally (e.g. in CI systems that support it), there is no current override flag — remove the `color: false` line from the config or omit `--no-color`.
+**Fix**: Check that your `utest.config.uc` does not set `color: false`. To force color on unconditionally, set `color: true`:
+
+```js
+return { color: true };
+```
 
 ---
 
 ## An unrecognised option error
 
-**Symptom**: `utest: unrecognised option: --foo`
+**Symptom**: `utest: Unknown option: -x`
 
 **Cause**: The flag does not exist or is misspelled.
 
-**Fix**: Run `utest --help` to see every supported flag, or consult [Reference: CLI and Configuration](../reference/cli.md).
+**Fix**: Run `utest -h` to see every supported flag, or consult [Reference: CLI and Configuration](../reference/cli.md).
 
 ---
 

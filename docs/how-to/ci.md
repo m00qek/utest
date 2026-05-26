@@ -6,16 +6,24 @@ Integrate utest into a CI pipeline so that every push is validated automatically
 
 ## Prerequisites
 
-utest runs inside the official OpenWrt 24.10 Docker image. The CI host must have Docker available. No OpenWrt SDK or cross-compiler is required on the host itself — Docker provides the entire execution environment.
+utest must be available in the CI execution environment. On an OpenWrt device or rootfs image:
+
+```bash
+# OpenWrt ≤ 24.10
+opkg update && opkg install ucode-utest
+
+# OpenWrt ≥ 25.12
+apk add ucode-utest
+```
 
 ---
 
 ## Run the suite
 
-`make -f dev.mk test` wraps Docker. Run it with no arguments to execute the default test suite:
+Invoke utest with the directory containing your test files:
 
 ```bash
-make -f dev.mk test
+utest test/unit
 ```
 
 The exit code reflects the result: `0` means all tests passed, non-zero means at least one test failed, errored, or the runner encountered a fatal problem. This is the signal CI systems use to mark a build as passed or failed.
@@ -24,29 +32,28 @@ The exit code reflects the result: `0` means all tests passed, non-zero means at
 
 ## Use JSON output for machine-readable results
 
-Pass `--reporter=json` to emit a structured JSON object instead of human-readable text. This is useful when a CI system needs to parse results, store them as artefacts, or feed them into a test dashboard:
+Pass `-r json` to emit a structured JSON object instead of human-readable text. This is useful when a CI system needs to parse results or store them as artefacts:
 
 ```bash
-make -f dev.mk test ARGS="--reporter=json"
+utest -r json test/unit
 ```
-
-The JSON reporter writes one object to stdout covering every bundle, suite, and individual test result.
 
 ---
 
-## Increase parallelism
+## Run tests in parallel
 
-By default, utest runs one test file at a time. Pass `--jobs=N` to run up to `N` files concurrently. Each file runs in its own subprocess, so this is safe without any additional setup:
+Set `jobs` in `utest.config.uc` to run multiple test files concurrently. Each file runs in its own subprocess, so no additional setup is required:
 
-```bash
-make -f dev.mk test ARGS="--jobs=4"
+```js
+// utest.config.uc
+return { jobs: 4 };
 ```
-
-Choose `N` based on the number of available CPU cores on the CI runner. A reasonable default for most hosted runners is `4`.
 
 ---
 
 ## GitHub Actions example
+
+CI hosts run standard Linux, not OpenWrt. Use the official OpenWrt rootfs image to provide the right execution environment:
 
 ```yaml
 name: Test
@@ -56,14 +63,30 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - openwrt: '24.10.6'
+            install: 'opkg update && opkg install ucode-utest'
+          - openwrt: '25.12.3'
+            install: 'apk add ucode-utest'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run utest
-        run: make -f dev.mk test ARGS="--jobs=4"
+      - name: Run tests (OpenWrt ${{ matrix.openwrt }})
+        env:
+          OPENWRT: ${{ matrix.openwrt }}
+          INSTALL: ${{ matrix.install }}
+        run: |
+          VERSION=$(echo "$OPENWRT" | sed 's/\.[^.]*$//')
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            "openwrt/rootfs:x86-64-openwrt-${VERSION}" \
+            sh -c "${INSTALL} && utest test/unit"
 ```
 
-Docker is available on GitHub-hosted `ubuntu-latest` runners without any additional setup step.
+Docker is available on GitHub-hosted `ubuntu-latest` runners without any additional setup.
 
 ---
 
@@ -74,22 +97,10 @@ For CI systems that execute arbitrary shell scripts (Jenkins, Buildkite, GitLab 
 ```bash
 #!/bin/sh
 set -e
-make -f dev.mk test ARGS="--jobs=4"
+utest test/unit
 ```
 
-`set -e` causes the script to exit immediately when `make` returns non-zero, which propagates the failure to the CI system.
-
----
-
-## Run the regression suite
-
-For a full regression check that also validates the framework's own internals, use the meta-test target:
-
-```bash
-make -f dev.mk meta-test
-```
-
-This is what the project's own CI pipeline runs on every push.
+`set -e` causes the script to exit immediately when `utest` returns non-zero, which propagates the failure to the CI system.
 
 ---
 

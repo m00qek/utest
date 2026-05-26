@@ -1,42 +1,49 @@
 # Writing your first test suite
 
-In this tutorial, we will write a utest test suite from scratch, run it, observe a failure, and fix it. By the end you will have a working test file and know how to interpret utest's output.
+In this tutorial, we will write a ucode source module, import it from a test file, run the suite, and observe both a passing run and a deliberate failure. By the end you will have a working project layout and know how to interpret utest's output.
 
 ---
 
 ## What we will build
 
-A test file `test/unit/hello_test.uc` that exercises a small arithmetic helper. The suite will contain two tests that check return values with `assert.match`.
+A source module `src/math.uc` that exports an `add` function, and a test file `test/unit/math_test.uc` that imports and exercises it. We will use the `-l` flag to tell utest where to find the source module.
 
 ---
 
 ## Prerequisites
 
-- **Docker** — utest runs inside the official OpenWrt 24.10 image. Install Docker and make sure the daemon is running.
-- **GNU make** — used to invoke the Docker-based runner via `make -f dev.mk test`.
-
-You do not need an existing ucode project. You can follow along in any directory that contains the cloned repository.
+- utest installed: `opkg install ucode-utest` (OpenWrt ≤ 24.10) or `apk add ucode-utest` (OpenWrt ≥ 25.12).
+- A directory to work in. You do not need an existing ucode project.
 
 ---
 
-## Step 1 — Create the test file
+## Step 1 — Create the source module
 
-Create the directory and file:
+Create `src/math.uc`:
+
+```bash
+mkdir -p src
+```
+
+```js
+export function add(a, b) {
+    return a + b;
+}
+```
+
+---
+
+## Step 2 — Create the test file
+
+Create `test/unit/math_test.uc`:
 
 ```bash
 mkdir -p test/unit
-touch test/unit/hello_test.uc
 ```
-
-Open `test/unit/hello_test.uc` and add the following:
 
 ```js
 import { describe, it, assert } from 'utest';
-
-// The function under test — inline here for simplicity.
-function add(a, b) {
-    return a + b;
-}
+import { add } from 'math';
 
 describe("add()", () => {
     it("returns the sum of two positive numbers", () => {
@@ -50,20 +57,22 @@ describe("add()", () => {
 ```
 
 !!! note
-    Everything needed in a test file — DSL functions, assertions, and mocks — is imported from `'utest'`.
+    Everything needed from the test framework — DSL functions, assertions, and mocks — is imported from `'utest'`. Your own modules are imported by name, resolved against the search path.
 
 ---
 
-## Step 2 — Run the suite
+## Step 3 — Run the suite
+
+Pass `-l src` to add `src/` to the module search path so utest can resolve `import { add } from 'math'`:
 
 ```bash
-make -f dev.mk test ARGS="test/unit/hello_test.uc"
+utest -l src test/unit/math_test.uc
 ```
 
-utest pulls the OpenWrt Docker image on first use, then runs your tests inside it. You should see output similar to the following:
+You should see:
 
 ```
-[test/unit/hello_test.uc] test/unit/hello_test.uc
+[test/unit/math_test.uc] test/unit/math_test.uc
   [PASS] returns the sum of two positive numbers
   [PASS] returns a negative result when the sum is negative
 Summary:
@@ -80,7 +89,7 @@ The default reporter is `detailed`. Each test is shown on its own line with a `[
 
 ---
 
-## Step 3 — Introduce a deliberate failure
+## Step 4 — Introduce a deliberate failure
 
 Change the first test so it expects the wrong value:
 
@@ -93,13 +102,13 @@ Change the first test so it expects the wrong value:
 Run again:
 
 ```bash
-make -f dev.mk test ARGS="test/unit/hello_test.uc"
+utest -l src test/unit/math_test.uc
 ```
 
 The output now shows what went wrong:
 
 ```
-[test/unit/hello_test.uc] test/unit/hello_test.uc
+[test/unit/math_test.uc] test/unit/math_test.uc
   [FAIL] returns the sum of two positive numbers
          Expected 99
            got 5
@@ -118,7 +127,7 @@ Summary:
 
 ---
 
-## Step 4 — Fix it and go green
+## Step 5 — Fix it and go green
 
 Restore the correct expected value:
 
@@ -131,7 +140,7 @@ Restore the correct expected value:
 Run one more time:
 
 ```bash
-make -f dev.mk test ARGS="test/unit/hello_test.uc"
+utest -l src test/unit/math_test.uc
 ```
 
 Both tests pass and the summary shows `Failed: 0`.
@@ -140,15 +149,16 @@ Both tests pass and the summary shows `Failed: 0`.
 
 ## What we just built
 
-- A test file that imports everything from `'utest'`.
-- A `describe` block containing two `it` tests.
-- Two tests using `assert.match` for exact value checks.
+- A source module `src/math.uc` that exports a function.
+- A test file `test/unit/math_test.uc` that imports and exercises it.
+- The `-l src` flag that adds `src/` to the module search path.
 - Familiarity with the `detailed` reporter's pass and failure output.
 
 ---
 
 ## Next steps
 
+- Mock modules your code depends on: [Tutorial: Writing your first mock](first-mock.md)
 - Write flexible assertions for structured data: [Tutorial: Writing flexible assertions with combinators](first-combinators.md)
 - Learn to skip tests temporarily: [How-to: Skip tests](../../how-to/skip-tests.md)
 - Filter which tests run by name: [How-to: Filter tests by name](../../how-to/filter-tests.md)

@@ -4,6 +4,8 @@ Replace outgoing HTTP calls with canned responses so your tests run without a ne
 
 Declare `uclient: null` in your `utest.config.uc` `mocks` table. `uclient` is absent from some rootfs variants — declaring it is still enough because the framework generates a stub shim from the known API list. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the general setup steps.
 
+For the exact callback firing order and full `data` field reference, see [Reference: Proxy Data Models — uclient](../reference/proxy-data-models.md#uclient).
+
 ---
 
 ## Seed URL-keyed response data
@@ -48,18 +50,6 @@ mock.inject('uclient', {
     assert.match('connection_refused', got_error);
 });
 ```
-
----
-
-## Callback firing order
-
-When a successful response is found, `request()` fires callbacks in this order:
-
-1. `header_done` — always fired
-2. `data_read` — fired only when `body` is not `null`
-3. `data_eof` — always fired
-
-All callbacks fire synchronously inside `request()`. No event loop is required.
 
 ---
 

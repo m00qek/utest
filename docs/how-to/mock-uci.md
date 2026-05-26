@@ -6,7 +6,7 @@ Declare `uci: null` in your `utest.config.uc` `mocks` table before using any of 
 
 ---
 
-## Seed the data structure
+## Seed a configuration package
 
 The `data` map uses package names as top-level keys. Each package value is an object of section names, where each section is an object of option keys including the mandatory `.type` key:
 
@@ -27,24 +27,7 @@ const uci_data = {
         }
     }
 };
-```
 
-Pass this to `mock.inject()`:
-
-```js
-mock.inject('uci', { data: uci_data }, (m_uci) => {
-    let c = m_uci.cursor();
-    // ...
-});
-```
-
----
-
-## get
-
-`get(pkg, section, option)` returns the option value, or `null` if the package, section, or option is absent:
-
-```js
 mock.inject('uci', { data: uci_data }, (m_uci) => {
     let c = m_uci.cursor();
     assert.match('1', c.get('luci-sso', 'default', 'enabled'));
@@ -55,12 +38,16 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ---
 
-## get_all
+## Read an entire section at once
 
 `get_all(pkg, section)` returns the full section object including `.type`, or `null` if the section does not exist:
 
 ```js
-mock.inject('uci', { data: uci_data }, (m_uci) => {
+mock.inject('uci', { data: {
+    'luci-sso': {
+        'default': { '.type': 'oidc', 'issuer_url': 'https://idp.example.com', 'client_id': 'my-client' }
+    }
+}}, (m_uci) => {
     let c = m_uci.cursor();
     let sec = c.get_all('luci-sso', 'default');
     assert.match('oidc', sec['.type']);
@@ -71,12 +58,16 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ---
 
-## foreach with type filter
+## Iterate sections by type
 
 `foreach(pkg, type, callback)` iterates sections whose `.type` matches the given string, in insertion order. The callback receives each section with `.name` injected:
 
 ```js
-mock.inject('uci', { data: uci_data }, (m_uci) => {
+mock.inject('uci', { data: {
+    'luci-sso': {
+        'admin_role': { '.type': 'role', 'email': ['admin@example.com'] }
+    }
+}}, (m_uci) => {
     let names = [];
     m_uci.cursor().foreach('luci-sso', 'role', (s) => push(names, s['.name']));
     assert.match(['admin_role'], names);
@@ -85,7 +76,7 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ---
 
-## set
+## Write options and verify they persist within the mock
 
 `set(pkg, section, option, value)` writes a value and makes it immediately readable via `get()`. The change is confined to the mock layer and does not touch the real UCI database:
 
@@ -101,7 +92,7 @@ mock.inject('uci', { data: {
 
 ---
 
-## delete — option vs section
+## Delete an option or an entire section
 
 Pass three arguments to delete a single option; pass two to delete the entire section:
 
@@ -113,11 +104,15 @@ mock.inject('uci', { data: {
     let c = m_uci.cursor();
     c.delete('luci-sso', 'default', 'scope');
     assert.match(null, c.get('luci-sso', 'default', 'scope'));
-    assert.match('1', c.get('luci-sso', 'default', 'enabled'));
+    assert.match('1',  c.get('luci-sso', 'default', 'enabled'));
 });
 
 // Delete an entire section
-mock.inject('uci', { data: uci_data }, (m_uci) => {
+mock.inject('uci', { data: {
+    'luci-sso': {
+        'admin_role': { '.type': 'role', 'email': ['admin@example.com'] }
+    }
+}}, (m_uci) => {
     let c = m_uci.cursor();
     c.delete('luci-sso', 'admin_role');
     let names = [];
@@ -128,12 +123,12 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ---
 
-## commit
+## Exercise code paths that call commit()
 
 `commit()` is a no-op that returns `true`. Call it in tests that exercise code paths which persist configuration:
 
 ```js
-mock.inject('uci', { data: uci_data }, (m_uci) => {
+mock.inject('uci', {}, (m_uci) => {
     assert.match(true, m_uci.cursor().commit('luci-sso'));
 });
 ```
@@ -144,4 +139,4 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 - Fail loudly when code reads an unmocked package: [How-to: Use strict mode](strict-mode.md)
 - Intercept calls through the imported `uci` binding: [How-to: Patch global state with mock.global.patch()](mock-global-patch.md)
-- Mock ubus calls: [How-to: Mock ubus](mock-ubus.md)
+- See the full `data` key format and behavior override list: [Reference: Proxy Data Models — uci](../reference/proxy-data-models.md#uci)

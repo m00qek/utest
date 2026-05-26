@@ -78,20 +78,20 @@ sequenceDiagram
 ## Sequential vs parallel executor
 
 The executor choice is made by `src/utest/runner/executor.uc` based on the
-`--jobs` flag:
+`jobs` configuration key:
 
-**Sequential** (`--jobs 1`, the default): opens each worker with `fs.popen()`,
+**Sequential** (`jobs: 1`, the default): opens each worker with `fs.popen()`,
 reads lines from the pipe synchronously, closes the pipe before starting the
 next worker. Output arrives in the order tests run. No temporary files are
 involved.
 
-**Parallel** (`--jobs N`): launches up to N workers simultaneously using shell
+**Parallel** (`jobs: N`): launches up to N workers simultaneously using shell
 background jobs. Each worker's stdout is redirected to a temporary file in
 `$run_dir/pipes/`. The coordinator polls those files in a loop, advancing a
 byte offset as new complete lines appear. A `done` sentinel file signals that a
 worker has exited. The coordinator enforces a per-worker wall-clock timeout
-(default 60 seconds, configurable with `--timeout`); a worker that exceeds it
-is killed with `SIGKILL` and a synthetic FATAL event is emitted.
+(default 60 seconds, configurable via `timeout` in `utest.config.uc`); a worker
+that exceeds it is killed with `SIGKILL` and a synthetic FATAL event is emitted.
 
 The trade-off: sequential is simpler and produces interleaved output in a single
 stream; parallel reduces total wall time for slow test suites but requires
@@ -112,8 +112,8 @@ performance difference for realistic test suites.
 
 ```mermaid
 flowchart TD
-    A["executor.uc"] -->|"--jobs 1 (default)"| B["Sequential executor"]
-    A -->|"--jobs N"| C["Parallel executor"]
+    A["executor.uc"] -->|"jobs: 1 (default)"| B["Sequential executor"]
+    A -->|"jobs: N"| C["Parallel executor"]
 
     B --> B1["fs.popen(worker)"]
     B1 --> B2["read lines synchronously"]

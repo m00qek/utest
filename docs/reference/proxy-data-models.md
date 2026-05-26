@@ -27,6 +27,16 @@ mocks: { 'fs': null }
 
 `stat` on a virtual path returns `{ size: <byte length>, mtime: 0, type: 'regular' }`.
 
+**`glob` wildcard syntax:**
+
+| Wildcard | Matches |
+| :--- | :--- |
+| `*` | Any sequence of characters within one path component |
+| `?` | Any single character within one path component |
+| `**` | Any sequence of characters including path separators |
+
+Character classes (`[abc]`, `[0-9]`) are not supported.
+
 **`behavior` overrides:** `readfile`, `writefile`, `access`, `stat`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`.
 
 ```js

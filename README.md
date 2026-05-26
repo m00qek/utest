@@ -3,12 +3,11 @@
 A modern, non-invasive testing framework for [ucode](https://github.com/jow-/ucode), OpenWrt's scripting language.
 
 ```js
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, assert } from 'utest';
 
 describe("add()", () => {
     it("returns the sum of two numbers", () => {
-        assert.eq(add(2, 3), 5);
+        assert.match(5, add(2, 3));
     });
 });
 ```
@@ -31,7 +30,7 @@ Summary:
 ## Features
 
 - **Jasmine-style DSL** — `describe`, `it`, `beforeEach`, `afterEach`, `setup`, `teardown`
-- **9 assertions** — `eq`, `ne`, `ok`, `notOk`, `match`, `notMatch`, `throws`, `notThrows`, `contains`
+- **Assertions** — `assert.match(expected, actual)` with composable combinators: `equals`, `contains`, `truthy`, `falsy`, `not`, `pred`, `regex`, `any`, `any_order`
 - **Built-in mock proxies** — `fs`, `uci`, `ubus`, `uloop`, `uclient`
 - **Non-invasive** — no changes to the code under test; shims are generated at startup
 - **Parallel execution** — run test files concurrently with `--jobs=N`
@@ -44,7 +43,11 @@ Summary:
 **On OpenWrt** (from the package feed):
 
 ```bash
+# OpenWrt ≤ 24.10
 opkg install ucode-utest
+
+# OpenWrt ≥ 25.12
+apk add ucode-utest
 ```
 
 **For development** (requires Docker and GNU make):
@@ -64,12 +67,11 @@ make -f dev.mk test ARGS="--help"
 1. Create `test/unit/example_test.uc`:
 
 ```js
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, assert } from 'utest';
 
 describe("example", () => {
     it("passes", () => {
-        assert.eq(1 + 1, 2);
+        assert.match(2, 1 + 1);
     });
 });
 ```
@@ -88,14 +90,12 @@ return { mocks: { 'fs': null } };
 ```
 
 ```js
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
-import { mock } from 'utest';
+import { describe, it, assert, mock } from 'utest';
 
 describe("read_config()", () => {
     it("returns file content", () => {
         mock.inject('fs', { data: { '/etc/config': 'hello' } }, (fs) => {
-            assert.eq(fs.readfile('/etc/config'), 'hello');
+            assert.match('hello', fs.readfile('/etc/config'));
         });
     });
 });

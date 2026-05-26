@@ -64,7 +64,7 @@ export function not_null() {
 }
 ```
 
-A combinator factory returns an object with a `match(actual)` method. Returning `{ ok: true }` signals success; returning `{ ok: false, message: '...' }` signals failure and provides the error text that `assert.match` will display. Custom failure messages are passed as the third argument to `assert.match`, not to the factory itself.
+See [Reference: Assertions — Combinator factories](../../reference/assertions.md#combinator-factories) for the full combinator contract.
 
 ---
 

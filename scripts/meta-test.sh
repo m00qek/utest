@@ -3,6 +3,10 @@
 # Find the absolute path of the project root
 PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
+SDK_VERSION=${SDK_VERSION:-24.10.6}
+SDK_ARCH=${SDK_ARCH:-x86-64}
+OPENWRT_VERSION=$(echo "$SDK_VERSION" | sed 's/\.[^.]*$//')
+
 # Execute the verification harness inside the Docker environment
 run_verify() {
     example=$1
@@ -14,7 +18,7 @@ run_verify() {
         -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
         -v "$PROJECT_ROOT:/app" \
         -w /app \
-        openwrt/rootfs:x86-64-openwrt-24.10 \
+        openwrt/rootfs:${SDK_ARCH}-openwrt-${OPENWRT_VERSION} \
         ucode test/verify.uc "$example" "$expected" "$extra_flags"
 }
 

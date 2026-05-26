@@ -40,7 +40,7 @@ graph TD
 | `src/utest/runner/executor/base.uc` | Shared executor logic: `build_l_flags()` (constructs `-L` search path arguments), `dispatch()` (routes JSON events to reporter methods), `ExecutorBase.execute()` (shuffles files before delegating to `run()`). |
 | `src/utest/runner/executor/sequential.uc` | Single-worker executor. Opens each worker with `fs.popen()` and reads JSON lines synchronously. |
 | `src/utest/runner/executor/parallel.uc` | Multi-worker executor. Launches workers in background shell subprocesses, polls output files, enforces per-worker timeout, kills timed-out workers with `kill -9`. |
-| `src/utest/runner/reporter.uc` | Reporter factory. Maps the `--reporter` string (`detailed`, `compact`, `json`) to the appropriate module and calls `reporter.init()`. |
+| `src/utest/runner/reporter.uc` | Reporter factory. Maps the `-r` format string (`detailed`, `compact`, `json`) to the appropriate module and calls `reporter.init()`. |
 | `src/utest/runner/reporter/base.uc` | `ReporterBase` prototype. Accumulates stats, failure lists, and timing; calls `render_*` hooks if they exist on the concrete reporter. |
 | `src/utest/runner/reporter/detailed.uc` | Detailed (default) reporter. Prints one line per test with status label and error text. |
 | `src/utest/runner/reporter/compact.uc` | Compact reporter. Prints one dot per test, buffers failure details, prints them at bundle end. |

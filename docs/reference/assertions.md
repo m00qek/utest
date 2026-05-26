@@ -100,7 +100,7 @@ assert.match(equals(42), result);
 assert.match(any_order([equals('a'), equals('b')]), tags);
 ```
 
-Plain scalars inside `assert.match` behave identically — `equals` is most useful inside other combinators.
+A plain scalar passed directly to `assert.match` performs an identical check.
 
 ---
 
