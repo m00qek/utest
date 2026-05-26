@@ -27,7 +27,7 @@ docker run --rm \
     -v "$ROOT/bin:/builder/bin" \
     "openwrt/sdk:${SDK_ARCH}-${SDK_VERSION}" \
     bash -c "
-        ./scripts/feeds update -a &&
+        ./scripts/feeds update base &&
         ./scripts/feeds install ucode &&
         make defconfig &&
         make package/$PKG_NAME/compile V=s
