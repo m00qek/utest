@@ -18,6 +18,7 @@ trap "rm -rf $TMPDIR" EXIT
 sed "s/^PKG_VERSION:=.*/PKG_VERSION:=${PKG_VERSION}~${GIT_COMMIT}/" "$ROOT/Makefile" > "$TMPDIR/Makefile"
 
 mkdir -p "$ROOT/bin"
+chmod 777 "$ROOT/bin"
 
 docker run --rm \
     -v "$TMPDIR/Makefile:$PKG_SDK_DIR/Makefile:ro" \
