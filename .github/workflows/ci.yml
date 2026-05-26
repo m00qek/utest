@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run meta-tests
         run: make -f dev.mk meta-test
@@ -45,7 +45,7 @@ jobs:
         sdk_version: ["24.10.6", "25.12.3"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Export Project Variables
         run: |
@@ -58,7 +58,7 @@ jobs:
           GIT_COMMIT: ${{ env.GIT_COMMIT }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PKG_NAME }}-${{ matrix.sdk_version }}
           path: bin/packages/**/${{ env.PKG_NAME }}*
@@ -72,10 +72,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download all package artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
