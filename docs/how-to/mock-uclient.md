@@ -1,8 +1,6 @@
 # How to mock HTTP requests with uclient
 
-Replace outgoing HTTP calls with canned responses so your tests run without a network connection.
-
-Declare `uclient: null` in your `utest.config.uc` `mocks` table. `uclient` is absent from some rootfs variants — declaring it is still enough because the framework generates a stub shim from the known API list. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the general setup steps.
+Declare `uclient: null` in your `utest.config.uc` `mocks` table. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 For the exact callback firing order and full `data` field reference, see [Reference: Proxy Data Models — uclient](../reference/proxy-data-models.md#uclient).
 

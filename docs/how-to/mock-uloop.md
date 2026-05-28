@@ -1,8 +1,6 @@
 # How to mock the event loop
 
-Replace `uloop`'s event loop with a synchronous queue so timer-driven code is testable without real waits.
-
-Declare `uloop: null` in your `utest.config.uc` `mocks` table. `uloop` is absent from the OpenWrt rootfs — declaring it is still enough because the framework generates a stub shim from the known API list. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the general setup steps.
+Declare `uloop: null` in your `utest.config.uc` `mocks` table. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 ---
 
@@ -73,8 +71,6 @@ mock.inject('uloop', {}, (m_uloop) => {
 ---
 
 ## Model the io.sleep() pattern without blocking
-
-Code that initialises uloop, schedules a timer, and then calls `run()` to sleep for a duration is testable without any real delay:
 
 ```js
 mock.inject('uloop', {}, (m_uloop) => {

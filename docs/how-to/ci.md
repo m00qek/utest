@@ -4,20 +4,6 @@ Integrate utest into a CI pipeline so that every push is validated automatically
 
 ---
 
-## Prerequisites
-
-utest must be available in the CI execution environment. On an OpenWrt device or rootfs image:
-
-```bash
-# OpenWrt ≤ 24.10
-opkg update && opkg install ucode-utest
-
-# OpenWrt ≥ 25.12
-apk add ucode-utest
-```
-
----
-
 ## Run the suite
 
 Invoke utest with the directory containing your test files:

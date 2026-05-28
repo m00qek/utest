@@ -47,11 +47,10 @@ Each worker is a fresh `ucode` invocation:
 ```bash
 ucode -L <shim_dir> -L <src_dir> -L <cwd> \
       src/utest/runner/worker/bootstrap.uc \
-      '{"file":"...","filter":"...","bundle":"...","seed":...}'
+      '{"file":"...","filter":"...","bundle":"...","seed":...,"mocks":["fs","uci"]}'
 ```
 
-`bootstrap.uc` receives the JSON argument, loads the test file with
-`loadfile()`, then calls `worker_runner.run_tests()`. The worker reporter in
+`bootstrap.uc` receives the JSON argument. Before loading the test file it installs a `require()` override that routes calls to declared mock modules through their active global proxy (if any), complementing the shim mechanism that covers `import` statements. It then loads the test file with `loadfile()` and calls `worker_runner.run_tests()`. The worker reporter in
 `src/utest/runner/worker/reporter.uc` writes JSON objects to stdout — one per
 event, terminated by a newline. The coordinator reads those lines and routes them
 to the coordinator-side reporter.

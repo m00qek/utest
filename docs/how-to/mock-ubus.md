@@ -1,7 +1,5 @@
 # How to mock ubus calls
 
-Replace ubus IPC calls with canned responses so your tests run without a running ubus daemon.
-
 Declare `ubus: null` in your `utest.config.uc` `mocks` table before using any of the patterns below. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 ---

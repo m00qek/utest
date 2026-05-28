@@ -1,11 +1,5 @@
 # How to add a reporter
 
-Reporters format test output for the coordinator process. The coordinator calls
-reporter methods as events arrive from workers. Adding a reporter takes three
-steps: create the module, register it in the factory, and verify it manually.
-
----
-
 ## 1. Create the reporter module
 
 Create `src/utest/runner/reporter/<name>.uc`. A reporter is a prototype-extended

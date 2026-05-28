@@ -1,10 +1,5 @@
 # How to add a built-in proxy
 
-A built-in proxy teaches utest how to intercept a specific OpenWrt module — `fs`,
-`uloop`, `ubus`, and so on. This guide walks through adding a new one from scratch.
-
----
-
 ## 1. Create the proxy file
 
 Create `src/utest/mock/proxy/<name>.uc`, where `<name>` matches the ucode module

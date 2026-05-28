@@ -26,6 +26,8 @@ A **shim** is a generated ES-module that sits between the test file and the real
 
 On every call the shim checks whether a proxy is active. If one is, the call goes to the proxy. If not, the call falls through to the real module unchanged.
 
+For code under test that loads modules with `require()` rather than `import`, a companion `require()` override in the worker covers the same role. See [About shim generation](../explanation/shim-generation.md#intercepting-require-in-program-mode-code).
+
 ---
 
 ## Proxy
@@ -66,7 +68,7 @@ A **behavior override** is a function registered under a method name in the `beh
 
 **`mock.inject(name, state, callback)`** pushes a transient state layer, passes the proxy to the callback, and pops the layer when the callback returns or throws. The real imported binding in the test file is unaffected.
 
-**`mock.global.patch(name, state)`** writes into the shim's global state. Every call through the module's imported binding — including in the code under test — is intercepted until `mock.global.unpatch(name)` is called.
+**`mock.global.patch(name, state)`** writes into the shim's global state. Every call through the module's imported binding (`import * as mod from 'name'`) or via `require('name')` — including in the code under test — is intercepted until `mock.global.unpatch(name)` is called.
 
 See [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md) for the full trade-off analysis.
 

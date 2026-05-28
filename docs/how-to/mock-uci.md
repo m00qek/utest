@@ -1,7 +1,5 @@
 # How to mock UCI configuration
 
-Replace UCI reads and writes with an in-memory configuration tree so your tests run without a real UCI database.
-
 Declare `uci: null` in your `utest.config.uc` `mocks` table before using any of the patterns below. See [How-to: Mock a module with mock.inject()](mock-inject.md) for the setup steps.
 
 ---

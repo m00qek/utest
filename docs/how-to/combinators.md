@@ -6,17 +6,6 @@ For the full signature of each combinator, see [Reference: Assertions](../refere
 
 ---
 
-## Import combinators
-
-All combinators are exported from `'utest'` alongside the DSL:
-
-```js
-import { describe, it, assert, equals, contains, truthy, falsy,
-         not, pred, regex, any, any_order } from 'utest';
-```
-
----
-
 ## When to use contains instead of a plain object
 
 A plain object passed to `assert.match` requires an **exact** key count. If the actual value has extra keys, the assertion fails. Use `contains({...})` whenever the code under test may return fields you do not need to verify:

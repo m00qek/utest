@@ -1,9 +1,5 @@
 # How to use strict mode
 
-Add `strict: true` to the state object so the mock dies immediately when code calls a function or accesses data that was not explicitly seeded.
-
----
-
 ## Add strict: true to the state
 
 Pass `strict: true` alongside `data` and/or `behavior`:
@@ -23,8 +19,6 @@ describe('strict mode', () => {
 ```
 
 The error message matches the pattern `strict mock` and identifies the module and function or key that was accessed.
-
-For why strict mode exists and the trade-offs involved, see [About strict mode](../explanation/strict-mode.md).
 
 ---
 
@@ -107,3 +101,4 @@ For `fs`, strict mode suppresses the real filesystem when listing directories or
 - Seed data and behaviour for the mock: [How-to: Mock a module with mock.inject()](mock-inject.md)
 - Apply strict mode globally across a patch: [How-to: Patch global state with mock.global.patch()](mock-global-patch.md)
 - Write a proxy that enforces its own invariants: [How-to: Write a custom proxy](custom-proxy.md)
+- Why strict mode exists and its trade-offs: [About strict mode](../explanation/strict-mode.md)

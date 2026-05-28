@@ -105,6 +105,33 @@ flowchart LR
 
 ---
 
+## Intercepting require() in program-mode code
+
+Shims cover `import` statements. They do not help when code under test loads a module at runtime with `require('fs')` — `require()` is a function call that resolves against the module cache and is not affected by what is on the `-L` search path in the same way as compile-time imports.
+
+To close this gap, the worker installs a `require()` override in `bootstrap.uc` before the test file is loaded. The override checks whether the requested module has an active global proxy, and returns it directly if so. Only modules declared in `mocks` are checked; all other `require()` calls are passed through to the original built-in unchanged.
+
+```
+require('fs')
+    │
+    ▼
+global.require override
+    ├─ global proxy active? ──yes──▶ return proxy
+    │
+    ├─ module in mocks?
+    │     ├─ yes ──▶ try require('real_fs')  ─── found ──▶ return real module
+    │     │                                  └── not found ──▶ fall through
+    │     └─ no ──▶ fall through
+    │
+    └─ return _real_require(name)   (original built-in)
+```
+
+The `real_<name>` symlink that the coordinator places alongside each shim gives the override a way to reach the real module when no proxy is active — the same symlink that `get_real()` in the mock engine already uses. This avoids the override accidentally loading the ES-module shim (which `require()` cannot compile) when a mocked module is requested but not currently patched.
+
+The two mechanisms — shim for `import`, override for `require()` — both route to the same proxy object, so `mock.global.patch()` covers code under test regardless of how it loads its dependencies.
+
+---
+
 ## See also
 
 - Why calling the same module from production code requires `mock.global.patch()`: [About mock.inject() vs mock.global.patch()](inject-vs-patch.md)

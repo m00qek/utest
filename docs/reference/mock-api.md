@@ -59,7 +59,7 @@ assert.match('enabled=1', content);
 
 **Returns:** proxy object.
 
-Installs persistent global state for the named module and returns a proxy. When a shim is active for that module, code that imported the real module via `import * as mod from 'name'` transparently routes through the same mock engine, making the global state visible to production code under test.
+Installs persistent global state for the named module and returns a proxy. When a shim is active for that module, code that loads the module via `import * as mod from 'name'` or via `require('name')` transparently routes through the same mock engine, making the global state visible to production code under test.
 
 Global state is independent of scoped layers. `mock.inject` layers shadow global state but do not erase it; the global state becomes visible again when all layers are popped.
 
@@ -178,5 +178,5 @@ mock.restore(snap);
 ## See also
 
 - How mocking works end-to-end: [About the mocking architecture](../explanation/concepts.md)
-- When to use inject vs patch: [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md)
+- Scoped injection vs global state: [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md)
 - Data key format for each built-in proxy: [Proxy Data Models](proxy-data-models.md)

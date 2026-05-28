@@ -8,7 +8,7 @@ utest provides two mechanisms for mocking modules: `mock.inject()` and `mock.glo
 
 `mock.inject()` affects only the proxy object it passes to the callback. The real imported binding in the test file — the one you declared with `import * as fs from 'fs'` — is completely unaffected. Code inside the callback that calls `m_fs.readfile(...)` goes through the mock; code that calls `fs.readfile(...)` reaches the real module.
 
-`mock.global.patch()` affects the module's shim. The shim is a generated file that sits in front of the real module and is what `import * as fs from 'fs'` actually loads inside the worker process. When you patch the global state, every call to the shim — including calls made through the top-level `fs` binding in your test file — is intercepted.
+`mock.global.patch()` affects the module at two levels. For code that uses `import * as fs from 'fs'`, a generated shim sits in front of the real module; every call through the imported binding routes through the shim, which delegates to the proxy when a global patch is active. For code that loads modules at runtime with `require('fs')`, a `require()` override installed in the worker intercepts the call and returns the proxy directly. Both paths lead to the same proxy, so `mock.global.patch()` covers production code regardless of which loading style it uses.
 
 The diagram below shows how each path reaches (or bypasses) the proxy:
 
@@ -53,6 +53,32 @@ it('injects scoped mock via mock.inject()', () => {
     });
 });
 ```
+
+---
+
+## The require() constraint
+
+The `require()` override intercepts calls made at runtime — inside a function body. A top-level call at module initialisation time is evaluated once when the module is first loaded, before any test runs and therefore before any patch is applied. The variable that captures it holds the real module for the lifetime of the process:
+
+```js
+// production code — eager require at module scope
+const fs = require('fs');              // captured once, before any patch
+
+export function read_config() {
+    return fs.readfile('/etc/config'); // always calls real fs — patch has no effect
+}
+```
+
+Code that calls `require()` lazily, inside the function that uses it, is intercepted correctly:
+
+```js
+// production code — lazy require inside function body
+export function read_config() {
+    return require('fs').readfile('/etc/config'); // re-evaluated on each call — patch works
+}
+```
+
+This constraint does not apply to `import` statements, because the shim is resolved once at compile time to a shim that checks for the proxy on every call — the import binding is always live.
 
 ---
 

@@ -40,7 +40,7 @@ return {
 };
 ```
 
-Every proxy method that handles a keyed lookup should follow this decision order: behavior override → data entry → strict die → real module/null. See [About strict mode](../explanation/strict-mode.md) for why. For the full list of `ctx` methods, see [Proxy context API reference](../reference/contributor/proxy-ctx-api.md).
+Every proxy method that handles a keyed lookup should follow this decision order: behavior override → data entry → strict die → real module/null. For the full list of `ctx` methods, see [Proxy context API reference](../reference/contributor/proxy-ctx-api.md).
 
 ---
 

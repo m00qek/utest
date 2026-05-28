@@ -1,11 +1,5 @@
 # How to add an assertion
 
-The correct extension point for new assertions is a **combinator factory** exported from `src/utest/assert.uc`. Combinators integrate with `assert.match` and compose freely with all existing combinators.
-
-For a step-by-step walkthrough of adding a combinator from scratch, see [Tutorial: Contributing your first patch](../../tutorials/contributor/first-patch.md).
-
----
-
 ## 1. Add the combinator factory to `assert.uc`
 
 Open `src/utest/assert.uc` and add your factory alongside `equals`, `contains`, `truthy`, and the others. Each factory returns an object with a `match(actual)` method:

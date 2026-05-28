@@ -1,17 +1,5 @@
 # How to patch global state with mock.global.patch()
 
-Use `mock.global.patch()` when the code under test imports a module directly and calls it through the imported binding — `mock.inject()` does not intercept that binding, but the global patch does.
-
----
-
-## When to use this instead of inject
-
-If the code under test imports a module directly and calls it through its own binding, use `mock.global.patch()`. If you only need to intercept calls made through the proxy object inside a callback, use `mock.inject()`.
-
-See [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md) for the full trade-off analysis.
-
----
-
 ## Declare the module in the config file
 
 Add the module to `mocks` in the config file so the framework generates a shim:
@@ -78,8 +66,46 @@ mock.global.unpatch('ubus');
 
 ---
 
+## Test code that loads modules with require()
+
+`mock.global.patch()` also intercepts `require()` calls in code under test — no extra configuration is needed. Declare the module in the config as usual, then patch as normal:
+
+```js
+// utest.config.uc
+return { mocks: { uci: null } };
+```
+
+```js
+// production code (uses require, not import)
+export function get_hostname(uci_mod) {
+    return (uci_mod || require('uci')).cursor().get('system', '@system[0]', 'hostname');
+}
+```
+
+```js
+import { describe, it, mock, assert } from 'utest';
+import { get_hostname } from 'mylib';
+
+describe('get_hostname()', () => {
+    it('reads hostname from uci via require()', () => {
+        mock.global.patch('uci', {
+            data: { system: { '@system[0]': { '.type': 'system', hostname: 'myrouter' } } }
+        });
+        assert.match('myrouter', get_hostname());
+        mock.global.unpatch('uci');
+    });
+});
+```
+
+The `require('uci')` call inside `get_hostname` is intercepted by the worker's `require()` override and returns the proxy while the global patch is active.
+
+**Important:** the `require()` call must happen at runtime — inside the function body — not at module initialisation time. A module-level `const uci = require('uci')` captures the real module before any patch is applied and will not be intercepted. See [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md#the-require-constraint) for details.
+
+---
+
 ## Next steps
 
+- Decide between inject and patch: [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.md)
 - Scope a mock to a callback instead: [How-to: Mock a module with mock.inject()](mock-inject.md)
 - Fail loudly on unmocked calls: [How-to: Use strict mode](strict-mode.md)
 - Write a proxy that intercepts absent modules: [How-to: Write a custom proxy](custom-proxy.md)
