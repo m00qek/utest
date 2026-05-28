@@ -38,7 +38,7 @@ export function run(options) {
 	for (let i = 0; i < length(bundle_work); i++) {
 		let b = bundle_work[i];
 		reporter.bundle_start(b.name);
-		execute_suites(b.files, reporter, jobs, test_filter, b.name, options.run_dir, options.src_dir, options.shim_paths || [], options.seed, options.timeout || 60, options.lib_paths || []);
+		execute_suites(b.files, reporter, jobs, test_filter, b.name, options.run_dir, options.src_dir, options.shim_paths || [], options.seed, options.timeout || 60, options.lib_paths || [], keys(options.mocks || {}));
 		reporter.bundle_end(b.name);
 	}
 

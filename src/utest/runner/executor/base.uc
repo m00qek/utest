@@ -23,7 +23,7 @@ export const build_l_flags = function(src_dir, shim_paths, lib_paths) {
 };
 
 export const ExecutorBase = {
-	execute: function(files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths) {
-		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed, timeout || 60, lib_paths || []);
+	execute: function(files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks) {
+		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed, timeout || 60, lib_paths || [], mocks || []);
 	}
 };

@@ -15,6 +15,19 @@ if (!test_file) {
 
 const reporter = worker_reporter.create(test_file, bundle_name);
 
+const _real_require = require;
+const _mocked = {};
+for (let name in (args.mocks || [])) _mocked[name] = true;
+global.require = function(name) {
+	let reg = global.__utest_registries && global.__utest_registries[name];
+	let proxy = reg && reg.global.proxy;
+	if (proxy) return proxy;
+	if (_mocked[name]) {
+		try { return _real_require('real_' + name); } catch(e) {}
+	}
+	return _real_require(name);
+};
+
 try {
 	let test_dir = replace(test_file, /\/[^\/]+$/, "");
 	if (test_dir != test_file) {
