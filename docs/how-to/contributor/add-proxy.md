@@ -112,7 +112,7 @@ return {
 ```
 
 The runner looks for `<NN>_<name>_config.uc` alongside the test file
-automatically when `make -f dev.mk meta-test` is used.
+automatically when `make meta-test` is used.
 
 ---
 
@@ -122,11 +122,11 @@ Run the example once with the `json` reporter and capture its output as the
 regression baseline:
 
 ```bash
-make -f dev.mk test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 
-`make -f dev.mk test` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
+`make test` wraps `src/utest.sh` inside the official OpenWrt Docker image, so
 the output reflects the target environment.
 
 ---
@@ -137,4 +137,4 @@ the output reflects the target environment.
   for the full `ctx` method list.
 - Read [About shim generation](../../explanation/shim-generation.md) to understand
   why the config file is required.
-- Run the full regression suite with `make -f dev.mk meta-test` to confirm nothing is broken.
+- Run the full regression suite with `make meta-test` to confirm nothing is broken.

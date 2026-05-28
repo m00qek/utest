@@ -31,7 +31,7 @@ cd utest
 Before touching anything, confirm that the baseline is clean:
 
 ```bash
-make -f dev.mk meta-test
+make meta-test
 ```
 
 The script runs every example in `examples/` through the JSON reporter and compares the output against the stored baselines in `test/json/`. A passing run ends with:
@@ -149,7 +149,7 @@ describe("Assertions", () => {
 Run the example once to make sure it passes before regenerating the baseline:
 
 ```bash
-make -f dev.mk test ARGS="examples/unit/01_assertions_test.uc"
+make test ARGS="examples/unit/01_assertions_test.uc"
 ```
 
 You should see three passing tests.
@@ -161,7 +161,7 @@ You should see three passing tests.
 The regression suite compares live JSON output against the files in `test/json/`. Because you added a test, the baseline file is now stale and must be updated:
 
 ```bash
-make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
@@ -173,7 +173,7 @@ make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
 ## Step 7 — Run the regression suite again
 
 ```bash
-make -f dev.mk meta-test
+make meta-test
 ```
 
 The suite should end with:

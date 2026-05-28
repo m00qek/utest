@@ -8,7 +8,7 @@ file against a stored baseline. A mismatch means a behaviour changed.
 ## Run all regressions
 
 ```bash
-make -f dev.mk meta-test
+make meta-test
 ```
 
 The script runs inside the official OpenWrt 24.10 Docker image so results reflect
@@ -42,19 +42,19 @@ When you intentionally change behaviour, update the stored baseline after
 confirming the new output is correct:
 
 ```bash
-make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
 For tests that require a config file (mock shims), pass `-c`:
 
 ```bash
-make -f dev.mk test ARGS="-r json -c examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
+make test ARGS="-r json -c examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
     > test/json/unit/11_mocking_fs_test.json
 ```
 
 The meta-test script detects a companion config file automatically by looking for
-`examples/<prefix>_config.uc` alongside each `<prefix>_test.uc`. `make -f dev.mk test`
+`examples/<prefix>_config.uc` alongside each `<prefix>_test.uc`. `make test`
 does not do this automatically, so you must pass `-c` explicitly
 when regenerating by hand.
 
@@ -67,20 +67,20 @@ when regenerating by hand.
 3. Run the test once to confirm it passes with the detailed reporter:
 
 ```bash
-make -f dev.mk test ARGS="examples/unit/15_mymod_test.uc"
+make test ARGS="examples/unit/15_mymod_test.uc"
 ```
 
 4. Capture the json output as the baseline:
 
 ```bash
-make -f dev.mk test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 
 5. Run the full suite to confirm the new baseline is picked up:
 
 ```bash
-make -f dev.mk meta-test
+make meta-test
 ```
 
 ---
@@ -103,7 +103,7 @@ The bundle test (`08_bundles_test.uc`) is a special case: `scripts/meta-test.sh`
 
 ## Next steps
 
-- Run `make -f dev.mk meta-test` after every non-trivial change to catch regressions
+- Run `make meta-test` after every non-trivial change to catch regressions
   early.
 - Keep baselines committed alongside the example files so CI can detect
   regressions automatically.

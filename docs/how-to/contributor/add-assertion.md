@@ -65,10 +65,10 @@ Update the import at the top to include the new factory.
 ## 4. Regenerate the baseline and verify
 
 ```bash
-make -f dev.mk test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 
-make -f dev.mk meta-test
+make meta-test
 ```
 
 ---
@@ -76,4 +76,4 @@ make -f dev.mk meta-test
 ## Next steps
 
 - See all existing combinator factories: [Reference: Assertions — Combinator factories](../../reference/assertions.md#combinator-factories)
-- Run `make -f dev.mk meta-test` after every change to catch regressions early.
+- Run `make meta-test` after every change to catch regressions early.

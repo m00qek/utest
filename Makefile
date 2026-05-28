@@ -1,40 +1,33 @@
-include $(TOPDIR)/rules.mk
+SDK_VERSION ?= 24.10.6
+SDK_ARCH ?= x86-64
 
-PKG_NAME:=ucode-utest
-PKG_VERSION:=0.9.0
-PKG_RELEASE:=1
+OPENWRT_VERSION := $(shell echo $(SDK_VERSION) | sed 's/\.[^.]*$$//')
+IMAGE_OPENWRT := openwrt/rootfs:$(SDK_ARCH)-openwrt-$(OPENWRT_VERSION)
 
-PKG_MAINTAINER:=António Mora <oliveira.fh42@gmail.com>
-PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE
+.PHONY: test shell meta-test package
 
-include $(INCLUDE_DIR)/package.mk
+test:
+	docker run --rm \
+		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
+		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
+		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \
+		-v $(CURDIR):/app \
+		-w /app \
+		$(IMAGE_OPENWRT) \
+		utest $(ARGS)
 
-define Package/ucode-utest
-  SECTION:=devel
-  CATEGORY:=Development
-  TITLE:=Unit testing framework for ucode
-  URL:=https://github.com/m00qek/utest
-  DEPENDS:=+ucode
-  PKGARCH:=all
-endef
+shell:
+	docker run --rm -it \
+		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
+		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
+		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \
+		-v $(CURDIR):/app \
+		-w /app \
+		$(IMAGE_OPENWRT) \
+		sh
 
-define Package/ucode-utest/description
-  A modern, non-invasive testing framework for the ucode ecosystem.
-  Provides a describe/it DSL, built-in mock proxies for uci, ubus, fs,
-  uloop, and uclient, and both sequential and parallel test runners.
-endef
+meta-test:
+	./scripts/meta-test.sh
 
-define Build/Compile
-endef
-
-define Package/ucode-utest/install
-	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) ./src/utest.sh $(1)/usr/bin/utest
-
-	$(INSTALL_DIR) $(1)/usr/share/ucode
-	$(CP) ./src/utest.uc $(1)/usr/share/ucode/
-	$(CP) -r ./src/utest $(1)/usr/share/ucode/
-endef
-
-$(eval $(call BuildPackage,ucode-utest))
+package:
+	GIT_COMMIT=$(shell git rev-parse --short=8 HEAD) SDK_VERSION=$(SDK_VERSION) SDK_ARCH=$(SDK_ARCH) ./scripts/build-package.sh

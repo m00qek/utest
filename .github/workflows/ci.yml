@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Run meta-tests
-        run: make -f dev.mk meta-test
+        run: make meta-test
 
   package:
     name: Build Package (${{ matrix.sdk_version }})
@@ -46,11 +46,11 @@ jobs:
 
       - name: Export Project Variables
         run: |
-          grep '^PKG_NAME:=' Makefile | sed 's/:=/=/' >> $GITHUB_ENV
+          grep '^PKG_NAME:=' openwrt/ucode-utest/Makefile | sed 's/:=/=/' >> $GITHUB_ENV
           echo "GIT_COMMIT=${GITHUB_SHA::8}" >> $GITHUB_ENV
 
       - name: Build Package
-        run: make -f dev.mk package SDK_VERSION=${{ matrix.sdk_version }}
+        run: make package SDK_VERSION=${{ matrix.sdk_version }}
         env:
           GIT_COMMIT: ${{ env.GIT_COMMIT }}
 
