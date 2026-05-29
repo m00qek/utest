@@ -67,8 +67,6 @@ mock.inject('uci', {
 });
 ```
 
-The data map then doubles as a specification of what the code under test is expected to access.
-
 ---
 
 ## Combine strict with partial data

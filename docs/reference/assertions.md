@@ -202,7 +202,7 @@ assert.match(any_order([
 
 ### `any()`
 
-Always passes, regardless of what `actual` is. Use it as a wildcard inside larger structures.
+Always passes, regardless of what `actual` is. Commonly used as a wildcard position inside composite patterns.
 
 ```js
 assert.match(contains({ id: any(), name: 'Alice' }), record);
@@ -214,7 +214,7 @@ assert.match(any_order([any(), 1]), [1, 2]);
 ### `starts_with(expected)`
 
 - **String `actual`**: passes when `actual` starts with the string `expected`.
-- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its leading elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators.
+- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its leading elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators. The length of `actual` beyond `expected` is unconstrained; use a plain array or `equals` if you also need to fix the total length.
 
 ```js
 assert.match(starts_with('OpenWrt'), 'OpenWrt 24.10');
@@ -227,7 +227,7 @@ assert.match(starts_with([any(), 2]), [99, 2, 3]);
 ### `ends_with(expected)`
 
 - **String `actual`**: passes when `actual` ends with the string `expected`.
-- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its trailing elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators.
+- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its trailing elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators. The length of `actual` beyond `expected` is unconstrained; use a plain array or `equals` if you also need to fix the total length.
 
 ```js
 assert.match(ends_with('24.10'), 'OpenWrt 24.10');
@@ -262,7 +262,7 @@ assert.match(contains({ port: between(1024, 65535) }), config);
 
 ### `is_type(t)`
 
-Passes when `type(actual) == t`. The type string must match ucode's `type()` return values: `'int'`, `'double'`, `'string'`, `'bool'`, `'array'`, `'object'`, `'function'`.
+Passes when `type(actual) == t`. The type string must match ucode's `type()` return values: `'int'`, `'double'`, `'string'`, `'bool'`, `'array'`, `'object'`, `'function'`. `type(null)` returns `null` (not a string), so `is_type` cannot match `null`; use `equals(null)` instead.
 
 ```js
 assert.match(is_type('int'),    result);

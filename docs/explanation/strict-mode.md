@@ -59,6 +59,8 @@ The choice not to make strict mode the default was also deliberate. Strict mode 
 
 Strict mode makes tests more brittle in proportion to the number of paths the code touches. Every new call to the mocked module that was not anticipated at test-writing time will cause a failure until the data map is updated. This is a feature in narrow unit tests — you want to know — and a liability in broad integration tests — you do not want every feature addition to break existing tests.
 
+A side effect of this property is that the `data` map of a strict mock becomes a living specification of what the code under test is expected to access. The test fails not only when an assertion is wrong but also when the code reaches for something it was not supposed to.
+
 For a workflow that uses this trade-off deliberately, see [How-to: Use strict mode](../how-to/strict-mode.md).
 
 ---

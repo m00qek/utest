@@ -41,7 +41,7 @@ assert.match(any_order([1, 2, 3]), [3, 1, 2]);
 assert.match(contains([1, 3]), [1, 2, 3, 4]);
 ```
 
-Both accept nested combinators as elements:
+To match elements by partial structure rather than exact value, nest combinators inside either:
 
 ```js
 assert.match(any_order([
@@ -133,8 +133,6 @@ assert.match(is_type('int'),    result);
 assert.match(is_type('string'), hostname);
 ```
 
-`is_type` does not work for `null` — use `equals(null)` or `falsy()` for that.
-
 ---
 
 ## When to use starts_with and ends_with
@@ -160,8 +158,6 @@ assert.match(starts_with([contains({ type: 'connect' }), any()]), events);
 // last element must be an error
 assert.match(ends_with([contains({ ok: false })]), results);
 ```
-
-`starts_with` and `ends_with` do not constrain the unchecked portion of the array — use a plain array or `equals` if you also need to fix the length.
 
 ---
 
