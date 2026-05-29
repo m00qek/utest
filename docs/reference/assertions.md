@@ -235,3 +235,38 @@ assert.match(ends_with([3, 4]), [1, 2, 3, 4]);
 assert.match(ends_with([any(), 4]), [1, 2, 3, 4]);
 ```
 
+---
+
+### `has_length(n)`
+
+Passes when `actual` is a string, array, or object whose `length` equals `n`.
+
+```js
+assert.match(has_length(3), [1, 2, 3]);
+assert.match(has_length(5), 'hello');
+assert.match(contains({ items: has_length(0) }), response);
+```
+
+---
+
+### `between(min, max)`
+
+Passes when `actual` is a number in the range `[min, max]` (inclusive).
+
+```js
+assert.match(between(0, 100), signal_strength);
+assert.match(contains({ port: between(1024, 65535) }), config);
+```
+
+---
+
+### `is_type(t)`
+
+Passes when `type(actual) == t`. The type string must match ucode's `type()` return values: `'int'`, `'double'`, `'string'`, `'bool'`, `'array'`, `'object'`, `'function'`.
+
+```js
+assert.match(is_type('int'),    result);
+assert.match(is_type('string'), hostname);
+assert.match(contains({ timeout: is_type('int') }), config);
+```
+

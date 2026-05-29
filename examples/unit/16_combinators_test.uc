@@ -1,4 +1,4 @@
-import { describe, it, assert, equals, contains, truthy, falsy, not, pred, any_order, any, regex, starts_with, ends_with } from 'utest';
+import { describe, it, assert, equals, contains, truthy, falsy, not, pred, any_order, any, regex, starts_with, ends_with, has_length, between, is_type } from 'utest';
 
 describe('Combinators', () => {
 	it('assert.match() with a plain scalar behaves like assert.eq()', () => {
@@ -219,6 +219,34 @@ describe('Combinators', () => {
 			() => assert.match(ends_with('foo'), 42),
 			/Expected a string/
 		);
+	});
+
+	it('has_length() checks the length of strings, arrays, and objects', () => {
+		assert.match(has_length(3), [1, 2, 3]);
+		assert.match(has_length(5), 'hello');
+		assert.match(has_length(2), { a: 1, b: 2 });
+		assert.match(contains({ items: has_length(0) }), { items: [] });
+		assert.throws(() => assert.match(has_length(3), [1, 2]), /Expected length 3, got 2/);
+		assert.throws(() => assert.match(has_length(3), 42), /Expected a string/);
+	});
+
+	it('between() checks numeric ranges (inclusive)', () => {
+		assert.match(between(1, 10), 5);
+		assert.match(between(0, 100), 0);
+		assert.match(between(0, 100), 100);
+		assert.throws(() => assert.match(between(1, 10), 0), /between/);
+		assert.throws(() => assert.match(between(1, 10), 11), /between/);
+		assert.throws(() => assert.match(between(1, 10), 'x'), /Expected a number/);
+	});
+
+	it('is_type() checks the runtime type', () => {
+		assert.match(is_type('int'),    42);
+		assert.match(is_type('string'), 'hello');
+		assert.match(is_type('array'),  []);
+		assert.match(is_type('object'), {});
+		assert.match(is_type('bool'),   true);
+		assert.match(contains({ port: is_type('int') }), { port: 8080, host: 'localhost' });
+		assert.throws(() => assert.match(is_type('int'), 'hello'), /Expected type 'int', got 'string'/);
 	});
 
 	it('truthy() and falsy() check truthiness', () => {

@@ -110,6 +110,33 @@ assert.match(any_order([any(), 1]), [2, 1]);
 
 ---
 
+## When to use has_length, between, and is_type
+
+Use `has_length(n)` to assert the length of a string, array, or object without specifying its contents:
+
+```js
+assert.match(has_length(0), errors);                          // empty list
+assert.match(contains({ items: has_length(3) }), response);  // nested length
+```
+
+Use `between(min, max)` to assert a numeric value falls in a range:
+
+```js
+assert.match(between(0, 100), signal_strength);
+assert.match(contains({ port: between(1024, 65535) }), config);
+```
+
+Use `is_type(t)` to assert the runtime type with a clear failure message. Pass the exact string that ucode's `type()` returns (`'int'`, `'string'`, `'bool'`, `'array'`, `'object'`, `'function'`):
+
+```js
+assert.match(is_type('int'),    result);
+assert.match(is_type('string'), hostname);
+```
+
+`is_type` does not work for `null` — use `equals(null)` or `falsy()` for that.
+
+---
+
 ## When to use starts_with and ends_with
 
 Use `starts_with` and `ends_with` to assert prefixes and suffixes without fixing the full length:

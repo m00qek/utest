@@ -340,3 +340,40 @@ export function any_order(expected) {
 	}, Combinator);
 };
 
+export function has_length(n) {
+	return proto({
+		match: function(actual) {
+			const t = type(actual);
+			if (t != 'string' && t != 'array' && t != 'object')
+				return { ok: false, message: sprintf("Expected a string, array, or object, got %s", t) };
+			const l = length(actual);
+			if (l == n)
+				return { ok: true };
+			return { ok: false, message: sprintf("Expected length %d, got %d", n, l) };
+		}
+	}, Combinator);
+};
+
+export function between(min, max) {
+	return proto({
+		match: function(actual) {
+			if (type(actual) != 'int' && type(actual) != 'double')
+				return { ok: false, message: sprintf("Expected a number, got %s", type(actual)) };
+			if (actual >= min && actual <= max)
+				return { ok: true };
+			return { ok: false, message: sprintf("Expected value between %s and %s, got %s", min, max, actual) };
+		}
+	}, Combinator);
+};
+
+export function is_type(expected) {
+	return proto({
+		match: function(actual) {
+			const t = type(actual);
+			if (t == expected)
+				return { ok: true };
+			return { ok: false, message: sprintf("Expected type '%s', got '%s'", expected, t) };
+		}
+	}, Combinator);
+};
+
