@@ -1,4 +1,4 @@
-import { describe, it, assert, equals, contains, truthy, falsy, not, pred, any_order, any, regex } from 'utest';
+import { describe, it, assert, equals, contains, truthy, falsy, not, pred, any_order, any, regex, starts_with, ends_with } from 'utest';
 
 describe('Combinators', () => {
 	it('assert.match() with a plain scalar behaves like assert.eq()', () => {
@@ -182,6 +182,42 @@ describe('Combinators', () => {
 		assert.throws(
 			() => assert.match(contains([any(), 1]), [1]),
 			/contain/
+		);
+	});
+
+	it('starts_with() matches string prefixes and array prefixes', () => {
+		assert.match(starts_with('OpenWrt'), 'OpenWrt 24.10');
+		assert.match(starts_with([1, 2]), [1, 2, 3, 4]);
+		assert.match(starts_with([any(), 2]), [99, 2, 3]);
+		assert.throws(
+			() => assert.match(starts_with('foo'), 'barfoo'),
+			/start with/
+		);
+		assert.throws(
+			() => assert.match(starts_with([1, 2]), [0, 1, 2]),
+			/Expected/
+		);
+		assert.throws(
+			() => assert.match(starts_with('foo'), 42),
+			/Expected a string/
+		);
+	});
+
+	it('ends_with() matches string suffixes and array suffixes', () => {
+		assert.match(ends_with('24.10'), 'OpenWrt 24.10');
+		assert.match(ends_with([3, 4]), [1, 2, 3, 4]);
+		assert.match(ends_with([any(), 4]), [1, 2, 3, 4]);
+		assert.throws(
+			() => assert.match(ends_with('foo'), 'foobar'),
+			/end with/
+		);
+		assert.throws(
+			() => assert.match(ends_with([3, 4]), [3, 4, 5]),
+			/Expected/
+		);
+		assert.throws(
+			() => assert.match(ends_with('foo'), 42),
+			/Expected a string/
 		);
 	});
 

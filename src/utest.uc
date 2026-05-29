@@ -1,7 +1,8 @@
 import * as dsl from 'utest.dsl';
 import { mock as _mock } from 'utest.mock.engine';
 import { spy as _spy } from 'utest.mock.spy';
-import { assert as _assert, equals as _equals, contains as _contains, truthy as _truthy, falsy as _falsy, not as _not, pred as _pred, any_order as _any_order, any as _any, regex as _regex } from 'utest.assert';
+import { assert as _assert } from 'utest.assert';
+import { equals as _equals, contains as _contains, truthy as _truthy, falsy as _falsy, not as _not, pred as _pred, any_order as _any_order, any as _any, regex as _regex, starts_with as _starts_with, ends_with as _ends_with } from 'utest.combinators';
 
 export const describe = dsl.describe;
 export const xdescribe = dsl.xdescribe;
@@ -24,3 +25,5 @@ export const pred = _pred;
 export const any_order = _any_order;
 export const any = _any;
 export const regex = _regex;
+export const starts_with = _starts_with;
+export const ends_with = _ends_with;

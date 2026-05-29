@@ -110,6 +110,34 @@ assert.match(any_order([any(), 1]), [2, 1]);
 
 ---
 
+## When to use starts_with and ends_with
+
+Use `starts_with` and `ends_with` to assert prefixes and suffixes without fixing the full length:
+
+```js
+// string prefix / suffix
+assert.match(starts_with('ERROR:'), log_line);
+assert.match(ends_with('.uc'), filename);
+
+// array prefix / suffix — length of the rest does not matter
+assert.match(starts_with(['connect', 'auth']), event_log);
+assert.match(ends_with(['done']), pipeline_steps);
+```
+
+Elements in the array form accept combinators:
+
+```js
+// first element is a connect event, second can be anything
+assert.match(starts_with([contains({ type: 'connect' }), any()]), events);
+
+// last element must be an error
+assert.match(ends_with([contains({ ok: false })]), results);
+```
+
+`starts_with` and `ends_with` do not constrain the unchecked portion of the array — use a plain array or `equals` if you also need to fix the length.
+
+---
+
 ## How to compose combinators into complex assertions
 
 Combinators nest freely. Build complex assertions from simple parts:

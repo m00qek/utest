@@ -208,3 +208,30 @@ Always passes, regardless of what `actual` is. Use it as a wildcard inside large
 assert.match(contains({ id: any(), name: 'Alice' }), record);
 assert.match(any_order([any(), 1]), [1, 2]);
 ```
+
+---
+
+### `starts_with(expected)`
+
+- **String `actual`**: passes when `actual` starts with the string `expected`.
+- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its leading elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators.
+
+```js
+assert.match(starts_with('OpenWrt'), 'OpenWrt 24.10');
+assert.match(starts_with([1, 2]), [1, 2, 3, 4]);
+assert.match(starts_with([any(), 2]), [99, 2, 3]);
+```
+
+---
+
+### `ends_with(expected)`
+
+- **String `actual`**: passes when `actual` ends with the string `expected`.
+- **Array `actual`**: passes when `actual` has at least as many elements as `expected` and its trailing elements match `expected` element-by-element. Elements of `expected` may be plain values (compared with `equals`) or combinators.
+
+```js
+assert.match(ends_with('24.10'), 'OpenWrt 24.10');
+assert.match(ends_with([3, 4]), [1, 2, 3, 4]);
+assert.match(ends_with([any(), 4]), [1, 2, 3, 4]);
+```
+
