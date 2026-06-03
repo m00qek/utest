@@ -8,9 +8,16 @@ return {
 			let f = ctx.get_behavior('cursor');
 			if (f) return f();
 
-			let cursor_calls = { get: [], get_all: [], foreach: [], set: [], commit: [], save: [], "delete": [] };
+			let cursor_calls = { load: [], get: [], get_all: [], foreach: [], set: [], commit: [], save: [], "delete": [] };
 			return {
 				__utest__: { calls: cursor_calls },
+
+				load: function(pkg) {
+					push(cursor_calls.load, [pkg]);
+					let override = ctx.get_behavior('load');
+					if (override) return override(pkg);
+					return true;
+				},
 
 				get: function(pkg, sec, opt) {
 					push(cursor_calls.get, [pkg, sec, opt]);
@@ -36,7 +43,8 @@ return {
 					let p = ctx.get_data(pkg);
 					if (type(p) != 'object') return null;
 					let s = p[sec];
-					return (type(s) == 'object') ? s : null;
+					if (type(s) != 'object') return null;
+					return { ...s, '.name': sec };
 				},
 
 				foreach: function(pkg, type_name, cb) {

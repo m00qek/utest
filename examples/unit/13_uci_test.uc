@@ -44,10 +44,11 @@ describe('uci Mocking', () => {
 		});
 	});
 
-	it('get_all() returns the full section object', () => {
+	it('get_all() returns the full section object including .name', () => {
 		mock.inject('uci', { data: uci_data }, (m_uci) => {
 			let c = m_uci.cursor();
 			let sec = c.get_all('luci-sso', 'default');
+			assert.match('default', sec['.name']);
 			assert.match('oidc', sec['.type']);
 			assert.match('my-client', sec.client_id);
 			assert.match(null, c.get_all('luci-sso', 'no-sec'));
@@ -69,6 +70,20 @@ describe('uci Mocking', () => {
 			assert.match('admin_role', first['.name']);
 			assert.match('admin@example.com', first.email[0]);
 			assert.match('*', first.read[0]);
+		});
+	});
+
+	it('load() is a no-op returning true', () => {
+		mock.inject('uci', { data: uci_data }, (m_uci) => {
+			assert.match(truthy(), m_uci.cursor().load('luci-sso'));
+		});
+	});
+
+	it('load() is recorded in cursor call history', () => {
+		mock.inject('uci', { data: uci_data }, (m_uci) => {
+			let c = m_uci.cursor();
+			c.load('luci-sso');
+			assert.match([['luci-sso']], c.__utest__.calls.load);
 		});
 	});
 

@@ -62,6 +62,24 @@ describe('ubus Mocking', () => {
 		});
 	});
 
+	it('disconnect() is a no-op', () => {
+		mock.inject('ubus', { data: {} }, (m_ubus) => {
+			const conn = m_ubus.connect();
+			conn.disconnect();
+			assert.match([[ ]], conn.__utest__.calls.disconnect);
+		});
+	});
+
+	it('disconnect() is recorded in connection call history', () => {
+		mock.inject('ubus', { data: { 'a:b': { ok: true } } }, (m_ubus) => {
+			const conn = m_ubus.connect();
+			conn.call('a', 'b', {});
+			conn.disconnect();
+			assert.match(1, length(conn.__utest__.calls.call));
+			assert.match(1, length(conn.__utest__.calls.disconnect));
+		});
+	});
+
 	it('strict mode dies on unmocked calls', () => {
 		assert.throws(() => {
 			mock.inject('ubus', { strict: true, data: {} }, (m_ubus) => {

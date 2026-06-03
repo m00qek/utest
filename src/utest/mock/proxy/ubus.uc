@@ -8,7 +8,7 @@ return {
 			let f = ctx.get_behavior('connect');
 			if (f) return f();
 
-			let conn_calls = { call: [] };
+			let conn_calls = { call: [], disconnect: [] };
 			return {
 				__utest__: { calls: conn_calls },
 				call: function(obj, method, args) {
@@ -26,6 +26,11 @@ return {
 					}
 
 					return (type(val) == 'function') ? val(args) : val;
+				},
+				disconnect: function() {
+					push(conn_calls.disconnect, []);
+					let override = ctx.get_behavior('disconnect');
+					if (override) return override();
 				}
 			};
 		};

@@ -3,6 +3,74 @@ return {
 	create: function(name, real, ctx) {
 		let proxy = ctx.base();
 
+		// Build a file handle backed by a string.  on_close(written), if provided,
+		// is called with everything that was write()n when close() is called.
+		function make_handle(content, on_close) {
+			let remaining = content ?? '';
+			let written = '';
+			return {
+				read: function(n) {
+					if (n == 'all') { let r = remaining; remaining = ''; return r; }
+					if (n == 'line') {
+						let i = index(remaining, '\n');
+						if (i < 0) { let r = remaining; remaining = ''; return length(r) ? r : null; }
+						let r = substr(remaining, 0, i + 1);
+						remaining = substr(remaining, i + 1);
+						return r;
+					}
+					let cnt = +n;
+					let r = substr(remaining, 0, cnt);
+					remaining = substr(remaining, cnt);
+					return r;
+				},
+				write: function(data) { written += data; return length(data); },
+				close: function() { if (on_close) on_close(written); },
+				error: function() { return null; }
+			};
+		}
+
+		proxy.open = function(path, mode) {
+			ctx.record_call('open', [path, mode]);
+			let f = ctx.get_behavior('open');
+			if (f) return f(path, mode);
+
+			mode ??= 'r';
+			let existing = ctx.get_data(path);
+
+			if (substr(mode, 0, 1) == 'r') {
+				if (existing != null) return make_handle(existing, null);
+				if (ctx.is_strict()) die("strict mock: 'fs.open' called with unmocked path: " + path);
+				return real ? real.open(path, mode) : null;
+			}
+
+			if (ctx.is_active()) {
+				let base = (substr(mode, 0, 1) == 'a') ? (existing ?? '') : '';
+				return make_handle('', (data) => ctx.set_data(path, base + data));
+			}
+
+			return real ? real.open(path, mode) : null;
+		};
+
+		proxy.popen = function(cmd, mode) {
+			ctx.record_call('popen', [cmd, mode]);
+			let f = ctx.get_behavior('popen');
+			if (f) return f(cmd, mode);
+
+			mode ??= 'r';
+			let existing = ctx.get_data(cmd);
+
+			if (substr(mode, 0, 1) == 'r') {
+				if (existing != null) return make_handle(existing, null);
+				if (ctx.is_strict()) die("strict mock: 'fs.popen' called with unmocked command: " + cmd);
+				return real ? real.popen(cmd, mode) : null;
+			}
+
+			if (ctx.is_active())
+				return make_handle('', (data) => ctx.set_data(cmd, data));
+
+			return real ? real.popen(cmd, mode) : null;
+		};
+
 		proxy.readfile = function(path) {
 			ctx.record_call('readfile', [path]);
 			let f = ctx.get_behavior('readfile');

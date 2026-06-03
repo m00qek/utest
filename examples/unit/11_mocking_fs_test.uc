@@ -202,4 +202,98 @@ describe('FS Mocking', () => {
 		});
 	});
 
+	it('open() in read mode returns a handle that reads the virtual file', () => {
+		mock.inject('fs', { data: { '/tmp/hello.txt': 'line1\nline2\n' } }, (m_fs) => {
+			const f = m_fs.open('/tmp/hello.txt', 'r');
+			assert.match('line1\n', f.read('line'));
+			assert.match('line2\n', f.read('line'));
+			assert.match(null,     f.read('line'));
+			f.close();
+		});
+	});
+
+	it('open() in read mode supports read("all")', () => {
+		mock.inject('fs', { data: { '/tmp/all.txt': 'hello world' } }, (m_fs) => {
+			const f = m_fs.open('/tmp/all.txt', 'r');
+			assert.match('hello world', f.read('all'));
+			assert.match('',            f.read('all'));
+			f.close();
+		});
+	});
+
+	it('open() in read mode supports read(n) for byte count', () => {
+		mock.inject('fs', { data: { '/tmp/bytes.txt': 'abcdef' } }, (m_fs) => {
+			const f = m_fs.open('/tmp/bytes.txt', 'r');
+			assert.match('ab', f.read(2));
+			assert.match('cd', f.read(2));
+			assert.match('ef', f.read(2));
+			f.close();
+		});
+	});
+
+	it('open() in read mode returns null for unmocked path', () => {
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.match(null, m_fs.open('/tmp/missing.txt', 'r'));
+		});
+	});
+
+	it('open() in write mode stores content to the data store on close', () => {
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			const f = m_fs.open('/tmp/out.txt', 'w');
+			f.write('hello ');
+			f.write('world');
+			f.close();
+			assert.match('hello world', m_fs.readfile('/tmp/out.txt'));
+		});
+	});
+
+	it('open() in write mode overwrites existing content', () => {
+		mock.inject('fs', { data: { '/tmp/existing.txt': 'old' } }, (m_fs) => {
+			const f = m_fs.open('/tmp/existing.txt', 'w');
+			f.write('new');
+			f.close();
+			assert.match('new', m_fs.readfile('/tmp/existing.txt'));
+		});
+	});
+
+	it('open() in append mode preserves existing content', () => {
+		mock.inject('fs', { data: { '/tmp/log.txt': 'first\n' } }, (m_fs) => {
+			const f = m_fs.open('/tmp/log.txt', 'a');
+			f.write('second\n');
+			f.close();
+			assert.match('first\nsecond\n', m_fs.readfile('/tmp/log.txt'));
+		});
+	});
+
+	it('open() error() always returns null', () => {
+		mock.inject('fs', { data: { '/tmp/f.txt': 'x' } }, (m_fs) => {
+			assert.match(null, m_fs.open('/tmp/f.txt', 'r').error());
+		});
+	});
+
+	it('popen() in read mode returns a handle that reads the virtual command output', () => {
+		mock.inject('fs', { data: { 'echo hello': 'hello\n' } }, (m_fs) => {
+			const f = m_fs.popen('echo hello', 'r');
+			assert.match('hello\n', f.read('all'));
+			f.close();
+		});
+	});
+
+	it('popen() in write mode stores written data under the command key', () => {
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			const f = m_fs.popen('cat > /tmp/sink', 'w');
+			f.write('piped data');
+			f.close();
+			assert.match('piped data', m_fs.readfile('cat > /tmp/sink'));
+		});
+	});
+
+	it('popen() throws in strict mode for unmocked command', () => {
+		assert.throws(() => {
+			mock.inject('fs', { strict: true, data: {} }, (m_fs) => {
+				m_fs.popen('unknown command', 'r');
+			});
+		}, /strict mock/);
+	});
+
 });
