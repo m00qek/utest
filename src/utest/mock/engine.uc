@@ -16,10 +16,23 @@ function deep_clone(obj) {
 	return obj;
 }
 
+// Returns the channel list declared by the proxy for `name`.  Always includes
+// 'data'; extra channels come from the proxy factory's `channels` array.
+function get_proxy_channels(name) {
+	let m = null;
+	try { m = require('utest.mock.proxy.' + name); } catch(e) {}
+	if (!m || type(m.channels) != 'array') return ['data'];
+	let channels = ['data'];
+	for (let ch in m.channels)
+		if (ch != 'data') push(channels, ch);
+	return channels;
+}
+
 function get_registry(name) {
 	if (!registries[name]) {
 		registries[name] = {
 			name: name,
+			channels: ['data'],
 			layers: [],
 			global: { data: {}, fns: {}, strict: false, proxy: null, calls: {} }
 		};
@@ -27,13 +40,27 @@ function get_registry(name) {
 	return registries[name];
 }
 
-function to_layer(state) {
-	return {
-		data:   state.data     ? deep_clone(state.data) : {},
-		fns:    state.behavior ? { ...state.behavior }  : {},
+// Adds any channels that are not yet tracked to the registry's channel list
+// and ensures their slot exists on the global state object.
+function ensure_channels(reg, channels) {
+	for (let ch in channels) {
+		if (!exists(reg.global, ch)) reg.global[ch] = {};
+		let found = false;
+		for (let existing in reg.channels)
+			if (existing == ch) { found = true; break; }
+		if (!found) push(reg.channels, ch);
+	}
+}
+
+function to_layer(state, channels) {
+	let layer = {
+		fns:    state.behavior ? { ...state.behavior } : {},
 		strict: state.strict   ? true : false,
 		calls:  {}
 	};
+	for (let ch in channels)
+		layer[ch] = state[ch] ? deep_clone(state[ch]) : {};
+	return layer;
 }
 
 function reset_layers() {
@@ -45,20 +72,42 @@ function reset_layers() {
 if (!global.__utest_internal_instance) global.__utest_internal_instance = {};
 const internal_obj = global.__utest_internal_instance;
 
-internal_obj.get_data = function(name, key) {
+internal_obj.get_channel = function(name, channel, key) {
 	const reg = get_registry(name);
 	for (let i = length(reg.layers) - 1; i >= 0; i--) {
-		if (exists(reg.layers[i].data, key)) return reg.layers[i].data[key];
+		if (reg.layers[i][channel] && exists(reg.layers[i][channel], key))
+			return reg.layers[i][channel][key];
 	}
-	if (exists(reg.global.data, key)) return reg.global.data[key];
+	if (reg.global[channel] && exists(reg.global[channel], key))
+		return reg.global[channel][key];
 	return null;
 };
 
-internal_obj.set_data = function(name, key, val) {
+internal_obj.set_channel = function(name, channel, key, val) {
 	const reg = get_registry(name);
 	const layers = reg.layers;
 	const target = length(layers) > 0 ? layers[length(layers) - 1] : reg.global;
-	target.data[key] = val;
+	if (!target[channel]) target[channel] = {};
+	target[channel][key] = val;
+};
+
+internal_obj.get_all_channel_keys = function(name, channel) {
+	const reg = get_registry(name);
+	let keys_map = {};
+	for (let i = length(reg.layers) - 1; i >= 0; i--)
+		if (reg.layers[i][channel])
+			for (let k, v in reg.layers[i][channel]) keys_map[k] = true;
+	if (reg.global[channel])
+		for (let k, v in reg.global[channel]) keys_map[k] = true;
+	return keys(keys_map);
+};
+
+internal_obj.get_data = function(name, key) {
+	return internal_obj.get_channel(name, 'data', key);
+};
+
+internal_obj.set_data = function(name, key, val) {
+	internal_obj.set_channel(name, 'data', key, val);
 };
 
 internal_obj.get_fn = function(name, fn_name) {
@@ -79,12 +128,7 @@ internal_obj.is_active = function(name) {
 };
 
 internal_obj.get_all_data_keys = function(name) {
-	const reg = get_registry(name);
-	let keys_map = {};
-	for (let i = length(reg.layers) - 1; i >= 0; i--)
-		for (let k, v in reg.layers[i].data) keys_map[k] = true;
-	for (let k, v in reg.global.data) keys_map[k] = true;
-	return keys(keys_map);
+	return internal_obj.get_all_channel_keys(name, 'data');
 };
 
 internal_obj.record_call = function(name, fn_name, args) {
@@ -151,13 +195,15 @@ mock_obj.reset = function() {
 mock_obj.snapshot = function() {
 	let snap = {};
 	for (let name, reg in registries) {
-		snap[name] = {
-			data:   deep_clone(reg.global.data),
+		let s = {
 			fns:    { ...reg.global.fns },
 			strict: reg.global.strict,
 			proxy:  reg.global.proxy
 			// calls intentionally omitted — restore() always resets them to {}
 		};
+		for (let ch in reg.channels)
+			s[ch] = deep_clone(reg.global[ch] ?? {});
+		snap[name] = s;
 	}
 	return snap;
 };
@@ -165,19 +211,25 @@ mock_obj.snapshot = function() {
 mock_obj.restore = function(snap) {
 	reset_layers();
 	for (let name, saved in snap) {
-		// Deep-clone data so successive restores from the same snapshot each
-		// get an independent copy; set_data() mutations cannot corrupt the snap.
-		get_registry(name).global = {
-			data:   deep_clone(saved.data),
+		const reg = get_registry(name);
+		// Deep-clone channel data so successive restores from the same snapshot
+		// each get an independent copy; set_channel() mutations cannot corrupt snap.
+		let new_global = {
 			fns:    { ...saved.fns },
 			strict: saved.strict,
 			proxy:  saved.proxy,
 			calls:  {}
 		};
+		for (let ch in reg.channels)
+			new_global[ch] = deep_clone(saved[ch] ?? {});
+		reg.global = new_global;
 	}
 	for (let name in keys(registries)) {
 		if (!exists(snap, name)) {
-			registries[name].global = { data: {}, fns: {}, strict: false, proxy: null, calls: {} };
+			const reg = registries[name];
+			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
+			for (let ch in reg.channels) new_global[ch] = {};
+			reg.global = new_global;
 		}
 	}
 };
@@ -193,8 +245,10 @@ function get_real(name) {
 }
 
 mock_obj.inject = function(name, state, cb) {
+	const channels = get_proxy_channels(name);
 	const reg = get_registry(name);
-	push(reg.layers, to_layer(state));
+	ensure_channels(reg, channels);
+	push(reg.layers, to_layer(state, channels));
 	let err = null;
 	let result;
 	try {
@@ -210,8 +264,11 @@ mock_obj.inject = function(name, state, cb) {
 
 mock_obj.global = {
 	patch: function(name, state) {
+		const channels = get_proxy_channels(name);
 		const reg = get_registry(name);
-		reg.global.data   = state.data     ? deep_clone(state.data) : {};
+		ensure_channels(reg, channels);
+		for (let ch in channels)
+			reg.global[ch] = state[ch] ? deep_clone(state[ch]) : {};
 		reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
 		reg.global.strict = state.strict   ? true : false;
 		reg.global.calls  = {};
@@ -222,7 +279,9 @@ mock_obj.global = {
 
 	unpatch: function(name) {
 		const reg = get_registry(name);
-		reg.global = { data: {}, fns: {}, strict: false, proxy: null, calls: {} };
+		let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
+		for (let ch in reg.channels) new_global[ch] = {};
+		reg.global = new_global;
 	}
 };
 

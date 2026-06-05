@@ -272,7 +272,7 @@ describe('FS Mocking', () => {
 	});
 
 	it('popen() in read mode returns a handle that reads the virtual command output', () => {
-		mock.inject('fs', { data: { 'echo hello': 'hello\n' } }, (m_fs) => {
+		mock.inject('fs', { commands: { 'echo hello': 'hello\n' } }, (m_fs) => {
 			const f = m_fs.popen('echo hello', 'r');
 			assert.match('hello\n', f.read('all'));
 			f.close();
@@ -280,17 +280,19 @@ describe('FS Mocking', () => {
 	});
 
 	it('popen() in write mode stores written data under the command key', () => {
-		mock.inject('fs', { data: {} }, (m_fs) => {
+		mock.inject('fs', { commands: {} }, (m_fs) => {
 			const f = m_fs.popen('cat > /tmp/sink', 'w');
 			f.write('piped data');
 			f.close();
-			assert.match('piped data', m_fs.readfile('cat > /tmp/sink'));
+			const r = m_fs.popen('cat > /tmp/sink', 'r');
+			assert.match('piped data', r.read('all'));
+			r.close();
 		});
 	});
 
 	it('popen() throws in strict mode for unmocked command', () => {
 		assert.throws(() => {
-			mock.inject('fs', { strict: true, data: {} }, (m_fs) => {
+			mock.inject('fs', { strict: true, commands: {} }, (m_fs) => {
 				m_fs.popen('unknown command', 'r');
 			});
 		}, /strict mock/);

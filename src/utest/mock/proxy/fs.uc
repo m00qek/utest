@@ -1,5 +1,6 @@
 // Loaded via require() in ucode program mode — see proxy_base.uc for why `return` is used here.
 return {
+	channels: ['commands'],
 	create: function(name, real, ctx) {
 		let proxy = ctx.base();
 
@@ -57,7 +58,7 @@ return {
 			if (f) return f(cmd, mode);
 
 			mode ??= 'r';
-			let existing = ctx.get_data(cmd);
+			let existing = ctx.get('commands', cmd);
 
 			if (substr(mode, 0, 1) == 'r') {
 				if (existing != null) return make_handle(existing, null);
@@ -66,7 +67,7 @@ return {
 			}
 
 			if (ctx.is_active())
-				return make_handle('', (data) => ctx.set_data(cmd, data));
+				return make_handle('', (data) => ctx.set('commands', cmd, data));
 
 			return real ? real.popen(cmd, mode) : null;
 		};

@@ -16,13 +16,20 @@ function make_behavior_fn(mod_name, fn_name, fn) {
 return {
 	context: function(name, real) {
 		return {
-			get_behavior:      function(fn_name) { return __internal__.get_fn(name, fn_name); },
-			get_data:          function(key)     { return __internal__.get_data(name, key); },
-			set_data:          function(key, val){ __internal__.set_data(name, key, val); },
-			record_call:       function(fn_name, args) { __internal__.record_call(name, fn_name, args); },
-			is_active:         function()        { return __internal__.is_active(name); },
-			is_strict:         function()        { return __internal__.is_strict(name); },
-			get_all_data_keys: function()        { return __internal__.get_all_data_keys(name); },
+			// Generic channel API — preferred for proxies with multiple namespaces
+			get:      function(channel, key)      { return __internal__.get_channel(name, channel, key); },
+			set:      function(channel, key, val) { __internal__.set_channel(name, channel, key, val); },
+			all_keys: function(channel)           { return __internal__.get_all_channel_keys(name, channel); },
+
+			// Shorthands for the 'data' channel — kept for backward compatibility
+			get_data:          function(key)      { return __internal__.get_channel(name, 'data', key); },
+			set_data:          function(key, val) { __internal__.set_channel(name, 'data', key, val); },
+			get_all_data_keys: function()         { return __internal__.get_all_channel_keys(name, 'data'); },
+
+			get_behavior:      function(fn_name)      { return __internal__.get_fn(name, fn_name); },
+			record_call:       function(fn_name, args){ __internal__.record_call(name, fn_name, args); },
+			is_active:         function()             { return __internal__.is_active(name); },
+			is_strict:         function()             { return __internal__.is_strict(name); },
 			base: function() {
 				let proxy = {};
 				const calls = __internal__.get_calls(name);
