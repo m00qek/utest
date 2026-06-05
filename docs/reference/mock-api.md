@@ -19,6 +19,7 @@ All mock entry points accept a `state` object that configures what the proxy doe
 | `data` | object | Key-value map of mock data. Keys and value shapes are proxy-specific; see [Proxy Data Models](proxy-data-models.md). |
 | `behavior` | object | Map of function names to replacement implementations. A matching entry completely replaces the proxy's built-in handling for that function. |
 | `strict` | boolean | When `true`, any call that hits an unmocked key dies with a `strict mock:` error instead of falling through to the real module. Defaults to `false`. |
+| *channel* | object | Some proxies declare additional named channels beyond `data`. For example, `fs` uses `commands` for `popen` data. Pass the channel as a top-level key in the state object: `{ data: {...}, commands: {...} }`. See [Proxy Data Models](proxy-data-models.md) for which channels each proxy supports. |
 
 ---
 

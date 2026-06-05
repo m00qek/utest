@@ -1,5 +1,7 @@
 # How to add a reporter
 
+Add a new output format that users can select with `-r <name>`.
+
 ## 1. Create the reporter module
 
 Create `src/utest/runner/reporter/<name>.uc`. A reporter is a prototype-extended

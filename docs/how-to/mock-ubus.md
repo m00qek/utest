@@ -69,6 +69,23 @@ mock.inject('ubus', { data: {} }, (m_ubus) => {
 
 ---
 
+## Exercise code paths that call disconnect()
+
+`disconnect()` is a no-op by default. If you need to verify that the code under test disconnects correctly, inspect the connection's call log:
+
+```js
+mock.inject('ubus', { data: { 'system:board': { hostname: 'OpenWrt' } } }, (m_ubus) => {
+    let conn = m_ubus.connect();
+    conn.call('system', 'board', {});
+    conn.disconnect();
+    assert.match(1, length(conn.__utest__.calls.disconnect));
+});
+```
+
+To override disconnect behaviour entirely, supply a `behavior.disconnect` function.
+
+---
+
 ## Override call behavior entirely
 
 Supply a `behavior.call` function to intercept all `call()` invocations regardless of their arguments:

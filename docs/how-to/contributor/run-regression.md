@@ -42,14 +42,14 @@ When you intentionally change behaviour, update the stored baseline after
 confirming the new output is correct:
 
 ```bash
-make test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make -s test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
 For tests that require a config file (mock shims), pass `-c`:
 
 ```bash
-make test ARGS="-r json -c examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
+make -s test ARGS="-r json -c examples/unit/11_mocking_fs_config.uc examples/unit/11_mocking_fs_test.uc" \
     > test/json/unit/11_mocking_fs_test.json
 ```
 
@@ -73,7 +73,7 @@ make test ARGS="examples/unit/15_mymod_test.uc"
 4. Capture the json output as the baseline:
 
 ```bash
-make test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make -s test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 

@@ -1,5 +1,7 @@
 # How to add a built-in proxy
 
+Ship a mock proxy for a new module inside the framework so that any project can use it with `mocks: { mymod: null }` in its config.
+
 ## 1. Create the proxy file
 
 Create `src/utest/mock/proxy/<name>.uc`, where `<name>` matches the ucode module
@@ -160,7 +162,7 @@ Run the example once with the `json` reporter and capture its output as the
 regression baseline:
 
 ```bash
-make test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
+make -s test ARGS="-r json -c examples/unit/18_mymod_config.uc examples/unit/18_mymod_test.uc" \
     > test/json/unit/18_mymod_test.json
 ```
 

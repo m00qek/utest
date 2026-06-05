@@ -1,24 +1,27 @@
 # How to add an assertion
 
-## 1. Add the combinator factory to `assert.uc`
+Add a new combinator factory to the combinators module, re-export it from the public entry point, and cover it with a test.
 
-Open `src/utest/assert.uc` and add your factory alongside `equals`, `contains`, `truthy`, and the others. Each factory returns an object with a `match(actual)` method:
+## 1. Add the combinator factory to `combinators.uc`
+
+Open `src/utest/combinators.uc` and add your factory alongside `equals`, `contains`, `truthy`, and the others. Each factory must wrap the returned object with `proto({...}, Combinator)` so that `is_combinator()` recognises it:
 
 ```js
 export function not_null() {
-    return {
+    return proto({
         match: function(actual) {
             if (actual !== null)
                 return { ok: true };
             return { ok: false, message: 'Expected a non-null value' };
         }
-    };
-}
+    }, Combinator);
+};
 ```
 
 Conventions:
 
-- Return only `{ ok: true }` or `{ ok: false, message: '...' }` — nothing else.
+- Wrap with `proto({...}, Combinator)` — without this, `assert.match` treats the return value as a plain expected object instead of a combinator.
+- Return only `{ ok: true }` or `{ ok: false, message: '...' }` from `match` — nothing else.
 - Use `sprintf('%J', value)` to serialise values in failure messages.
 - Mark the factory `export` so it can be re-exported from `src/utest.uc`.
 - Do not accept a `msg` parameter — callers pass custom failure messages as the third argument to `assert.match`.
@@ -29,10 +32,10 @@ Conventions:
 
 Open `src/utest.uc`. Two edits are required.
 
-Add the new name to the existing destructuring import on line 4:
+Add the new name to the existing destructuring import:
 
 ```js
-import { assert as _assert, equals as _equals, /* … */ not_null as _not_null } from 'utest.assert';
+import { equals as _equals, /* … */ not_null as _not_null } from 'utest.combinators';
 ```
 
 Add an export constant after the other combinator exports:
@@ -65,7 +68,7 @@ Update the import at the top to include the new factory.
 ## 4. Regenerate the baseline and verify
 
 ```bash
-make test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make -s test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 
 make meta-test

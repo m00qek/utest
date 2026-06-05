@@ -50,21 +50,21 @@ If any baseline mismatches, the script prints `FAILURE: Regressions found in: ..
 
 ## Step 3 — Add `not_null()`
 
-Open `src/utest/assert.uc`. The file exports the `assert` object and a set of combinator factories (`equals`, `contains`, `truthy`, `falsy`, and others). Add `not_null` after the `falsy` factory:
+Open `src/utest/combinators.uc`. This file defines and exports all combinator factories (`equals`, `contains`, `truthy`, `falsy`, and others). Add `not_null` after the `falsy` factory:
 
 ```js
 export function not_null() {
-    return {
+    return proto({
         match: function(actual) {
             if (actual !== null)
                 return { ok: true };
             return { ok: false, message: 'Expected a non-null value' };
         }
-    };
-}
+    }, Combinator);
+};
 ```
 
-See [Reference: Assertions — Combinator factories](../../reference/assertions.md#combinator-factories) for the full combinator contract.
+See [Reference: Assertions — Combinator factories](../../reference/assertions.md#combinator-factories) for the full combinator contract. Note the use of `proto({...}, Combinator)` — all combinator factories in this file use the shared `Combinator` prototype so that `is_combinator()` recognises them correctly.
 
 ---
 
@@ -72,12 +72,12 @@ See [Reference: Assertions — Combinator factories](../../reference/assertions.
 
 Open `src/utest.uc`. It re-exports each combinator individually using explicit `export const` statements. Two edits are needed.
 
-First, add `not_null as _not_null` to the existing destructuring import on line 4:
+First, add `not_null as _not_null` to the destructuring import from `'utest.combinators'`:
 
 ```js
-// existing line 4 — add not_null as _not_null to the end
-import { assert as _assert, equals as _equals, /* … */ regex as _regex,
-         not_null as _not_null } from 'utest.assert';
+// existing combinator import line — add not_null as _not_null to the end
+import { equals as _equals, /* … */ is_type as _is_type,
+         not_null as _not_null } from 'utest.combinators';
 ```
 
 Then add the export after the other combinator exports:
@@ -161,12 +161,12 @@ You should see three passing tests.
 The regression suite compares live JSON output against the files in `test/json/`. Because you added a test, the baseline file is now stale and must be updated:
 
 ```bash
-make test ARGS="-r json examples/unit/01_assertions_test.uc" \
+make -s test ARGS="-r json examples/unit/01_assertions_test.uc" \
     > test/json/unit/01_assertions_test.json
 ```
 
 !!! warning
-    Only regenerate baselines for files you intentionally changed. Regenerating an unrelated baseline can hide regressions.
+    Pass `-s` (silent) to suppress Make's command echo. Without it, the docker invocation line is captured into the JSON file and corrupts the baseline. Only regenerate baselines for files you intentionally changed.
 
 ---
 
@@ -188,7 +188,7 @@ If it does, your patch is complete and self-consistent.
 
 ## What we just built
 
-- A new `not_null()` combinator factory in `src/utest/assert.uc`.
+- A new `not_null()` combinator factory in `src/utest/combinators.uc`.
 - A re-export in `src/utest.uc` (import alias + `export const`) so users can import it from `'utest'`.
 - A new `it` block in `examples/unit/01_assertions_test.uc` that exercises the new combinator.
 - An updated JSON baseline at `test/json/unit/01_assertions_test.json`.

@@ -84,7 +84,8 @@ assert.throws(() => load_config("missing.uc"), /not found/, "missing config must
 Combinators are composable predicates used with `assert.match`. Import them from `'utest'`:
 
 ```js
-import { equals, contains, truthy, falsy, not, pred, regex, any, any_order } from 'utest';
+import { equals, contains, truthy, falsy, not, pred, regex, any, any_order,
+         starts_with, ends_with, has_length, between, is_type } from 'utest';
 ```
 
 Each factory returns a combinator object. Combinators can be nested inside each other and inside the plain-value `expected` argument of `assert.match`.

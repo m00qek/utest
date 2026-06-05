@@ -1,5 +1,7 @@
 # How to patch global state with mock.global.patch()
 
+Use `mock.global.patch()` to intercept calls made through the module's imported binding — including calls in production code that your test imports.
+
 ## Declare the module in the config file
 
 Add the module to `mocks` in the config file so the framework generates a shim:

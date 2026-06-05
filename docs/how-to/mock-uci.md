@@ -38,7 +38,7 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 
 ## Read an entire section at once
 
-`get_all(pkg, section)` returns the full section object including `.type`, or `null` if the section does not exist:
+`get_all(pkg, section)` returns the full section object including `.type` and `.name` (the section name), or `null` if the section does not exist:
 
 ```js
 mock.inject('uci', { data: {
@@ -48,7 +48,8 @@ mock.inject('uci', { data: {
 }}, (m_uci) => {
     let c = m_uci.cursor();
     let sec = c.get_all('luci-sso', 'default');
-    assert.match('oidc', sec['.type']);
+    assert.match('default',   sec['.name']);
+    assert.match('oidc',      sec['.type']);
     assert.match('my-client', sec.client_id);
     assert.match(null, c.get_all('luci-sso', 'no-sec'));
 });
@@ -116,6 +117,28 @@ mock.inject('uci', { data: {
     let names = [];
     c.foreach('luci-sso', 'role', (s) => push(names, s['.name']));
     assert.match([], names);
+});
+```
+
+---
+
+## Exercise code paths that call load()
+
+`load()` is a no-op that returns `true`. Call it in tests that exercise code paths which explicitly load a package before reading:
+
+```js
+mock.inject('uci', { data: uci_data }, (m_uci) => {
+    assert.match(truthy(), m_uci.cursor().load('luci-sso'));
+});
+```
+
+If you need to verify that `load` was called, inspect the cursor's call log:
+
+```js
+mock.inject('uci', { data: uci_data }, (m_uci) => {
+    let c = m_uci.cursor();
+    c.load('luci-sso');
+    assert.match([['luci-sso']], c.__utest__.calls.load);
 });
 ```
 
