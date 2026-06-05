@@ -6,11 +6,66 @@ mock engine's registry for the named module.
 
 ---
 
+## `ctx.get(channel, key)`
+
+Searches the layer stack from top to bottom, then falls back to global state,
+looking only within `channel`. Returns the first value found for `key`, or
+`null` if no entry exists at any level.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `channel` | string | Channel name, e.g. `'data'` or `'commands'` |
+| `key` | string | The key to look up |
+
+**Returns:** any value stored under `key` in `channel`, or `null`.
+
+**Notes:** A value of `null` stored explicitly is indistinguishable from
+"not found" — use a sentinel object if you need to distinguish the two.
+
+---
+
+## `ctx.set(channel, key, val)`
+
+Writes `val` under `key` in `channel`. If any layers are active (i.e. inside a
+`mock.inject()` callback), the write goes to the innermost layer. If no layers
+are active, the write goes to global state.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `channel` | string | Channel name, e.g. `'data'` or `'commands'` |
+| `key` | string | The key to write |
+| `val` | any | The value to store |
+
+**Returns:** nothing.
+
+---
+
+## `ctx.all_keys(channel)`
+
+Returns an array of every key that exists across all layers and global state
+within `channel`, deduplicated. Order is not guaranteed.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `channel` | string | Channel name, e.g. `'data'` |
+
+**Returns:** array of strings.
+
+**Usage:** proxy methods like `lsdir` and `glob` use this to enumerate all
+virtual paths in the `data` channel without seeing keys from other channels.
+
+---
+
 ## `ctx.get_data(key)`
 
-Searches the layer stack from top to bottom, then falls back to global state.
-Returns the first value found for `key`, or `null` if no entry exists at any
-level.
+Shorthand for `ctx.get('data', key)`. Prefer the generic form when writing
+new proxy code; this shorthand is retained for backward compatibility.
 
 **Parameters**
 
@@ -18,18 +73,13 @@ level.
 |---|---|---|
 | `key` | string | The data key to look up |
 
-**Returns:** any value stored under `key`, or `null`.
-
-**Notes:** A value of `null` stored explicitly is indistinguishable from
-"not found" — use a sentinel object if you need to distinguish the two.
+**Returns:** any value stored under `key` in the `data` channel, or `null`.
 
 ---
 
 ## `ctx.set_data(key, val)`
 
-Writes `val` under `key`. If any layers are active (i.e. inside a
-`mock.inject()` callback), the write goes to the innermost layer. If no layers
-are active, the write goes to global state.
+Shorthand for `ctx.set('data', key, val)`.
 
 **Parameters**
 
@@ -102,13 +152,9 @@ proxy.writefile = function(path, data) {
 
 ## `ctx.get_all_data_keys()`
 
-Returns an array of every key that exists across all layers and global state,
-deduplicated. Order is not guaranteed.
+Shorthand for `ctx.all_keys('data')`.
 
 **Returns:** array of strings.
-
-**Usage:** proxy methods like `lsdir` and `glob` use this to enumerate all
-virtual paths stored in mock data.
 
 ---
 

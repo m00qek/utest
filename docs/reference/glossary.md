@@ -47,14 +47,15 @@ utest ships built-in proxies for `fs`, `uci`, `ubus`, `uloop`, and `uclient`.
 
 ## Mock data
 
-**Mock data** is a key→value map supplied in the `data` field of a state object. What "key" means is proxy-specific:
+**Mock data** is a collection of key→value maps supplied in the state object passed to `mock.inject` or `mock.global.patch`. Most proxies use a single `data` channel; proxies that need separate namespaces declare additional channels. What "key" means is proxy- and channel-specific:
 
-| Proxy | Key | Value |
-| :--- | :--- | :--- |
-| `fs` | filesystem path | file contents (string), or `null` for absent |
-| `uci` | package name | section/option map |
-| `ubus` | `'object:method'` or `'object'` | response object or function |
-| `uclient` | request URL | response descriptor (`status`, `headers`, `body`) |
+| Proxy | Channel | Key | Value |
+| :--- | :--- | :--- | :--- |
+| `fs` | `data` | filesystem path | file contents (string), or `null` for absent — used by `readfile`, `open`, `stat`, `access`, `lsdir`, `glob` |
+| `fs` | `commands` | command string | output for `popen` in read mode; stores written data on close in write mode |
+| `uci` | `data` | package name | section/option map |
+| `ubus` | `data` | `'object:method'` or `'object'` | response object or function |
+| `uclient` | `data` | request URL | response descriptor (`status`, `headers`, `body`) |
 
 ---
 
@@ -76,9 +77,9 @@ See [About mock.inject() vs mock.global.patch()](../explanation/inject-vs-patch.
 
 ## Layer
 
-A **layer** is the unit of state pushed onto the mock engine's stack by each `inject()` call. It holds a copy of the `data`, `behavior`, and `strict` settings for that injection.
+A **layer** is the unit of state pushed onto the mock engine's stack by each `inject()` call. It holds a copy of the channel data (e.g. `data`, `commands`), `behavior`, and `strict` settings for that injection.
 
-Layers stack: an inner `inject()` creates a new layer on top and shadows outer layers for matching keys. When the callback exits, its layer is popped and the outer layer's values become visible again.
+Layers stack: an inner `inject()` creates a new layer on top and shadows outer layers for matching keys within each channel. When the callback exits, its layer is popped and the outer layer's values become visible again.
 
 ---
 

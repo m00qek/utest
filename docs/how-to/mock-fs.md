@@ -165,6 +165,64 @@ mock.inject('fs', { behavior: { error: () => 'ENOENT' } }, (m_fs) => {
 
 ---
 
+## Open and read a file line by line with open()
+
+Seed the path as you would for `readfile`. `open(path, 'r')` returns a handle that supports `read('line')`, `read('all')`, and `read(n)`:
+
+```js
+mock.inject('fs', { data: { '/var/log/app.log': 'started\nready\n' } }, (m_fs) => {
+    const f = m_fs.open('/var/log/app.log', 'r');
+    assert.match('started\n', f.read('line'));
+    assert.match('ready\n',   f.read('line'));
+    assert.match(null,        f.read('line'));   // EOF
+    f.close();
+});
+```
+
+In write mode (`'w'`) the handle accumulates content; `close()` stores the result back into the data map. In append mode (`'a'`) existing content is preserved:
+
+```js
+mock.inject('fs', { data: { '/tmp/log.txt': 'first\n' } }, (m_fs) => {
+    const f = m_fs.open('/tmp/log.txt', 'a');
+    f.write('second\n');
+    f.close();
+    assert.match('first\nsecond\n', m_fs.readfile('/tmp/log.txt'));
+});
+```
+
+Opening an unmocked path in read mode returns `null` in non-strict mode. If strict mode is active it dies instead.
+
+---
+
+## Pipe command output with popen()
+
+Seed the command string (exactly as passed to `popen`) under the `commands` key — a separate channel from file paths so that command strings never appear in `lsdir`, `glob`, `access`, or `stat`:
+
+```js
+mock.inject('fs', { commands: { 'ip -j route show': '[{"dst":"default"}]\n' } }, (m_fs) => {
+    const f = m_fs.popen('ip -j route show', 'r');
+    assert.match('[{"dst":"default"}]\n', f.read('all'));
+    f.close();
+});
+```
+
+In write mode, the handle stores written content under the command string in the `commands` channel on `close()`. Read it back by calling `popen` again in read mode:
+
+```js
+mock.inject('fs', { commands: {} }, (m_fs) => {
+    const f = m_fs.popen('cat > /tmp/sink', 'w');
+    f.write('piped data');
+    f.close();
+    const r = m_fs.popen('cat > /tmp/sink', 'r');
+    assert.match('piped data', r.read('all'));
+    r.close();
+});
+```
+
+In strict mode, `popen()` on an unmocked command dies with a `strict mock:` error.
+
+---
+
 ## Next steps
 
 - Control what happens on unmocked paths: [How-to: Use strict mode](strict-mode.md)

@@ -1,6 +1,6 @@
 # Proxy Data Models Reference
 
-This page documents the `data` key format for each built-in proxy. The same structure is used in both `mock.inject` and `mock.global.patch`.
+This page documents the state channels for each built-in proxy. The same structure is used in both `mock.inject` and `mock.global.patch`.
 
 The `behavior` field (function overrides) and `strict` flag apply uniformly to all proxies and are documented in [Mock API — State object](mock-api.md#state-object).
 
@@ -16,16 +16,33 @@ The `behavior` field (function overrides) and `strict` flag apply uniformly to a
 mocks: { 'fs': null }
 ```
 
-**`data` format:**
+**`data` channel:**
+
+Filesystem paths are the keys. `lsdir`, `glob`, `access`, `stat`, `readfile`,
+`open`, `writefile`, `rename`, and `unlink` all operate in this channel.
 
 | Key | Type | Meaning |
 | :--- | :--- | :--- |
-| filesystem path (string) | string | File content returned by `readfile`, used by `stat`, `access`, `lsdir`, `glob`. |
-| filesystem path (string) | `null` | File is explicitly absent; `readfile` returns `null`, `access` returns `null`. |
+| filesystem path (string) | string | File content returned by `readfile`, `open`, `stat`, `access`, `lsdir`, `glob`. |
+| filesystem path (string) | `null` | File is explicitly absent; `readfile` and `open` return `null`, `access` returns `null`. |
 
 `writefile` stores the written content under the path key. `unlink` sets the path to `null`. `rename` moves content from one key to another. `mkdir` and `chmod` are no-ops that return `true`. `error` returns `null` by default. `lsdir` and `glob` merge virtual paths with real filesystem entries (unless `strict` is set, in which case only virtual paths are used).
 
 `stat` on a virtual path returns `{ size: <byte length>, mtime: 0, type: 'regular' }`.
+
+`open(path, mode)` uses the path as a data key. In read mode (`'r'`), a seeded path returns a handle supporting `read('all')`, `read('line')`, and `read(n)`; an unmocked path returns `null` in non-strict mode or dies in strict mode. In write mode (`'w'`) and append mode (`'a'`), a writable handle is always returned; content is stored back into the data channel when `close()` is called. `error()` on any handle always returns `null`.
+
+**`commands` channel:**
+
+Command strings are the keys. Only `popen` uses this channel.
+
+| Key | Type | Meaning |
+| :--- | :--- | :--- |
+| command string (string) | string | Output returned by `popen` in read mode; stores written content on `close()` in write mode. |
+
+`popen(cmd, mode)` looks up the command string in the `commands` channel. Read mode returns a handle over the seeded output; write mode stores the written content under the command string key on `close()`. In strict mode, an unmocked command dies with a `strict mock:` error.
+
+Keeping commands in a separate channel ensures that command strings are invisible to `lsdir`, `glob`, `access`, and `stat`.
 
 **`glob` wildcard syntax:**
 
@@ -37,7 +54,7 @@ mocks: { 'fs': null }
 
 Character classes (`[abc]`, `[0-9]`) are not supported.
 
-**`behavior` overrides:** `readfile`, `writefile`, `access`, `stat`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`.
+**`behavior` overrides:** `readfile`, `writefile`, `open`, `popen`, `access`, `stat`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`.
 
 ```js
 mock.inject('fs', {
@@ -46,7 +63,10 @@ mock.inject('fs', {
         '/tmp/config.txt':      'mode=prod',
         '/tmp/dir/a.txt':       'alpha',
         '/tmp/dir/b.txt':       'beta',
-        '/tmp/deleted.txt':     null
+        '/tmp/deleted.txt':     null,
+    },
+    commands: {
+        'uname -r':             '6.1.0\n'
     },
     strict: false
 }, (m_fs) => {
@@ -62,6 +82,14 @@ mock.inject('fs', {
     m_fs.mkdir('/tmp/newdir', 0o755);       // → true (no-op)
     m_fs.chmod('/tmp/cfg2.txt', 0o644);     // → true (no-op)
     m_fs.error();                           // → null
+
+    let f = m_fs.open('/tmp/dir/b.txt', 'r');
+    f.read('all');                          // → 'beta'
+    f.close();
+
+    let p = m_fs.popen('uname -r', 'r');
+    p.read('line');                         // → '6.1.0\n'
+    p.close();
 });
 ```
 
@@ -85,11 +113,13 @@ mocks: { 'uci': null }
 
 Each section object has the form `{ '.type': '<uci-type>', <option>: <value>, ... }`. The `.type` field is required for `foreach` filtering. All option values are plain strings or arrays of strings, matching the real UCI data model.
 
-`cursor()` returns a cursor object with `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, and `save`. `commit` and `save` are no-ops returning `true`. `set` writes immediately and is readable in the same cursor. `delete` with three arguments removes a single option; with two arguments removes the entire section.
+`cursor()` returns a cursor object with `load`, `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, and `save`. `load`, `commit`, and `save` are no-ops returning `true`. `set` writes immediately and is readable in the same cursor. `delete` with three arguments removes a single option; with two arguments removes the entire section.
+
+`get_all(pkg, section)` returns the full section object with `.name` set to the section name and `.type` set from the data, or `null` if the section does not exist — matching real UCI behaviour.
 
 In strict mode, `get` on an unmocked package dies with a `strict mock:` error.
 
-**`behavior` overrides:** `cursor`, `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, `save`.
+**`behavior` overrides:** `cursor`, `load`, `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, `save`.
 
 ```js
 mock.inject('uci', {
@@ -102,9 +132,10 @@ mock.inject('uci', {
 }, (m_uci) => {
     let c = m_uci.cursor();
 
+    c.load('network');                          // → true (no-op)
     c.get('network', 'wan', 'proto');           // → 'dhcp'
     c.get('network', 'missing', 'opt');         // → null
-    c.get_all('network', 'loopback');           // → { '.type': 'interface', ifname: 'lo', proto: 'static' }
+    c.get_all('network', 'loopback');           // → { '.name': 'loopback', '.type': 'interface', ifname: 'lo', proto: 'static' }
 
     let ifaces = [];
     c.foreach('network', 'interface', (s) => push(ifaces, s['.name']));
@@ -142,7 +173,9 @@ When the value is a plain object, `call` returns it directly. When the value is 
 
 Lookup order: `'object:method'` key first; `'object'` key second; `null` in non-strict mode; fatal error in strict mode.
 
-**`behavior` overrides:** `connect`, `call`.
+The connection object returned by `connect()` also exposes `disconnect()`. `disconnect()` is a no-op by default and records the call in `conn.__utest__.calls.disconnect`.
+
+**`behavior` overrides:** `connect`, `call`, `disconnect`.
 
 ```js
 mock.inject('ubus', {
@@ -162,6 +195,7 @@ mock.inject('ubus', {
     conn.call('network', 'status', { interface: 'wan' });  // → { up: true }
     conn.call('network', 'status', { interface: 'lan' });  // → { up: false }
     conn.call('service', 'list', {});               // → { running: true }  (fallback)
+    conn.disconnect();                              // no-op
 });
 ```
 

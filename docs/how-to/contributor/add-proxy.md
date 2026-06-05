@@ -44,7 +44,45 @@ The `create(name, real, ctx)` signature is mandatory. `ctx` exposes the mock eng
 
 ---
 
-## 2. Declare an `api` list for absent modules (optional)
+## 2. Declare a `channels` list for multiple data namespaces (optional)
+
+If your proxy needs to store data under more than one logical namespace — for
+example, when two different operations share a single mock object but must not
+see each other's keys — declare extra channel names on the factory object:
+
+```js
+return {
+    channels: ['commands'],   // extra channels beyond the default 'data'
+    create: function(name, real, ctx) {
+        // ...
+        proxy.run = function(cmd) {
+            let out = ctx.get('commands', cmd);   // look up in 'commands', not 'data'
+            if (out != null) return out;
+            // ...
+        };
+        return proxy;
+    }
+};
+```
+
+The engine creates a separate slot per channel in every layer, so keys in
+`commands` are invisible to operations that enumerate `data` keys (and vice
+versa). Callers seed each channel with a matching top-level key in the state
+object:
+
+```js
+mock.inject('mymod', {
+    data:     { mykey: 'value' },
+    commands: { 'run foo': 'output' }
+}, (m) => { ... });
+```
+
+The built-in `fs` proxy declares `channels: ['commands']` so that command
+strings passed to `popen` are kept separate from the file-path `data` channel.
+
+---
+
+## 3. Declare an `api` list for absent modules (optional)
 
 If `mymod` is not present on the target rootfs (common for optional packages),
 the shim generator cannot introspect its exports. Add an `api` array so that a
@@ -64,7 +102,7 @@ that import it will fail at load time.
 
 ---
 
-## 3. Write an example test
+## 4. Write an example test
 
 Add a test file in `examples/unit/` that exercises the new proxy. Follow the
 existing numbering convention (`NN_<name>_test.uc`):
@@ -98,7 +136,7 @@ describe('mymod mocking', () => {
 
 ---
 
-## 4. Write a config file
+## 5. Write a config file
 
 Create a companion config file so the test runner knows to shim `mymod`:
 
@@ -116,7 +154,7 @@ automatically when `make meta-test` is used.
 
 ---
 
-## 5. Regenerate the baseline JSON
+## 6. Regenerate the baseline JSON
 
 Run the example once with the `json` reporter and capture its output as the
 regression baseline:
