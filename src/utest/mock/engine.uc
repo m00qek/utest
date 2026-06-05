@@ -121,10 +121,11 @@ internal_obj.get_fn = function(name, fn_name) {
 
 internal_obj.is_active = function(name) {
 	const reg = get_registry(name);
-	return length(reg.layers) > 0
-	    || length(keys(reg.global.data)) > 0
-	    || length(keys(reg.global.fns)) > 0
-	    || reg.global.proxy != null;
+	if (length(reg.layers) > 0 || reg.global.proxy != null || length(keys(reg.global.fns)) > 0)
+		return true;
+	for (let ch in reg.channels)
+		if (length(keys(reg.global[ch])) > 0) return true;
+	return false;
 };
 
 internal_obj.get_all_data_keys = function(name) {
