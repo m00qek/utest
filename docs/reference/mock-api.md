@@ -25,6 +25,32 @@ All mock entry points accept a `state` object that configures what the proxy doe
 
 ## Scoped injection
 
+### `mock.inject_builtin(name, fn, cb)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `name` | string | Name of the built-in global to replace (e.g. `'warn'`, `'system'`, `'print'`). |
+| `fn` | function | Replacement function installed in `global[name]` for the duration of `cb`. |
+| `cb` | function | Called with no arguments while the replacement is active. The original is restored when it returns or throws. |
+
+**Returns:** the value returned by `cb`.
+
+Saves the current value of `global[name]`, installs `fn` in its place, calls `cb()`, then restores the original. The restore is guaranteed even if `cb` throws — the exception is caught, the global is restored, then the exception is re-raised.
+
+Unlike `mock.inject()`, this function targets the global scope directly. It works for built-ins such as `warn`, `system`, and `print` that are not loadable modules and are therefore unreachable via the shim-based mock API.
+
+Calls to `mock.inject_builtin` may be nested. The inner call saves whatever `global[name]` holds at the moment of the call — which may itself be a replacement — and restores it on exit, so inner and outer scopes remain independent.
+
+```js
+const captured = [];
+mock.inject_builtin('warn', (...args) => push(captured, join('', args)), () => {
+    warn('test message\n');
+});
+assert.match(['test message\n'], captured);
+```
+
+---
+
 ### `mock.inject(name, state, cb)`
 
 | Parameter | Type | Description |
@@ -86,6 +112,44 @@ Removes all global state for the named module and clears the stored proxy. Scope
 
 ```js
 mock.global.unpatch('ubus');
+```
+
+---
+
+### `mock.global.patch_builtin(name, fn)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `name` | string | Name of the built-in global to replace (e.g. `'warn'`, `'system'`, `'print'`). |
+| `fn` | function | Replacement function installed in `global[name]` until `unpatch_builtin` is called. |
+
+**Returns:** nothing.
+
+Saves the current value of `global[name]` and installs `fn` in its place. The replacement persists until `mock.global.unpatch_builtin(name)` is called. Unlike `mock.inject_builtin()`, there is no automatic cleanup.
+
+Calling `mock.inject_builtin()` while a `patch_builtin` is active layers on top of it correctly: `inject_builtin` saves the patched function and restores it when its callback exits, leaving the persistent patch in place.
+
+```js
+const captured = [];
+mock.global.patch_builtin('warn', (...args) => push(captured, join('', args)));
+// ... code under test runs here ...
+mock.global.unpatch_builtin('warn');
+```
+
+---
+
+### `mock.global.unpatch_builtin(name)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `name` | string | Name of the built-in global whose original should be restored. |
+
+**Returns:** nothing.
+
+Restores `global[name]` to the value that was saved by the most recent `mock.global.patch_builtin(name)` call. If `patch_builtin` was never called for `name`, this is a no-op.
+
+```js
+mock.global.unpatch_builtin('warn');
 ```
 
 ---

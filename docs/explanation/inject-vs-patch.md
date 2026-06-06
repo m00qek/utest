@@ -102,9 +102,31 @@ This is a deliberate trade-off. `mock.global.patch()` is more powerful but requi
 
 ---
 
+## Built-in globals
+
+`warn`, `system`, `print`, and similar functions are built-in globals rather than loadable modules. They live directly in `global`, not behind a module import. This means the shim mechanism cannot reach them: there is no file named `warn.uc` in any search path for the framework to intercept. Calling `mock.global.patch('warn', ...)` fails with "could not load module 'warn'" for exactly this reason.
+
+The only way to replace a built-in is to write directly to `global[name]`. This is what the manual save/restore pattern does:
+
+```js
+const orig_warn = global.warn;
+global.warn = (...args) => { push(captured, join('', args)); orig_warn(...args); };
+// ... test code ...
+global.warn = orig_warn;  // must be reached even if assertions throw
+```
+
+The problem with this pattern is that if an assertion between the replacement and the restore throws, the restore never runs. The built-in remains patched for every subsequent test in the suite, silently corrupting output.
+
+`mock.inject_builtin(name, fn, cb)` eliminates the risk. It wraps the same save/write/restore in a try/catch, so the original is unconditionally restored when the callback exits — whether it returns normally or throws. The layering model also mirrors `mock.inject()`: nested calls each save what is currently in `global[name]` at the time of the call (which may be an outer replacement) and restore it when done, so inner and outer scopes remain independent.
+
+`mock.global.patch_builtin(name, fn)` is the persistent counterpart, matching the relationship between `mock.inject()` and `mock.global.patch()`. It is appropriate when you need the replacement to outlive a single callback — for example, across the body of a `describe()` block — and you are prepared to call `mock.global.unpatch_builtin(name)` explicitly to clean up. An `inject_builtin` called while a `patch_builtin` is active layers on top of it correctly: the injected scope saves and restores the patched function, not the original.
+
+---
+
 ## Next steps
 
 - Decide when to use each mechanism: [How-to: Patch global state with mock.global.patch()](../how-to/mock-global-patch.md)
+- Intercept a built-in global in a test: [How-to: Mock a built-in global](../how-to/mock-builtin.md)
 - Walk through a complete inject example: [How-to: Mock a module with mock.inject()](../how-to/mock-inject.md)
 - Understand how mock state survives across tests: [About test isolation](test-isolation.md)
 - Make unmocked access fail loudly: [About strict mode](strict-mode.md)
