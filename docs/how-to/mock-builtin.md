@@ -1,6 +1,6 @@
 # How to mock a built-in global
 
-Use `mock.inject_builtin()` or `mock.global.patch_builtin()` to intercept built-in globals such as `warn`, `system`, and `print` that are not loadable modules and therefore unreachable via the shim-based mock API.
+Use `mock.inject_builtin()` to intercept built-in globals such as `warn`, `system`, and `print`. Built-ins are not loadable modules, so the shim-based mock API cannot reach them — `inject_builtin` works by writing directly to `global[name]` and guaranteeing cleanup even when the callback throws.
 
 ---
 
@@ -26,30 +26,49 @@ The original `warn` function is unconditionally restored when the callback exits
 
 ---
 
-## Suppress warn() output for an entire describe block
+## Suppress warn() output across multiple tests
 
-Use `mock.global.patch_builtin()` when you want the replacement to persist across multiple tests. Call `mock.global.unpatch_builtin()` in an `afterEach` or at the end of the block:
+`inject_builtin` works cleanly for this too — call it once per test and no cleanup step is needed. The callback wraps the test body; the original is restored when it returns:
 
 ```js
-import { describe, it, afterEach, mock } from 'utest';
+import { describe, it, mock, assert } from 'utest';
 
 describe('noisy module', () => {
-    afterEach(() => { mock.global.unpatch_builtin('warn'); });
-
     it('does not spam stderr', () => {
-        mock.global.patch_builtin('warn', () => null);
-        noisy_module.run();
-        // no assertion about warn output — just suppress it
+        mock.inject_builtin('warn', () => null, () => {
+            noisy_module.run();
+        });
     });
 
     it('still works when warn is suppressed', () => {
-        mock.global.patch_builtin('warn', () => null);
-        assert.match('ok', noisy_module.result());
+        mock.inject_builtin('warn', () => null, () => {
+            assert.match('ok', noisy_module.result());
+        });
     });
 });
 ```
 
-Forgetting to call `unpatch_builtin()` leaks the replacement into subsequent tests. Use `afterEach` to ensure cleanup runs even when tests fail.
+No `afterEach`, no risk of a leaked patch.
+
+---
+
+## When to use patch_builtin instead
+
+Reach for `mock.global.patch_builtin()` only when the replacement must be active *outside* a callback — for example, at file scope before any `describe` runs, or when the code under test is called from a module-level initialiser that executes before any test body:
+
+```js
+// file-scope patch — active from here until explicitly removed
+mock.global.patch_builtin('warn', () => null);
+
+const fw4 = require('fw4');  // fw4's module-scope code runs here; warn is already suppressed
+
+describe('fw4', () => {
+    afterEach(() => { mock.global.unpatch_builtin('warn'); });
+    // ...
+});
+```
+
+Always pair `patch_builtin` with `unpatch_builtin` — in an `afterEach` if the patch is per-test, or explicitly at the end of the scope where it was installed. Forgetting to call `unpatch_builtin` leaks the replacement into subsequent tests.
 
 ---
 
