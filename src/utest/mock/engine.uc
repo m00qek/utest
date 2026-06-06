@@ -245,6 +245,25 @@ function get_real(name) {
 	return null;
 }
 
+// Saved originals for mock.global.patch_builtin(); keyed by built-in name.
+if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
+const builtin_overrides = global.__utest_builtin_overrides;
+
+mock_obj.inject_builtin = function(name, fn, cb) {
+	const orig = global[name];
+	global[name] = fn;
+	let err = null;
+	let result;
+	try {
+		result = cb();
+	} catch (e) {
+		err = e;
+	}
+	global[name] = orig;
+	if (err != null) die(err);
+	return result;
+};
+
 mock_obj.inject = function(name, state, cb) {
 	const channels = get_proxy_channels(name);
 	const reg = get_registry(name);
@@ -283,6 +302,18 @@ mock_obj.global = {
 		let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
 		for (let ch in reg.channels) new_global[ch] = {};
 		reg.global = new_global;
+	},
+
+	patch_builtin: function(name, fn) {
+		builtin_overrides[name] = global[name];
+		global[name] = fn;
+	},
+
+	unpatch_builtin: function(name) {
+		if (exists(builtin_overrides, name)) {
+			global[name] = builtin_overrides[name];
+			delete builtin_overrides[name];
+		}
 	}
 };
 
