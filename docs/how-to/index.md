@@ -22,6 +22,7 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 | [Mock a module with inject()](mock-inject.md) | Scoped mock for code that receives a module as a parameter |
 | [Patch global state](mock-global-patch.md) | Replace the module import itself for the duration of a test |
 | [Mock the filesystem](mock-fs.md) | Intercept `fs` calls with virtual files |
+| [Mock a built-in global](mock-builtin.md) | Intercept `warn`, `system`, `print`, etc. |
 | [Mock UCI configuration](mock-uci.md) | Provide test UCI packages without touching the real config |
 | [Mock ubus calls](mock-ubus.md) | Stub ubus object/method responses |
 | [Mock the event loop](mock-uloop.md) | Run timer callbacks synchronously without blocking |

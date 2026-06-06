@@ -63,6 +63,7 @@ nav:
           - Mock a module with inject(): how-to/mock-inject.md
           - Patch global state: how-to/mock-global-patch.md
           - Mock the filesystem: how-to/mock-fs.md
+          - Mock a built-in global: how-to/mock-builtin.md
           - Mock UCI configuration: how-to/mock-uci.md
           - Mock ubus calls: how-to/mock-ubus.md
           - Mock the event loop: how-to/mock-uloop.md
