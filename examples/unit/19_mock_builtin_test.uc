@@ -46,6 +46,17 @@ describe('Mock built-ins', () => {
 		assert.match(['outer:a', 'inner:b', 'outer:c'], log);
 	});
 
+	it('inject_builtin() layers on top of an active patch_builtin()', () => {
+		const log = [];
+		mock.global.patch_builtin('warn', (...a) => push(log, 'patched:' + join('', a)));
+		mock.inject_builtin('warn', (...a) => push(log, 'injected:' + join('', a)), () => {
+			warn('inside');
+		});
+		warn('outside');
+		mock.global.unpatch_builtin('warn');
+		assert.match(['injected:inside', 'patched:outside'], log);
+	});
+
 	it('global.patch_builtin() replaces the built-in persistently', () => {
 		const captured = [];
 		mock.global.patch_builtin('warn', (...args) => push(captured, join('', args)));
