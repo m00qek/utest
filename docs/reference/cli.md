@@ -29,6 +29,7 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `pattern` | string | Default file glob pattern. |
 | `color` | boolean | Set to `false` to disable colour output. |
 | `timeout` | integer | Default worker timeout in seconds. |
+| `lib_paths` | array of strings | Additional directories to append to the module search path. Relative paths are resolved against the directory containing the configuration file, not the working directory. |
 
 ---
 
@@ -61,12 +62,13 @@ A module that is not listed in `mocks` is never intercepted; `import * as mod fr
 
 ```js
 return {
-    reporter: 'compact',
-    jobs:     4,
-    timeout:  30,
-    color:    true,
-    filter:   null,
-    pattern:  '*_test.uc',
+    reporter:  'compact',
+    jobs:      4,
+    timeout:   30,
+    color:     true,
+    filter:    null,
+    pattern:   '*_test.uc',
+    lib_paths: ['lib'],
     mocks: {
         'fs':      null,
         'ubus':    null,

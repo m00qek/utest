@@ -1,0 +1,51 @@
+{
+  "stats": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/20_config_lib_paths_test.uc",
+      "bundle": "examples/unit/20_config_lib_paths_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Config-relative lib paths"
+        },
+        {
+          "id": 2,
+          "name": "resolves a relative lib_paths entry against the config file's directory"
+        }
+      ],
+      "index": 1
+    }
+  ],
+  "files": [
+    "examples/unit/20_config_lib_paths_test.uc"
+  ],
+  "bundles": {
+    "examples/unit/20_config_lib_paths_test.uc": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

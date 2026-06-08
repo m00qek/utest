@@ -62,8 +62,9 @@ function main() {
 	let t = clock();
 
 	let lib_paths = opts.lib_paths || [];
+	const config_dir = file_config.path ? replace(file_config.path, /\/[^\/]+$/, "") : null;
 	for (let p in (file_config.data.lib_paths || []))
-		push(lib_paths, p);
+		push(lib_paths, (config_dir && !match(p, /^\//)) ? (fs.realpath(config_dir + "/" + p) || config_dir + "/" + p) : p);
 
 	let config = {
 		bundles:   parse_bundles(positional, file_config.data.pattern),
