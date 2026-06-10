@@ -174,7 +174,7 @@ function frequency_gen(...pairs) {
 	});
 }
 
-function optional_gen(g, opts) {
+function optional_gen(generator, opts) {
 	opts ??= {};
 	const none_weight = opts.none_weight ?? 1;
 	const some_weight = opts.some_weight ?? 1;
@@ -182,7 +182,7 @@ function optional_gen(g, opts) {
 		die("gen.optional: weights must be non-negative");
 	if (none_weight == 0 && some_weight == 0)
 		die("gen.optional: at least one weight must be > 0");
-	return frequency_gen([none_weight, constant_gen(null)], [some_weight, g]);
+	return frequency_gen([none_weight, constant_gen(null)], [some_weight, generator]);
 }
 
 function map_gen(generator, fn) {

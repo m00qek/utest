@@ -11,6 +11,7 @@ export function create(use_color) {
 	return proto({
 		render_suite_start: function(msg) {
 			if (reported_suites[msg.suite]) return;
+			if (length(keys(reported_suites)) > 0) print("\n");
 			reported_suites[msg.suite] = true;
 			
 			let header = color(t.HEADER, "[" + (msg.bundle || "Default") + "] " + msg.suite);
@@ -33,14 +34,14 @@ export function create(use_color) {
 				print("  [" + color(t.PASS, "PASS") + "] " + name + "\n");
 			} else if (msg.status == "FAIL") {
 				print("  [" + color(t.FAIL, "FAIL") + "] " + name + "\n");
-				print("         " + color(t.FAIL, msg.error || "") + "\n");
+				print("         " + color(t.FAIL, replace(msg.error || "", "\n", "\n         ")) + "\n");
 			} else if (msg.status == "SKIP") {
 				print("  [" + color(t.SKIP, "SKIP") + "] " + name + "\n");
 			} else if (msg.status == "IGNORE") {
 				print("  [" + color(t.IGNORE, "IGNORE") + "] " + name + "\n");
 			} else {
 				print("  [" + color(t.BOLD + t.ERROR, "ERR!") + "] " + name + "\n");
-				print("         " + color(t.ERROR, msg.error || "") + "\n");
+				print("         " + color(t.ERROR, replace(msg.error || "", "\n", "\n         ")) + "\n");
 			}
 		},
 
@@ -51,7 +52,7 @@ export function create(use_color) {
 
 		render_summary: function(ctx) {
 			let stats = ctx.stats;
-			print(color(t.HEADER, "Summary:") + "\n");
+			print("\n" + color(t.HEADER, "Summary:") + "\n");
 			print("  Suites: " + stats.suites + "\n");
 			print("  Total:  " + stats.total + "\n");
 
