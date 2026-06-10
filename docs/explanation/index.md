@@ -12,6 +12,7 @@ Understanding-oriented material that explains the design decisions and concepts 
 | [About test isolation](test-isolation.md) | What the framework guarantees between tests and where that guarantee ends |
 | [About inject() vs global.patch()](inject-vs-patch.md) | Why two mock mechanisms exist and when to use each |
 | [About strict mode](strict-mode.md) | The philosophy behind failing on unmocked calls and the trade-offs involved |
+| [About property-based testing](property-based-testing.md) | How the shrinking model works, and how randomness is managed |
 
 ---
 

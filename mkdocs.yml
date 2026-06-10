@@ -51,6 +51,7 @@ nav:
       - Writing your first test: tutorials/user/first-test.md
       - Writing your first mock: tutorials/user/first-mock.md
       - Writing flexible assertions: tutorials/user/first-combinators.md
+      - Writing your first property test: tutorials/user/first-property-test.md
       - Contributing your first patch: tutorials/contributor/first-patch.md
   - How-to Guides:
       - Overview: how-to/index.md
@@ -59,6 +60,7 @@ nav:
           - Filter tests by name: how-to/filter-tests.md
           - Run tests in CI: how-to/ci.md
           - Troubleshoot common problems: how-to/troubleshoot.md
+          - Reproduce a failing property: how-to/property-reproduce.md
       - Mocking:
           - Mock a module with inject(): how-to/mock-inject.md
           - Patch global state: how-to/mock-global-patch.md
@@ -83,6 +85,7 @@ nav:
       - CLI and Configuration: reference/cli.md
       - DSL: reference/dsl.md
       - Assertions: reference/assertions.md
+      - Property-based testing: reference/property.md
       - Mock API: reference/mock-api.md
       - Proxy Data Models: reference/proxy-data-models.md
       - Glossary: reference/glossary.md
@@ -97,6 +100,7 @@ nav:
       - About test isolation: explanation/test-isolation.md
       - About inject() vs global.patch(): explanation/inject-vs-patch.md
       - About strict mode: explanation/strict-mode.md
+      - About property-based testing: explanation/property-based-testing.md
       - About the worker/coordinator: explanation/worker-coordinator.md
       - About the mock engine: explanation/mock-engine.md
       - About shim generation: explanation/shim-generation.md

@@ -12,6 +12,7 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 | [Filter tests by name](filter-tests.md) | Run a subset of tests during development |
 | [Run tests in CI](ci.md) | Integrate utest into a CI pipeline |
 | [Troubleshoot common problems](troubleshoot.md) | Diagnose and fix frequent failures |
+| [Reproduce a failing property](property-reproduce.md) | Automatically replay local failures and reproduce CI seeds |
 
 ---
 
