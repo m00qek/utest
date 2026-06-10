@@ -3,6 +3,8 @@ import { mock as _mock } from 'utest.mock.engine';
 import { spy as _spy } from 'utest.mock.spy';
 import { assert as _assert } from 'utest.assert';
 import { equals as _equals, contains as _contains, truthy as _truthy, falsy as _falsy, not as _not, pred as _pred, any_order as _any_order, any as _any, regex as _regex, starts_with as _starts_with, ends_with as _ends_with, has_length as _has_length, between as _between, is_type as _is_type } from 'utest.combinators';
+import { prop as _prop, forall as _forall } from 'utest.property';
+import { gen as _gen, is_generator as _is_generator } from 'utest.generators';
 
 export const describe = dsl.describe;
 export const xdescribe = dsl.xdescribe;
@@ -30,3 +32,7 @@ export const ends_with = _ends_with;
 export const has_length = _has_length;
 export const between = _between;
 export const is_type = _is_type;
+export const prop = _prop;
+export const forall = _forall;
+export const gen = _gen;
+export const is_generator = _is_generator;

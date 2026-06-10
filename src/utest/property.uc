@@ -1,0 +1,448 @@
+// Property-based testing with internal (choice-sequence) shrinking.
+//
+// A generator is { generate: fn(source) -> value }.  The source wraps a
+// deterministic PRNG and records every draw.  On failure, the recorded
+// `choices` array is shrunk (made lexicographically smaller) and the
+// generator is replayed against the shrunk sequence — so shrinking
+// composes through map/bind/filter without per-type shrinkers.
+//
+// Source contract: every generator MUST read randomness only through
+// `source.draw(bound)`, never via math.rand() directly.  Bypassing the
+// source breaks recording and replay and silently corrupts shrinking.
+
+import * as math from 'math';
+import * as fs from 'fs';
+import * as dsl from 'utest.dsl';
+import { parse_thrown } from 'utest.util';
+import { root, stack } from 'utest.runner.worker.registry';
+
+// Source overrun sentinel.  Thrown by replay_source when the shrinker hands a
+// choices array that's shorter than what the generator wants to read; caught
+// and counted as an invalid (skipped) shrink candidate by try_choices.
+const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
+
+// ─── Source ──────────────────────────────────────────────────────────────────
+
+// Bias rate: every 1-in-N draws, force a 0 instead of a uniform sample.
+// Small draws map to "interesting" values across all generators (zp for int,
+// empty for array, first alternative for oneof, ...), so injecting zeros
+// surfaces edge cases much faster than pure uniform sampling.
+const BIAS_DENOM = 8;
+
+function record_source(seed) {
+	math.srand(seed);
+	const choices = [];
+	return {
+		seed,
+		choices,
+		draw: function(bound) {
+			if (bound <= 1) { push(choices, 0); return 0; }
+			const r = math.rand();
+			const v = (r % BIAS_DENOM == 0) ? 0 : (r % bound);
+			push(choices, v);
+			return v;
+		}
+	};
+}
+
+function replay_source(choices) {
+	let i = 0;
+	return {
+		choices,
+		draw: function(bound) {
+			if (i >= length(choices)) die(OVERRUN_MSG);
+			if (bound <= 1) { i++; return 0; }
+			return choices[i++] % bound;
+		}
+	};
+}
+
+
+// ─── Replay & shrinking ──────────────────────────────────────────────────────
+
+function caught_msg(e) {
+	return (type(e) == 'object' && e.message) ? e.message : sprintf('%s', e);
+}
+
+// Extract the __utest__.kind from a caught exception, or null if it isn't a
+// utest-tagged throw.  Used to distinguish our sentinels from user errors.
+function utest_kind(e) {
+	const m = caught_msg(e);
+	let parsed = null;
+	try { parsed = json(m); } catch (_) {}
+	if (type(parsed) == 'object' && parsed.__utest__) return parsed.__utest__.kind;
+	return null;
+}
+
+function is_property_sentinel(kind) {
+	return kind == 'property_overrun' || kind == 'property_discard';
+}
+
+// Replays never touch the user-facing classify/discards counters — those only
+// reflect the original generation runs.  Without this, shrinking would inflate
+// classify counts (and produce >100% coverage in the report).
+const NOOP_CTX = { classify: function(_label, _cond) {} };
+
+// Returns { kind: 'fail'|'pass'|'invalid', value?, error? }.
+// Replay-only entry point: used for shrink candidates and for re-extracting
+// the final shrunk value.  Genuine generator errors propagate; only the
+// property-sentinel throws ('overrun', 'discard') count as 'invalid'.
+function try_choices(g, prop_fn, choices) {
+	const s = replay_source(choices);
+	let value;
+	try { value = g.generate(s); }
+	catch (e) {
+		if (is_property_sentinel(utest_kind(e))) return { kind: 'invalid' };
+		die(e);
+	}
+	try { prop_fn(value, NOOP_CTX); return { kind: 'pass' }; }
+	catch (e) {
+		if (is_property_sentinel(utest_kind(e))) return { kind: 'invalid' };
+		return { kind: 'fail', value, error: e };
+	}
+}
+
+function without_range(arr, idx, n) {
+	const c = [];
+	for (let i = 0; i < length(arr); i++)
+		if (i < idx || i >= idx + n) push(c, arr[i]);
+	return c;
+}
+
+function lex_smaller(a, b) {
+	if (length(a) != length(b)) return length(a) < length(b);
+	for (let i = 0; i < length(a); i++) {
+		if (a[i] != b[i]) return a[i] < b[i];
+	}
+	return false;
+}
+
+// Helper for shrink moves: tries a candidate, returns true if it became the
+// new minimum.  Centralizes the lex-smaller + max_steps bookkeeping.
+function shrink_step(g, prop_fn, ctx, cand) {
+	if (!lex_smaller(cand, ctx.cur)) return false;
+	if (try_choices(g, prop_fn, cand).kind != 'fail') return false;
+	ctx.cur = cand;
+	ctx.steps++;
+	if (ctx.steps >= ctx.max_steps) ctx.capped = true;
+	return true;
+}
+
+function sorted_copy(arr, len) {
+	const slice = [];
+	for (let k = 0; k < len; k++) push(slice, arr[k]);
+	sort(slice);
+	const out = [...arr];
+	for (let k = 0; k < len; k++) out[k] = slice[k];
+	return out;
+}
+
+// Greedy shrinker.  Move classes, cheapest first:
+//   (1) delete a contiguous span                — collapses lengths
+//   (2) sort a prefix                            — canonicalizes order
+//   (3) swap adjacent out-of-order pairs         — local reordering
+//   (4) lower a single value (binary search)     — reduces magnitudes
+//   (5) redistribute weight between two positions — preserves sums
+// Loops until a full pass finds no smaller failing candidate OR max_steps is hit.
+// Invariant: `cur` is always a failing choice sequence.
+function shrink(g, prop_fn, failing, max_steps) {
+	const ctx = { cur: failing, steps: 0, capped: false, max_steps };
+	let progress = true;
+	while (progress && !ctx.capped) {
+		progress = false;
+
+		// (1) deletions: try larger spans first, then singles.
+		// span /= 2 in ucode is integer division, so span reaches 0 and the loop exits.
+		for (let span = length(ctx.cur); span >= 1 && !progress && !ctx.capped; span /= 2) {
+			for (let i = 0; i + span <= length(ctx.cur) && !progress; i++) {
+				if (shrink_step(g, prop_fn, ctx, without_range(ctx.cur, i, span))) progress = true;
+			}
+		}
+		if (progress) continue;
+
+		// (2) sort a prefix — wins big for order-invariant properties.
+		for (let len = length(ctx.cur); len >= 2 && !progress && !ctx.capped; len /= 2) {
+			if (shrink_step(g, prop_fn, ctx, sorted_copy(ctx.cur, len))) progress = true;
+		}
+		if (progress) continue;
+
+		// (3) swap adjacent out-of-order pairs.
+		for (let i = 0; i < length(ctx.cur) - 1 && !progress && !ctx.capped; i++) {
+			if (ctx.cur[i] <= ctx.cur[i+1]) continue;   // already in order
+			const cand = [...ctx.cur];
+			cand[i] = ctx.cur[i+1]; cand[i+1] = ctx.cur[i];
+			if (shrink_step(g, prop_fn, ctx, cand)) progress = true;
+		}
+		if (progress) continue;
+
+		// (4) lower individual values — binary search per position toward 0.
+		for (let i = 0; i < length(ctx.cur) && !progress && !ctx.capped; i++) {
+			if (ctx.cur[i] == 0) continue;
+			let cand = [...ctx.cur]; cand[i] = 0;
+			if (shrink_step(g, prop_fn, ctx, cand)) { progress = true; continue; }
+			// Binary search (lo, hi); lo known-pass, hi known-fail.
+			let lo = 0, hi = ctx.cur[i];
+			while (lo + 1 < hi) {
+				const mid = int((lo + hi) / 2);
+				const c2 = [...ctx.cur]; c2[i] = mid;
+				if (try_choices(g, prop_fn, c2).kind == 'fail') hi = mid;
+				else lo = mid;
+			}
+			if (hi < ctx.cur[i]) {
+				const c3 = [...ctx.cur]; c3[i] = hi;
+				ctx.cur = c3;
+				ctx.steps++;
+				if (ctx.steps >= ctx.max_steps) ctx.capped = true;
+				progress = true;
+			}
+		}
+		if (progress) continue;
+
+		// (5) redistribute pairs (a, b) → (a-k, b+k) for k = 1, 2, 4, ...
+		// Preserves the value sum (modulo replay-time bound clamping) — the only
+		// move that can reduce a sum-constrained shrunken structure further.
+		for (let i = 0; i < length(ctx.cur) - 1 && !progress && !ctx.capped; i++) {
+			if (ctx.cur[i] == 0) continue;
+			for (let j = i + 1; j < length(ctx.cur) && !progress && !ctx.capped; j++) {
+				for (let k = 1; k <= ctx.cur[i] && !progress; k *= 2) {
+					const cand = [...ctx.cur];
+					cand[i] -= k; cand[j] += k;
+					if (shrink_step(g, prop_fn, ctx, cand)) progress = true;
+				}
+			}
+		}
+	}
+	return { choices: ctx.cur, steps: ctx.steps, capped: ctx.capped };
+}
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+//
+// Saves the shrunk choice sequence of a failing property to disk and replays
+// it first on the next run.  Survives PRNG/bias changes because we replay the
+// raw `choices`, not the seed.  Commit `.utest/` to git to get team-wide
+// regression protection; .gitignore it for per-engineer-only behavior.
+
+const PERSIST_DIR = ".utest/property";
+
+// Slug + cheap polynomial hash for collision resistance.  Filenames stay
+// human-readable so engineers can grep the .utest/property/ tree.
+function persist_filename(test_name) {
+	let slug = "";
+	for (let i = 0; i < length(test_name) && length(slug) < 40; i++) {
+		const c = substr(test_name, i, 1);
+		const code = ord(c);
+		const ok = (code >= 48 && code <= 57)
+		        || (code >= 65 && code <= 90)
+		        || (code >= 97 && code <= 122);
+		if (ok) slug += c;
+		else if (length(slug) > 0 && substr(slug, length(slug) - 1, 1) != "_") slug += "_";
+	}
+	while (length(slug) > 0 && substr(slug, length(slug) - 1, 1) == "_")
+		slug = substr(slug, 0, length(slug) - 1);
+	let h = 0;
+	for (let i = 0; i < length(test_name); i++)
+		h = (h * 31 + ord(substr(test_name, i, 1))) % 0x7fffffff;
+	return slug + "_" + sprintf("%08x", h) + ".json";
+}
+
+function persist_path(test_name) {
+	return PERSIST_DIR + "/" + persist_filename(test_name);
+}
+
+function ensure_persist_dir() {
+	try {
+		if (!fs.access(".utest", "r"))   fs.mkdir(".utest", 493);
+		if (!fs.access(PERSIST_DIR, "r")) fs.mkdir(PERSIST_DIR, 493);
+		return true;
+	} catch (_) { return false; }
+}
+
+// Returns the path on success, null on any failure (I/O errors don't break tests).
+function save_example(test_name, data) {
+	if (!ensure_persist_dir()) return null;
+	const path = persist_path(test_name);
+	try {
+		const f = fs.open(path, "w");
+		if (!f) return null;
+		f.write(sprintf('%J', data));
+		f.close();
+		return path;
+	} catch (_) { return null; }
+}
+
+function load_example(test_name) {
+	const path = persist_path(test_name);
+	try {
+		if (!fs.access(path, "r")) return null;
+		const f = fs.open(path, "r");
+		if (!f) return null;
+		const content = f.read("all");
+		f.close();
+		return json(content);
+	} catch (_) { return null; }
+}
+
+function delete_example(test_name) {
+	try { fs.unlink(persist_path(test_name)); } catch (_) {}
+}
+
+// ─── Runner ──────────────────────────────────────────────────────────────────
+
+function make_ctx(stats) {
+	return {
+		classify: function(label, cond) {
+			if (cond === false) return;
+			stats.classifications[label] = (stats.classifications[label] || 0) + 1;
+		}
+	};
+}
+
+function fmt_stats(stats, runs) {
+	const lines = [];
+	if (stats.discards > 0)
+		push(lines, sprintf("  Discards: %d (filter rejections)", stats.discards));
+	const ks = keys(stats.classifications);
+	if (length(ks) > 0) {
+		push(lines, "  Coverage:");
+		for (let k in ks) {
+			const pct = (stats.classifications[k] * 100) / runs;
+			push(lines, sprintf("    %-20s %d (%d%%)", k, stats.classifications[k], pct));
+		}
+	}
+	return join("\n", lines);
+}
+
+// Indent every line after the first by `n` spaces — keeps multi-line error
+// messages visually aligned with the "Error: " column.
+function indent_continuation(s, n) {
+	let pad = "";
+	for (let i = 0; i < n; i++) pad += " ";
+	return replace(s, "\n", "\n" + pad);
+}
+
+function report_failure(info, runs) {
+	const lines = [];
+	if (info.replayed) {
+		push(lines, "Property failed (replayed saved counterexample)");
+		push(lines, sprintf("  Replayed from:  %s", info.persist_path));
+		if (info.saved_at)
+			push(lines, sprintf("  Saved at:       %d (epoch seconds)", info.saved_at));
+		push(lines, sprintf("  Seed:           %d", info.seed));
+		push(lines, sprintf("  Value:          %J", info.shrunk_value));
+		push(lines, "  Error:          " + indent_continuation(parse_thrown(info.error).message, 18));
+	} else {
+		push(lines, sprintf("Property failed after %d case(s)", info.cases_tried));
+		push(lines, sprintf("  Seed:           %d", info.seed));
+		push(lines, sprintf("  Original value: %J", info.original_value));
+		push(lines, sprintf("  Shrunk value:   %J", info.shrunk_value));
+		push(lines, sprintf("  Shrink steps:   %d%s",
+			info.shrink_steps,
+			info.shrink_capped ? " (capped — may not be minimal)" : ""));
+		push(lines, "  Error:          " + indent_continuation(parse_thrown(info.error).message, 18));
+		if (info.persist_path)
+			push(lines, sprintf("  Saved to:       %s (will replay on next run)", info.persist_path));
+		const s = fmt_stats(info.stats, runs);
+		if (length(s) > 0) push(lines, s);
+	}
+	die(sprintf('%J', { __utest__: { kind: 'fail', message: join("\n", lines) } }));
+}
+
+export function forall(g, prop_fn, opts) {
+	opts ??= {};
+	const runs       = opts.runs       ?? 100;
+	const shrink_max = opts.shrink_max ?? 500;
+	const persist_id = opts.persist_id;
+	const persist    = (persist_id != null) && (opts.persist != false);
+	const t = clock();
+	const base_seed  = opts.seed       ?? (t[0] * 1000000000 + t[1]);
+	const stats = { classifications: {}, discards: 0 };
+	const ctx = make_ctx(stats);
+
+	// Replay any saved counterexample first.  If it still fails, report it
+	// without re-shrinking; if it now passes (or has gone stale), drop it.
+	if (persist) {
+		const saved = load_example(persist_id);
+		if (saved && type(saved.choices) == 'array') {
+			const r = try_choices(g, prop_fn, saved.choices);
+			if (r.kind == 'fail') {
+				report_failure({
+					replayed: true,
+					persist_path: persist_path(persist_id),
+					saved_at: saved.saved_at,
+					seed: saved.seed,
+					shrunk_value: r.value,
+					error: r.error
+				}, runs);
+			}
+			delete_example(persist_id);
+		}
+	}
+
+	for (let i = 0; i < runs; i++) {
+		const seed = base_seed + i;
+		const s = record_source(seed);
+		let value;
+		try { value = g.generate(s); }
+		catch (e) {
+			if (utest_kind(e) == 'property_discard') { stats.discards++; continue; }
+			die(e);
+		}
+		try { prop_fn(value, ctx); }
+		catch (e) {
+			if (is_property_sentinel(utest_kind(e))) { stats.discards++; continue; }
+			const shrunk = shrink(g, prop_fn, s.choices, shrink_max);
+			const replay = try_choices(g, prop_fn, shrunk.choices);
+			const shrunk_value = (replay.kind == 'fail') ? replay.value : '<unreproducible>';
+			// Use the error captured *during the shrunk replay* — the original
+			// error references positions/state from the unshrunken value.
+			const reported_error = (replay.kind == 'fail') ? replay.error : e;
+			let saved_path = null;
+			if (persist) {
+				const failure_t = clock();
+				saved_path = save_example(persist_id, {
+					test:     persist_id,
+					seed:     seed,
+					choices:  shrunk.choices,
+					saved_at: failure_t[0]
+				});
+			}
+			report_failure({
+				cases_tried: i + 1,
+				seed,
+				original_value: value,
+				shrunk_value,
+				shrink_steps: shrunk.steps,
+				shrink_capped: shrunk.capped,
+				stats,
+				error: reported_error,
+				persist_path: saved_path
+			}, runs);
+		}
+	}
+};
+
+// ─── DSL hook ────────────────────────────────────────────────────────────────
+
+// Build the describe-path prefix at declaration time (the registry's `stack`
+// holds containing describes — root has id=0 and is skipped).
+function current_describe_path() {
+	const parts = [];
+	for (let i = 0; i < length(stack); i++)
+		if (stack[i].id != 0) push(parts, stack[i].name);
+	return join(" > ", parts);
+}
+
+export function prop(name, g, prop_fn, opts) {
+	opts ??= {};
+	const effective = { ...opts };
+	if (effective.persist_id == null) {
+		// Qualify with file + describe path so identically-named tests in
+		// different files / different describes don't share a persistence file.
+		const file = root.test_file || "";
+		const path = current_describe_path();
+		const prefix = (file != "" ? file + " :: " : "")
+		             + (path != "" ? path + " > " : "");
+		effective.persist_id = prefix + name;
+	}
+	dsl.it(name, function() { forall(g, prop_fn, effective); });
+};

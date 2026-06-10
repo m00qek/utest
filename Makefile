@@ -7,7 +7,8 @@ IMAGE_OPENWRT := openwrt/rootfs:$(SDK_ARCH)-openwrt-$(OPENWRT_VERSION)
 .PHONY: test shell meta-test package
 
 test:
-	docker run --rm \
+	@docker run --rm \
+		--user $$(id -u):$$(id -g) \
 		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
 		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
 		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \
@@ -17,7 +18,8 @@ test:
 		utest $(ARGS)
 
 shell:
-	docker run --rm -it \
+	@docker run --rm -it \
+		--user $$(id -u):$$(id -g) \
 		-v $(CURDIR)/src/utest.sh:/usr/bin/utest:ro \
 		-v $(CURDIR)/src/utest.uc:/usr/share/ucode/utest.uc:ro \
 		-v $(CURDIR)/src/utest:/usr/share/ucode/utest:ro \

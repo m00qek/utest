@@ -1,9 +1,11 @@
 import * as worker_runner from 'utest.runner.worker.runner';
 import * as worker_reporter from 'utest.runner.worker.reporter';
+import { root } from 'utest.runner.worker.registry';
 import * as fs from 'fs';
 
 const args = json(ARGV[0]);
 const test_file = args.file;
+root.test_file = test_file;
 const test_filter = args.filter;
 const test_seed = args.seed;
 const bundle_name = args.bundle || "Default";
