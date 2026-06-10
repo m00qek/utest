@@ -13,6 +13,8 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `-f <regex>` | string | — | Run only tests whose full name matches the regex. |
 | `-c <path>` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared. |
 | `-l <path>` | string | — | Prepend a directory to the module search path. Repeatable. |
+| `-j <n>` | integer | — | Number of parallel workers. Overrides `jobs` in the configuration file. |
+| `-s <seed>` | integer | — | Random seed for property-based tests. Overrides `seed` if specified. |
 
 ---
 

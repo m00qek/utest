@@ -68,14 +68,14 @@ function main() {
 
 	let config = {
 		bundles:   parse_bundles(positional, file_config.data.pattern),
-		jobs:      file_config.data.jobs,
+		jobs:      opts.jobs != null ? int(opts.jobs) : file_config.data.jobs,
 		color:     file_config.data.color !== false,
 		filter:    opts.filter   || file_config.data.filter,
 		reporter:  opts.reporter || file_config.data.reporter,
 		run_dir:   opts.run_dir,
 		src_dir:   opts.src_dir,
 		mocks:     file_config.data.mocks || {},
-		seed:      int(t[1]),
+		seed:      opts.seed != null ? int(opts.seed) : int(t[1]),
 		timeout:   int(file_config.data.timeout || 60),
 		lib_paths: lib_paths
 	};
