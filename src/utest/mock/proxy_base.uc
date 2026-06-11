@@ -34,7 +34,7 @@ return {
 				let proxy = {};
 				const calls = __internal__.get_calls(name);
 				for (let fn_name, fn in (real || {})) {
-					if (type(fn) == 'function') {
+					if (type(fn) === 'function') {
 						calls[fn_name] = calls[fn_name] || [];
 						proxy[fn_name] = make_behavior_fn(name, fn_name, fn);
 					} else {

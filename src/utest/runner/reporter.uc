@@ -5,9 +5,9 @@ import * as json_repo from 'utest.runner.reporter.json';
 export function create_reporter(type, use_color, files, seed) {
 	let reporter;
 
-	if (type == "compact") {
+	if (type === "compact") {
 		reporter = compact.create(use_color);
-	} else if (type == "json") {
+	} else if (type === "json") {
 		reporter = json_repo.create();
 	} else {
 		reporter = detailed.create(use_color);

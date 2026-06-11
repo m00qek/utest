@@ -20,7 +20,7 @@ export function create() {
 				let line;
 				let received_any = false;
 				let captured = [];
-				while ((line = proc.read("line")) != null) {
+				while ((line = proc.read("line")) !== null) {
 					let msg;
 					try { msg = json(line); } catch (e) {
 						warn(rtrim(line) + "\n");

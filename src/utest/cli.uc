@@ -5,7 +5,7 @@ function parse_bundles(positional, pattern) {
 	let bundles = [];
 	pattern = pattern || "*_test.uc";
 
-	if (length(positional) == 0) {
+	if (length(positional) === 0) {
 		push(bundles, { name: "Default", pattern: "test/unit/" + pattern });
 		return bundles;
 	}
@@ -17,7 +17,7 @@ function parse_bundles(positional, pattern) {
 
 		if (length(parts) > 2) {
 			die(sprintf("Invalid bundle argument: '%s'. Expected format: [Name:]path\n", arg));
-		} else if (length(parts) == 2) {
+		} else if (length(parts) === 2) {
 			name = parts[0];
 			path = parts[1];
 		} else {
@@ -26,7 +26,7 @@ function parse_bundles(positional, pattern) {
 		}
 
 		if (!match(path, /\.uc$/)) {
-			if (substr(path, length(path) - 1) != "/")
+			if (substr(path, length(path) - 1) !== "/")
 				path = path + "/";
 			path = path + pattern;
 		}
@@ -55,7 +55,7 @@ function main() {
 	let opts = json(ARGV[1]);
 	let positional = slice(ARGV, 2);
 
-	if (opts.reporter != null && !match(opts.reporter, /^(detailed|compact|json)$/))
+	if (opts.reporter !== null && !match(opts.reporter, /^(detailed|compact|json)$/))
 		die(sprintf("Invalid -r value '%s': expected one of: detailed, compact, json.\n", opts.reporter));
 
 	let file_config = load_config(opts.config);
@@ -75,22 +75,22 @@ function main() {
 	let mocks = {};
 	for (let name in keys(raw_mocks)) {
 		let entry = raw_mocks[name];
-		mocks[name] = (type(entry) == 'object' && entry.proxy)
+		mocks[name] = (type(entry) === 'object' && entry.proxy)
 			? { ...entry, proxy: resolve_rel(entry.proxy) }
 			: entry;
 	}
 
 	let config = {
 		bundles:   parse_bundles(positional, file_config.data.pattern),
-		jobs:      opts.jobs != null ? int(opts.jobs) : file_config.data.jobs,
+		jobs:      opts.jobs !== null ? int(opts.jobs) : file_config.data.jobs,
 		color:     file_config.data.color !== false,
 		filter:    opts.filter   || file_config.data.filter,
 		reporter:  opts.reporter || file_config.data.reporter,
 		run_dir:   opts.run_dir,
 		src_dir:   opts.src_dir,
 		mocks:     mocks,
-		seed:      opts.seed != null ? int(opts.seed) : int(t[1]),
-		prop_seed: opts.seed != null ? int(opts.seed) : null,
+		seed:      opts.seed !== null ? int(opts.seed) : int(t[1]),
+		prop_seed: opts.seed !== null ? int(opts.seed) : null,
 		timeout:   int(file_config.data.timeout || 60),
 		lib_paths: lib_paths
 	};

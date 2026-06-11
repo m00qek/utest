@@ -30,7 +30,7 @@ export function describe(name, fn) {
 	let _err = null;
 	try { fn(); } catch(e) { _err = e; }
 	pop(stack);
-	if (_err != null) die(_err);
+	if (_err !== null) die(_err);
 };
 
 export function it(name, fn) {
@@ -76,14 +76,14 @@ export function xdescribe(name, fn) {
 	let _err = null;
 	try { if (fn) fn(); } catch(e) { _err = e; }
 	pop(stack);
-	if (_err != null) die(_err);
+	if (_err !== null) die(_err);
 };
 
 export function setup(fn) {
 	guard();
 	if (length(stack) > 1)
 		die("setup() can only be used at module level (outside describe)");
-	if (root.setup != null)
+	if (root.setup !== null)
 		die("setup() can only be called once per file");
 	root.setup = fn;
 };
@@ -92,7 +92,7 @@ export function teardown(fn) {
 	guard();
 	if (length(stack) > 1)
 		die("teardown() can only be used at module level (outside describe)");
-	if (root.teardown != null)
+	if (root.teardown !== null)
 		die("teardown() can only be called once per file");
 	root.teardown = fn;
 };

@@ -44,5 +44,5 @@ export function run(options) {
 
 	reporter.summary();
 
-	return (reporter.stats.failed == 0 && reporter.stats.errors == 0 && reporter.stats.fatals == 0);
+	return (reporter.stats.failed === 0 && reporter.stats.errors === 0 && reporter.stats.fatals === 0);
 };

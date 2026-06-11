@@ -33,7 +33,7 @@ global.require = function(name) {
 
 try {
 	let test_dir = replace(test_file, /\/[^\/]+$/, "");
-	if (test_dir != test_file) {
+	if (test_dir !== test_file) {
 		let real_dir = fs.realpath(test_dir) || test_dir;
 		unshift(REQUIRE_SEARCH_PATH, real_dir);
 	}

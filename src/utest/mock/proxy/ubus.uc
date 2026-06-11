@@ -17,15 +17,15 @@ return {
 					if (override) return override(obj, method, args);
 
 					let val = ctx.get_data(obj + ':' + method);
-					if (val == null) val = ctx.get_data(obj);
+					if (val === null) val = ctx.get_data(obj);
 
-					if (val == null) {
+					if (val === null) {
 						if (ctx.is_strict())
 							die(sprintf("strict mock: ubus.call('%s', '%s') is not mocked", obj, method));
 						return null;
 					}
 
-					return (type(val) == 'function') ? val(args) : val;
+					return (type(val) === 'function') ? val(args) : val;
 				},
 				disconnect: function() {
 					push(conn_calls.disconnect, []);

@@ -2,12 +2,12 @@ if (!global.__utest_registries) global.__utest_registries = {};
 const registries = global.__utest_registries;
 
 function deep_clone(obj) {
-	if (type(obj) == 'array') {
+	if (type(obj) === 'array') {
 		let r = [];
 		for (let v in obj) push(r, deep_clone(v));
 		return r;
 	}
-	if (type(obj) == 'object') {
+	if (type(obj) === 'object') {
 		let r = {};
 		for (let k, v in obj) r[k] = deep_clone(v);
 		return r;
@@ -21,10 +21,10 @@ function deep_clone(obj) {
 function get_proxy_channels(name) {
 	let m = null;
 	try { m = require('utest.mock.proxy.' + name); } catch(e) {}
-	if (!m || type(m.channels) != 'array') return ['data'];
+	if (!m || type(m.channels) !== 'array') return ['data'];
 	let channels = ['data'];
 	for (let ch in m.channels)
-		if (ch != 'data') push(channels, ch);
+		if (ch !== 'data') push(channels, ch);
 	return channels;
 }
 
@@ -47,7 +47,7 @@ function ensure_channels(reg, channels) {
 		if (!exists(reg.global, ch)) reg.global[ch] = {};
 		let found = false;
 		for (let existing in reg.channels)
-			if (existing == ch) { found = true; break; }
+			if (existing === ch) { found = true; break; }
 		if (!found) push(reg.channels, ch);
 	}
 }
@@ -121,7 +121,7 @@ internal_obj.get_fn = function(name, fn_name) {
 
 internal_obj.is_active = function(name) {
 	const reg = get_registry(name);
-	if (length(reg.layers) > 0 || reg.global.proxy != null || length(keys(reg.global.fns)) > 0)
+	if (length(reg.layers) > 0 || reg.global.proxy !== null || length(keys(reg.global.fns)) > 0)
 		return true;
 	for (let ch in reg.channels)
 		if (length(keys(reg.global[ch])) > 0) return true;
@@ -174,7 +174,7 @@ function build_proxy(name, real) {
 		const proxy = factory(name, real, ctx);
 		// Pre-initialize calls for declared API methods so spy(proxy).calls.X is
 		// always [] and never undefined, even before the first call is made.
-		if (m && type(m.api) == 'array') {
+		if (m && type(m.api) === 'array') {
 			const calls = internal_obj.get_calls(name);
 			for (let fn_name in m.api)
 				if (!calls[fn_name]) calls[fn_name] = [];
@@ -260,7 +260,7 @@ mock_obj.inject_builtin = function(name, fn, cb) {
 		err = e;
 	}
 	global[name] = orig;
-	if (err != null) die(err);
+	if (err !== null) die(err);
 	return result;
 };
 
@@ -278,7 +278,7 @@ mock_obj.inject = function(name, state, cb) {
 		err = e;
 	}
 	pop(reg.layers);
-	if (err != null) die(err);
+	if (err !== null) die(err);
 	return result;
 };
 

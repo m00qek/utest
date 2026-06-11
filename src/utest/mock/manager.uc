@@ -11,7 +11,7 @@ function find_real_module(name) {
 
 // Extract the proxy path from a config.mocks entry, or null if none.
 function proxy_path(raw) {
-	if (type(raw) == 'object') return raw.proxy || null;
+	if (type(raw) === 'object') return raw.proxy || null;
 	return null;
 }
 
@@ -26,7 +26,7 @@ function generate_standard_shim(name, shim_dir) {
 		"import { __internal__ } from 'utest.mock.engine';"
 	];
 	for (let fn_name in (real ? keys(real) : [])) {
-		if (type(real[fn_name]) == 'function') {
+		if (type(real[fn_name]) === 'function') {
 			push(lines, sprintf(
 				"export const %s = function(...args) { let p = __internal__.get_proxy_global('%s'); return p ? p.%s(...args) : _real.%s(...args); };",
 				fn_name, name, fn_name, fn_name
@@ -47,7 +47,7 @@ function setup_shim(name, shim_dir) {
 		let api = null;
 		try {
 			let proxy = require('utest.mock.proxy.' + name);
-			if (proxy && type(proxy.api) == 'array') api = proxy.api;
+			if (proxy && type(proxy.api) === 'array') api = proxy.api;
 		} catch(e) {}
 		if (api) {
 			let lines = ["import { __internal__ } from 'utest.mock.engine';"];

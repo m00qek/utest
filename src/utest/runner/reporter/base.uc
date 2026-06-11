@@ -79,25 +79,25 @@ export const ReporterBase = {
 			this._bundle_stats[bundle].total++;
 		}
 
-		if (msg.status == "PASS") {
+		if (msg.status === "PASS") {
 			this.stats.passed++;
 			this._suite_stats[file].passed++;
 			if (bundle) this._bundle_stats[bundle].passed++;
-		} else if (msg.status == "FAIL") {
+		} else if (msg.status === "FAIL") {
 			this.stats.failed++;
 			this._suite_stats[file].failed++;
 			if (bundle) this._bundle_stats[bundle].failed++;
 			push(this.failures, msg);
-		} else if (msg.status == "ERROR") {
+		} else if (msg.status === "ERROR") {
 			this.stats.errors++;
 			this._suite_stats[file].errors++;
 			if (bundle) this._bundle_stats[bundle].errors++;
 			push(this.failures, msg);
-		} else if (msg.status == "SKIP") {
+		} else if (msg.status === "SKIP") {
 			this.stats.skipped++;
 			this._suite_stats[file].skipped++;
 			if (bundle) this._bundle_stats[bundle].skipped++;
-		} else if (msg.status == "IGNORE") {
+		} else if (msg.status === "IGNORE") {
 			this.stats.ignored++;
 			this._suite_stats[file].ignored++;
 			if (bundle) this._bundle_stats[bundle].ignored++;

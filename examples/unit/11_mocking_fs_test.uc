@@ -77,8 +77,8 @@ describe('FS Mocking', () => {
 		let has_virtual = false;
 		let has_real = false;
 		for (let name in list) {
-			if (name == 'virtual_config') has_virtual = true;
-			if (name == 'banner' || name == 'hosts') has_real = true;
+			if (name === 'virtual_config') has_virtual = true;
+			if (name === 'banner' || name === 'hosts') has_real = true;
 		}
 
 		assert.match(truthy(), has_virtual, 'Should find virtual file');

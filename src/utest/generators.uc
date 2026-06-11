@@ -10,7 +10,7 @@ const Generator = { __utest__: { kind: 'generator' } };
 function gen_from(fn) { return proto({ generate: fn }, Generator); }
 
 export function is_generator(v) {
-	return type(v) == 'object' && v.__utest__ && v.__utest__.kind == 'generator';
+	return type(v) === 'object' && v.__utest__ && v.__utest__.kind === 'generator';
 };
 
 // Small draws map to values near the "zero point" — the endpoint of [lo, hi]
@@ -28,28 +28,28 @@ function int_gen(lo, hi) {
 }
 
 function bool_gen() {
-	return gen_from(function(source) { return source.draw(2) == 1; });
+	return gen_from(function(source) { return source.draw(2) === 1; });
 }
 
 // Same zero-point shrinking as int_gen; precision controls the number of
 // discrete steps across [lo, hi], split proportionally between each side.
 function float_gen(lo, hi, opts) {
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
-	const precision = (opts != null && opts.precision != null) ? opts.precision : 10000;
+	const precision = (opts !== null && (opts.precision ?? null) !== null) ? opts.precision : 10000;
 	if (precision < 1) die(sprintf("gen.float: precision (%d) must be >= 1", precision));
 	const zp = (lo > 0) ? lo : ((hi < 0) ? hi : 0.0);
 	const pos_room = hi - zp;
 	const neg_room = zp - lo;
 	const total = pos_room + neg_room;
 	const pos_quota = (total <= 0) ? 0 :
-	                  (neg_room == 0) ? precision :
+	                  (neg_room === 0) ? precision :
 	                  int(precision * pos_room / (total * 1.0));
 	const neg_quota = precision - pos_quota;
 	return gen_from(function(source) {
 		const d = source.draw(precision + 1);
 		if (total <= 0) return zp;
 		if (d <= pos_quota) {
-			if (pos_quota == 0) return zp;
+			if (pos_quota === 0) return zp;
 			return zp + (d / (pos_quota * 1.0)) * pos_room;
 		}
 		return zp - ((d - pos_quota) / (neg_quota * 1.0)) * neg_room;
@@ -61,27 +61,30 @@ function constant_gen(v) {
 }
 
 function size_from_opts(opts, name) {
-	if (opts == null) die(name + ": opts required ({ max_len } or { len })");
-	if (opts.len != null) {
-		if (opts.min_len != null || opts.max_len != null)
+	if (opts === null) die(name + ": opts required ({ max_len } or { len })");
+	const len     = opts.len     ?? null;
+	const min_len = opts.min_len ?? null;
+	const max_len = opts.max_len ?? null;
+	if (len !== null) {
+		if (min_len !== null || max_len !== null)
 			die(name + ": cannot combine 'len' with 'min_len' / 'max_len'");
-		if (opts.len < 0)
-			die(sprintf("%s: len (%d) must be >= 0", name, opts.len));
-		return { min_len: opts.len, max_len: opts.len };
+		if (len < 0)
+			die(sprintf("%s: len (%d) must be >= 0", name, len));
+		return { min_len: len, max_len: len };
 	}
-	if (opts.max_len == null)
+	if (max_len === null)
 		die(name + ": opts.max_len or opts.len required");
-	const min_provided = (opts.min_len != null);
-	const min_len = opts.min_len ?? 0;
-	if (min_len < 0)
-		die(sprintf("%s: min_len (%d) must be >= 0", name, min_len));
-	if (opts.max_len < min_len) {
+	const min_provided = (min_len !== null);
+	const min_val = min_len ?? 0;
+	if (min_val < 0)
+		die(sprintf("%s: min_len (%d) must be >= 0", name, min_val));
+	if (max_len < min_val) {
 		if (min_provided)
-			die(sprintf("%s: max_len (%d) must be >= min_len (%d)", name, opts.max_len, min_len));
+			die(sprintf("%s: max_len (%d) must be >= min_len (%d)", name, max_len, min_val));
 		else
-			die(sprintf("%s: max_len (%d) must be >= 0", name, opts.max_len));
+			die(sprintf("%s: max_len (%d) must be >= 0", name, max_len));
 	}
-	return { min_len, max_len: opts.max_len };
+	return { min_len: min_val, max_len };
 }
 
 function array_gen(elem, opts) {
@@ -115,7 +118,7 @@ const STRING_CHARS       = "abcdefghijklmnopqrstuvwxyz0123456789 ";
 const ALPHANUMERIC_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 let ASCII_CHARS = null; // built lazily to avoid a 95-char literal at module load
 function _ascii_chars() {
-	if (ASCII_CHARS == null) {
+	if (ASCII_CHARS === null) {
 		let s = "";
 		for (let c = 32; c <= 126; c++) s += chr(c);
 		ASCII_CHARS = s;
@@ -125,8 +128,8 @@ function _ascii_chars() {
 
 function string_gen(opts) {
 	const sz = size_from_opts(opts, "gen.string");
-	const charset = (opts.charset != null) ? opts.charset : STRING_CHARS;
-	if (length(charset) == 0) die("gen.string: charset must be non-empty");
+	const charset = ((opts.charset ?? null) !== null) ? opts.charset : STRING_CHARS;
+	if (length(charset) === 0) die("gen.string: charset must be non-empty");
 	return gen_from(function(source) {
 		const n = sz.min_len + source.draw(sz.max_len - sz.min_len + 1);
 		let out = "";
@@ -138,7 +141,7 @@ function string_gen(opts) {
 
 function with_locked_charset(opts, charset, name) {
 	opts ??= {};
-	if (opts.charset != null)
+	if ((opts.charset ?? null) !== null)
 		die(name + ": 'charset' not allowed; use gen.string for custom charsets");
 	const merged = { ...opts };
 	merged.charset = charset;
@@ -149,12 +152,12 @@ function alphanumeric_gen(opts) { return string_gen(with_locked_charset(opts, AL
 function ascii_gen(opts)        { return string_gen(with_locked_charset(opts, _ascii_chars(),    "gen.ascii"));        }
 
 function oneof_gen(...gens) {
-	if (length(gens) == 0) die("gen.oneof: at least one generator required");
+	if (length(gens) === 0) die("gen.oneof: at least one generator required");
 	return gen_from(function(source) { return gens[source.draw(length(gens))].generate(source); });
 }
 
 function elements_gen(...arr) {
-	if (length(arr) == 0) die("gen.elements: at least one value required");
+	if (length(arr) === 0) die("gen.elements: at least one value required");
 	return gen_from(function(source) { return arr[source.draw(length(arr))]; });
 }
 
@@ -180,7 +183,7 @@ function optional_gen(generator, opts) {
 	const some_weight = opts.some_weight ?? 1;
 	if (none_weight < 0 || some_weight < 0)
 		die("gen.optional: weights must be non-negative");
-	if (none_weight == 0 && some_weight == 0)
+	if (none_weight === 0 && some_weight === 0)
 		die("gen.optional: at least one weight must be > 0");
 	return frequency_gen([none_weight, constant_gen(null)], [some_weight, generator]);
 }
@@ -197,7 +200,7 @@ function bind_gen(generator, fn) {
 }
 
 function filter_gen(generator, pred, opts) {
-	const attempts = (opts != null && opts.attempts != null) ? opts.attempts : 32;
+	const attempts = (opts !== null && (opts.attempts ?? null) !== null) ? opts.attempts : 32;
 	if (attempts < 1) die(sprintf("gen.filter: attempts (%d) must be >= 1", attempts));
 	return gen_from(function(source) {
 		for (let i = 0; i < attempts; i++) {

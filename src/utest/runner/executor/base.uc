@@ -4,10 +4,10 @@ import * as fs from 'fs';
 export const q = util.q;
 
 export const dispatch = function(msg, reporter) {
-	if (msg.event == "SUITE_START")      reporter.suite_start(msg);
-	else if (msg.event == "TEST_RESULT") reporter.test_result(msg);
-	else if (msg.event == "SUITE_END")   reporter.suite_end(msg);
-	else if (msg.event == "FATAL")       reporter.fatal(msg);
+	if (msg.event === "SUITE_START")      reporter.suite_start(msg);
+	else if (msg.event === "TEST_RESULT") reporter.test_result(msg);
+	else if (msg.event === "SUITE_END")   reporter.suite_end(msg);
+	else if (msg.event === "FATAL")       reporter.fatal(msg);
 };
 
 // Returns { flags, worker_path } for spawning a worker process.

@@ -21,7 +21,7 @@ export function create(use_color) {
 	function print_dot(bundle_name, sym, clr) {
 		let b = get_bundle(bundle_name);
 		// Start new bundle with indent
-		if (b.dots_on_line == 0) {
+		if (b.dots_on_line === 0) {
 			print("  ");
 		}
 		if (b.dots_on_line >= 78) {
@@ -38,8 +38,8 @@ export function create(use_color) {
 		if (f.path) {
 			for (let i = 0; i < length(f.path); i++) {
 				let p = f.path[i];
-				if (p.id != 0) {
-					if (i == length(f.path) - 1) {
+				if (p.id !== 0) {
+					if (i === length(f.path) - 1) {
 						name = p.name;
 					} else {
 						path_str += p.name + " > ";
@@ -48,8 +48,8 @@ export function create(use_color) {
 			}
 		}
 
-		let symbol = (f.status == "FAIL" ? "■" : "▲");
-		let status_color = (f.status == "FAIL" ? t.FAIL : t.ERROR);
+		let symbol = (f.status === "FAIL" ? "■" : "▲");
+		let status_color = (f.status === "FAIL" ? t.FAIL : t.ERROR);
 
 		print(sprintf("    %s %s%s\n", color(status_color, symbol), path_str, name));
 
@@ -107,17 +107,17 @@ export function create(use_color) {
 		},
 
 		render_test_result: function(msg) {
-			if (msg.status == "PASS") {
+			if (msg.status === "PASS") {
 				print_dot(msg.bundle, "●", t.PASS);
-			} else if (msg.status == "SKIP") {
+			} else if (msg.status === "SKIP") {
 				print_dot(msg.bundle, "○", t.SKIP);
-			} else if (msg.status == "IGNORE") {
+			} else if (msg.status === "IGNORE") {
 				print_dot(msg.bundle, "◌", t.IGNORE);
-			} else if (msg.status == "FAIL") {
+			} else if (msg.status === "FAIL") {
 				print_dot(msg.bundle, "■", t.FAIL);
 				let b = get_bundle(msg.bundle);
 				push(b.file_failures[msg.suite], msg);
-			} else if (msg.status == "ERROR") {
+			} else if (msg.status === "ERROR") {
 				print_dot(msg.bundle, "▲", t.ERROR);
 				let b = get_bundle(msg.bundle);
 				push(b.file_failures[msg.suite], msg);

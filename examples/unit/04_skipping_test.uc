@@ -5,7 +5,7 @@ import { describe, it, assert, skip, xit, xdescribe } from 'utest';
 describe("Feature: Authentication", () => {
 	it("works with valid credentials", () => {
 		const user = { name: 'alice', token: 'abc' };
-		assert.match(true, user.token != null);
+		assert.match(true, user.token !== null);
 	});
 
 	skip("works with OAuth2 (Not implemented yet)", () => {

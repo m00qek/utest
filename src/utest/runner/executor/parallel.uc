@@ -64,8 +64,8 @@ export function create() {
 					if (fh) {
 						fh.seek(worker.offset, 0);
 						let line;
-						while ((line = fh.read("line")) != null) {
-							if (ord(line, length(line) - 1) != 10) break;
+						while ((line = fh.read("line")) !== null) {
+							if (ord(line, length(line) - 1) !== 10) break;
 							let msg;
 							try { msg = json(line); } catch (e) {
 								// Non-JSON lines are diagnostic output (e.g. warn() calls

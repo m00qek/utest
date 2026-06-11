@@ -25,14 +25,14 @@ return {
 					if (override) return override(pkg, sec, opt);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) != 'object') {
+					if (type(p) !== 'object') {
 						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
 						return null;
 					}
 					let s = p[sec];
-					if (type(s) != 'object') return null;
+					if (type(s) !== 'object') return null;
 					let v = s[opt];
-					return (v != null) ? v : null;
+					return (v !== null) ? v : null;
 				},
 
 				get_all: function(pkg, sec) {
@@ -41,9 +41,9 @@ return {
 					if (override) return override(pkg, sec);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) != 'object') return null;
+					if (type(p) !== 'object') return null;
 					let s = p[sec];
-					if (type(s) != 'object') return null;
+					if (type(s) !== 'object') return null;
 					return { ...s, '.name': sec };
 				},
 
@@ -53,12 +53,12 @@ return {
 					if (override) return override(pkg, type_name, cb);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) != 'object') {
+					if (type(p) !== 'object') {
 						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
 						return;
 					}
 					for (let sec_name, sec in p) {
-						if (type(sec) != 'object' || sec['.type'] != type_name) continue;
+						if (type(sec) !== 'object' || sec['.type'] !== type_name) continue;
 						let s = { ...sec };
 						s['.name'] = sec_name;
 						cb(s);
@@ -71,8 +71,8 @@ return {
 					if (override) return override(pkg, sec, opt, val);
 
 					let p = ctx.get_data(pkg);
-					p = (type(p) == 'object') ? { ...p } : {};
-					p[sec] = (type(p[sec]) == 'object') ? { ...p[sec] } : {};
+					p = (type(p) === 'object') ? { ...p } : {};
+					p[sec] = (type(p[sec]) === 'object') ? { ...p[sec] } : {};
 					p[sec][opt] = val;
 					ctx.set_data(pkg, p);
 					return true;
@@ -98,10 +98,10 @@ return {
 					if (override) return override(pkg, sec, opt);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) != 'object') return false;
+					if (type(p) !== 'object') return false;
 					p = { ...p };
-					if (opt != null) {
-						if (type(p[sec]) != 'object') return false;
+					if (opt !== null) {
+						if (type(p[sec]) !== 'object') return false;
 						p[sec] = { ...p[sec] };
 						delete p[sec][opt];
 					} else {

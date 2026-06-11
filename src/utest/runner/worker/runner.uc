@@ -75,27 +75,27 @@ export function run_tests(reporter, filter, seed) {
 			}
 
 			// Snapshot after beforeEach so a patch() that throws before unpatch() can't leak into afterEach.
-			let pre_body_snap = (error == null && mock_snap != null) ? mock.snapshot() : null;
+			let pre_body_snap = (error === null && mock_snap !== null) ? mock.snapshot() : null;
 
-			if (error == null) {
+			if (error === null) {
 				try { test.fn(); } catch (e) { error = e; }
 			}
 
-			if (error != null && pre_body_snap != null) mock.restore(pre_body_snap);
+			if (error !== null && pre_body_snap !== null) mock.restore(pre_body_snap);
 
 			for (let hook in test.afterEach) {
 				try { hook(); } catch (e) {
-					if (error == null) error = e;
+					if (error === null) error = e;
 				}
 			}
 
-			if (error != null) {
+			if (error !== null) {
 				reporter.test_result(error, test.path, null, test.index);
 			} else {
 				reporter.test_result(null, test.path, "PASS", test.index);
 			}
 
-			if (mock_snap != null) mock.restore(mock_snap);
+			if (mock_snap !== null) mock.restore(mock_snap);
 		}
 
 		root.is_running = false;

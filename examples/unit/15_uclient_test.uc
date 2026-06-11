@@ -58,7 +58,7 @@ describe('uclient Mocking', () => {
 			let u = m_uclient.new(url, null, {
 				data_read: (conn) => {
 					let chunk;
-					while ((chunk = conn.read()) != null) push(chunks, chunk);
+					while ((chunk = conn.read()) !== null) push(chunks, chunk);
 				},
 				header_done: () => {},
 				data_eof:    () => {}

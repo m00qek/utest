@@ -31,7 +31,7 @@ describe('ubus Mocking', () => {
 
 	it('supports function values for dynamic responses', () => {
 		mock.inject('ubus', {
-			data: { 'network:status': (args) => ({ up: args.interface == 'wan' }) }
+			data: { 'network:status': (args) => ({ up: args.interface === 'wan' }) }
 		}, (m_ubus) => {
 			let conn = m_ubus.connect();
 			assert.match(truthy(), conn.call('network', 'status', { interface: 'wan' }).up);

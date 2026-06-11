@@ -143,10 +143,10 @@ describe('Combinators', () => {
 	});
 
 	it('pred() applies a custom predicate function', () => {
-		assert.match(pred(x => x % 2 == 0), 4);
+		assert.match(pred(x => x % 2 === 0), 4);
 		assert.match(contains([pred(x => x > 2)]), [1, 2, 3]);
 		assert.throws(
-			() => assert.match(pred(x => x % 2 == 0), 3, 'expected even'),
+			() => assert.match(pred(x => x % 2 === 0), 3, 'expected even'),
 			/expected even/
 		);
 	});

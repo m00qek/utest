@@ -10,13 +10,13 @@ const format_path = _util.format_path;
  */
 
 function normalize(obj) {
-    if (type(obj) != "object") return obj;
+    if (type(obj) !== "object") return obj;
     let n = { ...obj };
     delete n.duration_ms;
     delete n.seed;
     for (let k, v in n) {
-        if (type(v) == "object") n[k] = normalize(v);
-        else if (type(v) == "array") {
+        if (type(v) === "object") n[k] = normalize(v);
+        else if (type(v) === "array") {
             n[k] = [];
             for (let item in v) push(n[k], normalize(item));
         }

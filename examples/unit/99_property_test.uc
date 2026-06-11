@@ -25,8 +25,8 @@ describe("Properties of arrays", () => {
 	prop("length is non-negative",
 		gen.array(gen.int(0, 100), { max_len: 10 }),
 		(xs, ctx) => {
-			ctx.classify("empty", length(xs) == 0);
-			ctx.classify("full",  length(xs) == 10);
+			ctx.classify("empty", length(xs) === 0);
+			ctx.classify("full",  length(xs) === 10);
 			assert.match(true, length(xs) >= 0);
 		});
 
@@ -88,7 +88,7 @@ describe("Failing properties (demonstrate shrinking output)", () => {
 		gen.array(gen.int(0, 9), { max_len: 8 }),
 		(xs) => {
 			for (let i = 0; i < length(xs); i++)
-				assert.match(true, xs[i] != 3,
+				assert.match(true, xs[i] !== 3,
 					sprintf("xs[%d] is 3", i));
 		},
 		{ seed: 1, persist: false });

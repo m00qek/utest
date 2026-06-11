@@ -18,8 +18,8 @@ function record_source(seed) {
 		choices,
 		draw: function(bound) {
 			if (bound <= 1) { push(choices, 0); return 0; }
-			const r = math.rand();
-			const v = (r % BIAS_DENOM == 0) ? 0 : (r % bound);
+			const r = int(math.rand());
+			const v = (r % BIAS_DENOM === 0) ? 0 : (r % bound);
 			push(choices, v);
 			return v;
 		}
@@ -39,19 +39,19 @@ function replay_source(choices) {
 }
 
 function caught_msg(e) {
-	return (type(e) == 'object' && e.message) ? e.message : sprintf('%s', e);
+	return (type(e) === 'object' && e.message) ? e.message : sprintf('%s', e);
 }
 
 function utest_kind(e) {
 	const m = caught_msg(e);
 	let parsed = null;
 	try { parsed = json(m); } catch (_) {}
-	if (type(parsed) == 'object' && parsed.__utest__) return parsed.__utest__.kind;
+	if (type(parsed) === 'object' && parsed.__utest__) return parsed.__utest__.kind;
 	return null;
 }
 
 function is_property_sentinel(kind) {
-	return kind == 'property_overrun' || kind == 'property_discard';
+	return kind === 'property_overrun' || kind === 'property_discard';
 }
 
 // Replays skip classify/discards counters — only original generation runs count.
@@ -80,9 +80,9 @@ function without_range(arr, idx, n) {
 }
 
 function lex_smaller(a, b) {
-	if (length(a) != length(b)) return length(a) < length(b);
+	if (length(a) !== length(b)) return length(a) < length(b);
 	for (let i = 0; i < length(a); i++) {
-		if (a[i] != b[i]) return a[i] < b[i];
+		if (a[i] !== b[i]) return a[i] < b[i];
 	}
 	return false;
 }
@@ -90,7 +90,7 @@ function lex_smaller(a, b) {
 // Tries a shrink candidate; returns true and updates ctx if it became the new minimum.
 function shrink_step(g, prop_fn, ctx, cand) {
 	if (!lex_smaller(cand, ctx.cur)) return false;
-	if (try_choices(g, prop_fn, cand).kind != 'fail') return false;
+	if (try_choices(g, prop_fn, cand).kind !== 'fail') return false;
 	ctx.cur = cand;
 	ctx.steps++;
 	if (ctx.steps >= ctx.max_steps) ctx.capped = true;
@@ -145,7 +145,7 @@ function shrink(g, prop_fn, failing, max_steps) {
 
 		// (4) lower individual values — binary search per position toward 0.
 		for (let i = 0; i < length(ctx.cur) && !progress && !ctx.capped; i++) {
-			if (ctx.cur[i] == 0) continue;
+			if (ctx.cur[i] === 0) continue;
 			let cand = [...ctx.cur]; cand[i] = 0;
 			if (shrink_step(g, prop_fn, ctx, cand)) { progress = true; continue; }
 			// Binary search: lo known-pass, hi known-fail.
@@ -153,7 +153,7 @@ function shrink(g, prop_fn, failing, max_steps) {
 			while (lo + 1 < hi) {
 				const mid = int((lo + hi) / 2);
 				const c2 = [...ctx.cur]; c2[i] = mid;
-				if (try_choices(g, prop_fn, c2).kind == 'fail') hi = mid;
+				if (try_choices(g, prop_fn, c2).kind === 'fail') hi = mid;
 				else lo = mid;
 			}
 			if (hi < ctx.cur[i]) {
@@ -170,7 +170,7 @@ function shrink(g, prop_fn, failing, max_steps) {
 		// Preserves the value sum — the only move that can reduce a sum-constrained
 		// shrunken structure further.
 		for (let i = 0; i < length(ctx.cur) - 1 && !progress && !ctx.capped; i++) {
-			if (ctx.cur[i] == 0) continue;
+			if (ctx.cur[i] === 0) continue;
 			for (let j = i + 1; j < length(ctx.cur) && !progress && !ctx.capped; j++) {
 				for (let k = 1; k <= ctx.cur[i] && !progress; k *= 2) {
 					const cand = [...ctx.cur];
@@ -194,9 +194,9 @@ function persist_filename(test_name) {
 		        || (code >= 65 && code <= 90)
 		        || (code >= 97 && code <= 122);
 		if (ok) slug += c;
-		else if (length(slug) > 0 && substr(slug, length(slug) - 1, 1) != "_") slug += "_";
+		else if (length(slug) > 0 && substr(slug, length(slug) - 1, 1) !== "_") slug += "_";
 	}
-	while (length(slug) > 0 && substr(slug, length(slug) - 1, 1) == "_")
+	while (length(slug) > 0 && substr(slug, length(slug) - 1, 1) === "_")
 		slug = substr(slug, 0, length(slug) - 1);
 	let h = 0;
 	for (let i = 0; i < length(test_name); i++)
@@ -305,8 +305,8 @@ export function forall(generator, prop_fn, opts) {
 	opts ??= {};
 	const runs       = opts.runs       ?? 100;
 	const shrink_max = opts.shrink_max ?? 500;
-	const persist_id = opts.persist_id;
-	const persist    = (persist_id != null) && (opts.persist != false);
+	const persist_id = opts.persist_id ?? null;
+	const persist    = (persist_id !== null) && (opts.persist !== false);
 	const t = clock();
 	const base_seed  = opts.seed       ?? root.prop_seed ?? (t[0] * 1000000000 + t[1]);
 	const stats = { classifications: {}, discards: 0 };
@@ -315,9 +315,9 @@ export function forall(generator, prop_fn, opts) {
 	// Replay any saved counterexample first; drop it if it now passes or is stale.
 	if (persist) {
 		const saved = load_example(persist_id);
-		if (saved && type(saved.choices) == 'array') {
+		if (saved && type(saved.choices) === 'array') {
 			const r = try_choices(generator, prop_fn, saved.choices);
-			if (r.kind == 'fail') {
+			if (r.kind === 'fail') {
 				report_failure({
 					replayed: true,
 					persist_path: persist_path(persist_id),
@@ -337,7 +337,7 @@ export function forall(generator, prop_fn, opts) {
 		let value;
 		try { value = generator.generate(s); }
 		catch (e) {
-			if (utest_kind(e) == 'property_discard') { stats.discards++; continue; }
+			if (utest_kind(e) === 'property_discard') { stats.discards++; continue; }
 			die(e);
 		}
 		try { prop_fn(value, ctx); }
@@ -345,9 +345,9 @@ export function forall(generator, prop_fn, opts) {
 			if (is_property_sentinel(utest_kind(e))) { stats.discards++; continue; }
 			const shrunk = shrink(generator, prop_fn, s.choices, shrink_max);
 			const replay = try_choices(generator, prop_fn, shrunk.choices);
-			const shrunk_value = (replay.kind == 'fail') ? replay.value : '<unreproducible>';
+			const shrunk_value = (replay.kind === 'fail') ? replay.value : '<unreproducible>';
 			// Use the error from the shrunk replay — the original references the unshrunken value.
-			const reported_error = (replay.kind == 'fail') ? replay.error : e;
+			const reported_error = (replay.kind === 'fail') ? replay.error : e;
 			let saved_path = null;
 			if (persist) {
 				const failure_t = clock();
@@ -378,18 +378,18 @@ export function forall(generator, prop_fn, opts) {
 function current_describe_path() {
 	const parts = [];
 	for (let i = 0; i < length(stack); i++)
-		if (stack[i].id != 0) push(parts, stack[i].name);
+		if (stack[i].id !== 0) push(parts, stack[i].name);
 	return join(" > ", parts);
 }
 
 export function prop(name, generator, prop_fn, opts) {
 	opts ??= {};
-	const effective = { ...opts };
-	if (effective.persist_id == null) {
+	const effective = { persist_id: null, ...opts };
+	if (effective.persist_id === null) {
 		const file = root.test_file || "";
 		const path = current_describe_path();
-		const prefix = (file != "" ? file + " :: " : "")
-		             + (path != "" ? path + " > " : "");
+		const prefix = (file !== "" ? file + " :: " : "")
+		             + (path !== "" ? path + " > " : "");
 		effective.persist_id = prefix + name;
 	}
 	dsl.it(name, function() { forall(generator, prop_fn, effective); });

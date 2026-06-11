@@ -17,7 +17,7 @@ export function create(use_color) {
 			let header = color(t.HEADER, "[" + (msg.bundle || "Default") + "] " + msg.suite);
 			print(header);
 
-			if (msg.count != null) {
+			if (msg.count !== null) {
 				print(" (" + msg.count + " tests)\n");
 			} else {
 				print("\n");
@@ -30,14 +30,14 @@ export function create(use_color) {
 
 			let name = msg.path[length(msg.path) - 1].name;
 
-			if (msg.status == "PASS") {
+			if (msg.status === "PASS") {
 				print("  [" + color(t.PASS, "PASS") + "] " + name + "\n");
-			} else if (msg.status == "FAIL") {
+			} else if (msg.status === "FAIL") {
 				print("  [" + color(t.FAIL, "FAIL") + "] " + name + "\n");
 				print("         " + color(t.FAIL, replace(msg.error || "", "\n", "\n         ")) + "\n");
-			} else if (msg.status == "SKIP") {
+			} else if (msg.status === "SKIP") {
 				print("  [" + color(t.SKIP, "SKIP") + "] " + name + "\n");
-			} else if (msg.status == "IGNORE") {
+			} else if (msg.status === "IGNORE") {
 				print("  [" + color(t.IGNORE, "IGNORE") + "] " + name + "\n");
 			} else {
 				print("  [" + color(t.BOLD + t.ERROR, "ERR!") + "] " + name + "\n");

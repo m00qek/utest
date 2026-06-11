@@ -42,13 +42,13 @@ return {
 				if (f) return f(method, opts);
 
 				let response = ctx.get_data(url);
-				if (response == null) {
+				if (response === null) {
 					if (ctx.is_strict())
 						die(sprintf("strict mock: uclient.request('%s') is not mocked", url));
 					return false;
 				}
 
-				if (response.error != null) {
+				if (response.error !== null) {
 					if (callbacks && callbacks.error)
 						callbacks.error(u, response.error);
 					return true;
@@ -56,7 +56,7 @@ return {
 
 				if (callbacks && callbacks.header_done)
 					callbacks.header_done(u);
-				if (callbacks && callbacks.data_read && response.body != null)
+				if (callbacks && callbacks.data_read && response.body !== null)
 					callbacks.data_read(u);
 				if (callbacks && callbacks.data_eof)
 					callbacks.data_eof(u);
@@ -76,7 +76,7 @@ return {
 				let f = ctx.get_behavior('status');
 				if (f) return f();
 				let response = ctx.get_data(url);
-				return (response && response.status != null) ? { status: response.status } : null;
+				return (response && response.status !== null) ? { status: response.status } : null;
 			};
 
 			u.read = function() {
@@ -86,7 +86,7 @@ return {
 				if (_body_served) return null;
 				_body_served = true;
 				let response = ctx.get_data(url);
-				return (response && response.body != null) ? response.body : null;
+				return (response && response.body !== null) ? response.body : null;
 			};
 
 			u.disconnect = function() {

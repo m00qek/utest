@@ -32,7 +32,7 @@ export function create(suite, bundle) {
 		test_result: function(error, path, forced_status, index) {
 			let status, msg;
 
-			if (error != null) {
+			if (error !== null) {
 				const p = parse_thrown(error);
 				status = p.is_assertion ? "FAIL" : "ERROR";
 				msg = p.message;
