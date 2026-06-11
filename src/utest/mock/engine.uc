@@ -293,6 +293,46 @@ mock_obj.inject = function(name, state, cb) {
 	return result;
 };
 
+mock_obj.inject_all = function(states, cb) {
+	const names = keys(states);
+
+	// Validate all targets before touching any registry state.
+	const reals = {};
+	const channels_map = {};
+	for (let name in names) {
+		const proxy_channels = get_proxy_channels(name);
+		const real = get_real(name);
+		guard_mock_target('mock.inject_all', name, proxy_channels, real);
+		reals[name] = real;
+		channels_map[name] = proxy_channels || ['data'];
+	}
+
+	// Push one layer per proxy.
+	for (let name in names) {
+		const reg = get_registry(name);
+		ensure_channels(reg, channels_map[name]);
+		push(reg.layers, to_layer(states[name], channels_map[name]));
+	}
+
+	let err = null;
+	let result;
+	try {
+		const deps = {};
+		for (let name in names)
+			deps[name] = build_proxy(name, reals[name]);
+		result = cb(deps);
+	} catch (e) {
+		err = e;
+	}
+
+	// Pop in reverse order to mirror push order.
+	for (let i = length(names) - 1; i >= 0; i--)
+		pop(get_registry(names[i]).layers);
+
+	if (err !== null) die(err);
+	return result;
+};
+
 mock_obj.global = {
 	patch: function(name, state) {
 		const proxy_channels = get_proxy_channels(name);
