@@ -46,7 +46,7 @@ Every proxy method that handles a keyed lookup should follow this decision order
 
 ## Register the proxy in the config file
 
-In the config file, pass `{ proxy: 'path/to/my_proxy.uc' }` as the value for the module. The path is resolved relative to the current working directory when utest is invoked:
+In the config file, pass `{ proxy: 'path/to/my_proxy.uc' }` as the value for the module. The path is resolved relative to the config file's directory:
 
 ```js
 return {

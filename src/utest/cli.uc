@@ -66,6 +66,20 @@ function main() {
 	for (let p in (file_config.data.lib_paths || []))
 		push(lib_paths, (config_dir && !match(p, /^\//)) ? (fs.realpath(config_dir + "/" + p) || config_dir + "/" + p) : p);
 
+	function resolve_rel(p) {
+		if (!config_dir || !p || match(p, /^\//)) return p;
+		return fs.realpath(config_dir + "/" + p) || config_dir + "/" + p;
+	}
+
+	let raw_mocks = file_config.data.mocks || {};
+	let mocks = {};
+	for (let name in keys(raw_mocks)) {
+		let entry = raw_mocks[name];
+		mocks[name] = (type(entry) == 'object' && entry.proxy)
+			? { ...entry, proxy: resolve_rel(entry.proxy) }
+			: entry;
+	}
+
 	let config = {
 		bundles:   parse_bundles(positional, file_config.data.pattern),
 		jobs:      opts.jobs != null ? int(opts.jobs) : file_config.data.jobs,
@@ -74,7 +88,7 @@ function main() {
 		reporter:  opts.reporter || file_config.data.reporter,
 		run_dir:   opts.run_dir,
 		src_dir:   opts.src_dir,
-		mocks:     file_config.data.mocks || {},
+		mocks:     mocks,
 		seed:      opts.seed != null ? int(opts.seed) : int(t[1]),
 		timeout:   int(file_config.data.timeout || 60),
 		lib_paths: lib_paths

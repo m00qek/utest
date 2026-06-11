@@ -69,7 +69,7 @@ function setup_shim(name, shim_dir) {
 
 // config.mocks: map of module name → null | { proxy: 'path/to/proxy.uc' }
 //   null               → shim the module using its built-in or generic proxy
-//   { proxy: 'path' }  → shim with a custom proxy factory; path is relative to cwd
+//   { proxy: 'path' }  → shim with a custom proxy factory; path resolved by cli.uc
 export const setup = function(config) {
 	const shim_dir = config.run_dir + "/shims";
 	// proxy_dir mirrors the utest.mock.proxy.* search structure so that
