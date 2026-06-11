@@ -90,6 +90,7 @@ function main() {
 		src_dir:   opts.src_dir,
 		mocks:     mocks,
 		seed:      opts.seed != null ? int(opts.seed) : int(t[1]),
+		prop_seed: opts.seed != null ? int(opts.seed) : null,
 		timeout:   int(file_config.data.timeout || 60),
 		lib_paths: lib_paths
 	};

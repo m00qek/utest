@@ -308,7 +308,7 @@ export function forall(generator, prop_fn, opts) {
 	const persist_id = opts.persist_id;
 	const persist    = (persist_id != null) && (opts.persist != false);
 	const t = clock();
-	const base_seed  = opts.seed       ?? (t[0] * 1000000000 + t[1]);
+	const base_seed  = opts.seed       ?? root.prop_seed ?? (t[0] * 1000000000 + t[1]);
 	const stats = { classifications: {}, discards: 0 };
 	const ctx = make_ctx(stats);
 

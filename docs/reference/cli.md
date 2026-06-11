@@ -14,7 +14,7 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `-c <path>` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared. |
 | `-l <path>` | string | — | Prepend a directory to the module search path. Repeatable. |
 | `-j <n>` | integer | — | Number of parallel workers. Overrides `jobs` in the configuration file. |
-| `-s <seed>` | integer | — | Random seed for property-based tests. Overrides `seed` if specified. |
+| `-s <seed>` | integer | — | Fix the random seed. Controls both test-file shuffle order and the default seed for all property tests. Use to reproduce a CI failure locally. |
 
 ---
 

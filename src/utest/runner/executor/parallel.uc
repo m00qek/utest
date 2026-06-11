@@ -4,7 +4,7 @@ import { mkdir_p } from 'utest.util';
 
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks) {
+		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks, prop_seed) {
 			const WORKER_TIMEOUT_MS = (timeout || 60) * 1000;
 			const pipes_dir = run_dir + "/pipes";
 
@@ -26,7 +26,7 @@ export function create() {
 					let done_file = pipes_dir + "/done." + id;
 					let pid_file = pipes_dir + "/pid." + id;
 
-					let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed, mocks: mocks || [] });
+					let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed, prop_seed: prop_seed, mocks: mocks || [] });
 					// Launch ucode in background inside the subshell so pid_file holds the
 					// ucode PID directly — killing it on timeout hits the right process.
 					let cmd = sprintf("( ucode %s %s %s > %s 2>&1 & echo $! > %s; wait; touch %s ) &",
