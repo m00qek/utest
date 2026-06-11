@@ -13,6 +13,8 @@ In standard example-based testing, you supply a few inputs and expect specific o
 
 While useful, this relies entirely on the test author's imagination to anticipate edge cases. If the author forgets to test negative bounds or reversed ranges, bugs hide in the gaps.
 
+---
+
 ## Testing properties
 
 Property-based testing addresses this by testing general rules. Instead of hardcoding inputs, you declare what must be true for *all* inputs. For `clamp`, a property would be:
@@ -27,9 +29,9 @@ The framework then generates hundreds of random `(value, lo, hi)` combinations a
 
 Randomness in utest is managed carefully to ensure deterministic behavior and effective bug discovery. 
 
-Generators don't call the system random number generator directly. Instead, the framework passes them a `source` object seeded securely. This allows the framework to record exactly what random choices were made to produce a specific value, which is crucial for reproducing failures.
+Generators don't call the system random number generator directly. Instead, the framework passes them a `source` object seeded from the clock. This allows the framework to record exactly what random choices were made to produce a specific value, which is crucial for reproducing failures.
 
-Generators are also biased. When testing `gen.int(-100, 100)`, a purely uniform distribution is unlikely to hit `0`, `-100`, or `100` frequently. utest automatically biases generation towards "zero points" (values closest to `0` or boundary extremes) 1 out of every 8 times, significantly increasing the probability of uncovering edge-case bugs.
+Generators are also biased toward edge-case values. When testing `gen.int(-100, 100)`, a purely uniform distribution is unlikely to hit `0`, `-100`, or `100` frequently. utest deliberately overweights these "zero points" — the values closest to `0` or the range boundary — so common sources of off-by-one and boundary bugs surface faster than chance alone would allow. See [Property-based testing reference](../reference/property.md) for the exact bias mechanics.
 
 ---
 

@@ -104,22 +104,11 @@ This is a deliberate trade-off. `mock.global.patch()` is more powerful but requi
 
 ## Built-in globals
 
-`warn`, `system`, `print`, and similar functions are built-in globals rather than loadable modules. They live directly in `global`, not behind a module import. This means the shim mechanism cannot reach them: there is no file named `warn.uc` in any search path for the framework to intercept. Calling `mock.global.patch('warn', ...)` fails with "could not load module 'warn'" for exactly this reason.
+`warn`, `system`, `print`, and similar functions are built-in globals rather than loadable modules. They live directly in `global`, not behind a module import. This means the shim mechanism cannot reach them: there is no file named `warn.uc` in any search path for the framework to intercept.
 
-The only way to replace a built-in is to write directly to `global[name]`. This is what the manual save/restore pattern does:
+The only way to replace a built-in is to write directly to `global[name]`. This is a fundamentally different operation from the module mock API — there is no shim, no proxy, no layer stack. Two helpers exist to handle the save/restore lifecycle safely: `mock.inject_builtin()` (callback-scoped, automatic cleanup) and `mock.global.patch_builtin()` (persistent until explicitly removed, mirrors `mock.global.patch()`). The inject/patch distinction applies here for the same reason it applies to modules: use the scoped form when a callback lifetime fits, use the persistent form when the replacement must be active before any describe block runs.
 
-```js
-const orig_warn = global.warn;
-global.warn = (...args) => { push(captured, join('', args)); orig_warn(...args); };
-// ... test code ...
-global.warn = orig_warn;  // must be reached even if assertions throw
-```
-
-The problem with this pattern is that if an assertion between the replacement and the restore throws, the restore never runs. The built-in remains patched for every subsequent test in the suite, silently corrupting output.
-
-`mock.inject_builtin(name, fn, cb)` eliminates the risk. It wraps the same save/write/restore in a try/catch, so the original is unconditionally restored when the callback exits — whether it returns normally or throws. The layering model also mirrors `mock.inject()`: nested calls each save what is currently in `global[name]` at the time of the call (which may be an outer replacement) and restore it when done, so inner and outer scopes remain independent. Prefer `inject_builtin` by default — the callback scope makes cleanup automatic and keeps the replacement's lifetime explicit and narrow.
-
-`mock.global.patch_builtin(name, fn)` exists for the cases where a callback scope genuinely does not fit — most commonly when the replacement must be active at file scope before the first `describe` runs, or when it must be active during module initialisation that fires before any test body. Like `mock.global.patch()` for modules, it requires explicit cleanup via `mock.global.unpatch_builtin(name)`. An `inject_builtin` called while a `patch_builtin` is active layers on top of it correctly: the injected scope saves and restores the patched function, not the original.
+See [How-to: Mock a built-in global](../how-to/mock-builtin.md) for usage patterns and [Mock API Reference](../reference/mock-api.md) for the full signatures.
 
 ---
 

@@ -12,33 +12,56 @@ import { prop, forall, gen, is_generator } from 'utest';
 
 ### `prop(name, generator, prop_fn, opts)`
 
-Registers a property test block. Equivalent to wrapping `forall` inside an `it` block.
+Registers a property test block. Equivalent to wrapping `forall` inside an `it` block, with `persist_id` auto-derived from the test file path, enclosing `describe` names, and `name`.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `name` | string | The name of the property test. |
 | `generator` | Generator | The generator defining the input data shape. |
-| `prop_fn` | function | The property assertion function `(value, ctx)`. Must throw/assert on failure. |
+| `prop_fn` | function | The property function `(value, ctx)`. Must throw or call `assert` on failure. |
 | `opts` | object | Optional configuration. See Options below. |
 
 ### `forall(generator, prop_fn, opts)`
 
-The core property testing engine. Can be called directly if you wish to run property tests outside the standard `prop()` block definition. 
+The core property testing engine. Runs the property and reports failures directly. Call it inside an `it` block when you need more control than `prop()` provides — for example, to run several independent properties in one test, or to skip persistence.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `generator` | Generator | The generator defining the input data shape. |
-| `prop_fn` | function | The property assertion function `(value, ctx)`. Must throw/assert on failure. |
+| `prop_fn` | function | The property function `(value, ctx)`. Must throw or call `assert` on failure. |
 | `opts` | object | Optional configuration. See Options below. |
 
 ### Options
 
 | Key | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `runs` | integer | `100` | The number of random inputs to test before considering the property successful. |
-| `shrink_max` | integer | `500` | The maximum number of shrinking steps to attempt when finding a minimal counterexample. |
-| `seed` | integer | (random) | Hardcode a random seed. Useful for reproducing CI failures. |
-| `persist` | boolean | `true` | Whether to automatically persist and replay failing counterexamples locally. |
+| `runs` | integer | `100` | The number of random inputs to generate before declaring the property passing. |
+| `shrink_max` | integer | `500` | The maximum number of shrinking steps when finding a minimal counterexample. |
+| `seed` | integer | (clock-derived) | Fix the random seed. Useful for reproducing a CI failure locally. |
+| `persist_id` | string | (none) | Key used to store and reload failing counterexamples under `.utest/property/`. When `null` (the default for bare `forall()` calls), persistence is disabled regardless of `persist`. `prop()` sets this automatically. |
+| `persist` | boolean | `true` | Set to `false` to disable counterexample persistence even when `persist_id` is set. Has no effect when `persist_id` is `null`. |
+
+### Property function context
+
+`prop_fn` receives two arguments: the generated `value` and a `ctx` object.
+
+`ctx.classify(label, cond)` tags the current generated value with `label` when `cond` is truthy (or omitted). Tagged counts are printed in the failure output as a coverage breakdown, making it easier to see how inputs are distributed across interesting categories:
+
+```js
+prop("clamp result is always within [lo, hi]",
+    gen.tuple(gen.int(-100, 100), gen.int(-100, 100), gen.int(-100, 100)),
+    (t, ctx) => {
+        const lo = t[0] < t[2] ? t[0] : t[2];
+        const hi = t[0] < t[2] ? t[2] : t[0];
+        ctx.classify("negative range",  lo < 0 && hi < 0);
+        ctx.classify("straddles zero",  lo < 0 && hi >= 0);
+        ctx.classify("positive range",  lo >= 0);
+        const result = clamp(t[1], lo, hi);
+        assert.match(true, result >= lo && result <= hi);
+    });
+```
+
+`ctx.classify` is a no-op during shrinking — classifications are only counted during the original generation phase.
 
 ---
 
@@ -46,9 +69,11 @@ The core property testing engine. Can be called directly if you wish to run prop
 
 All generators are available under the `gen` object.
 
+All numeric and collection generators are biased: 1 in every 8 draws is forced to `0` before being mapped to the output range. Zero maps to the value closest to `0` within the generator's range, so edge-case inputs (zero, boundary values, empty collections) are generated roughly 8× more often than a uniform distribution would produce.
+
 ### Primitives
 
-- `gen.int(lo, hi)`: Generates an integer uniformly distributed in the range `[lo, hi]` inclusive.
+- `gen.int(lo, hi)`: Generates an integer in `[lo, hi]`. Values shrink toward the endpoint of the range closest to `0`.
 - `gen.bool()`: Generates `true` or `false`.
 - `gen.float(lo, hi, opts)`: Generates a floating point number in `[lo, hi]`. `opts.precision` controls the discrete steps (default `10000`).
 - `gen.constant(v)`: Always yields the exact value `v`.
@@ -60,7 +85,7 @@ The `opts` object for strings requires either `{ len }` for an exact length or `
 
 - `gen.string(opts)`: Generates strings from `opts.charset`. The default charset includes lowercase letters, numbers, and space.
 - `gen.ascii(opts)`: Generates strings using all printable ASCII characters.
-- `gen.alphanumeric(opts)`: Generates strings using `[A-Za-z0-z]`.
+- `gen.alphanumeric(opts)`: Generates strings using `[A-Za-z0-9]`.
 
 ### Collections
 

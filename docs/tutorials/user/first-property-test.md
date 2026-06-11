@@ -112,12 +112,11 @@ Run again. All 100 cases pass.
 
 ---
 
-## What you have learned
+## What we just built
 
-- `prop(name, generator, prop_fn)` registers a property test as a normal `it` block.
-- `gen.tuple(...)` generates arrays of fixed structure. Access elements by index.
-- When a property fails, the framework shrinks the input to a minimal counterexample before reporting.
-- The failure output shows both the original failing input and the shrunk one.
+- A source module with a `clamp` function and a property test that checks it against hundreds of randomly generated inputs.
+- A failing version of `clamp` that let us watch the framework find and shrink a counterexample from `(-47, 91, 12)` down to `(0, 1, 0)`.
+- Familiarity with reading the failure output: seed, original value, shrunk value, and the shrink step count.
 
 ---
 

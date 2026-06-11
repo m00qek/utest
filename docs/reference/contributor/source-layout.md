@@ -30,7 +30,7 @@ graph TD
 
 | Path | Responsibility |
 |---|---|
-| `src/utest.uc` | Public entry-point. Re-exports `describe`, `it`, `skip`, `xit`, `xdescribe`, `beforeEach`, `afterEach`, `setup`, `teardown`, `mock`, `assert`. |
+| `src/utest.uc` | Public entry-point. Re-exports `describe`, `it`, `skip`, `xit`, `xdescribe`, `beforeEach`, `afterEach`, `setup`, `teardown`, `mock`, `assert`, `prop`, `forall`, `gen`, `is_generator`. |
 | `src/utest/dsl.uc` | Implements the test-definition DSL (`describe`, `it`, `beforeEach`, …). Builds the in-memory tree of groups and tests in the worker process. |
 | `src/utest/assert.uc` | Exports the `assert` object (`throws`, `match`). |
 | `src/utest/combinators.uc` | Exports all combinator factories: `equals`, `contains`, `truthy`, `falsy`, `not`, `pred`, `regex`, `any`, `any_order`, `starts_with`, `ends_with`, `has_length`, `between`, `is_type`. Also exports `is_combinator()` used internally by `assert.uc`. |
@@ -59,6 +59,8 @@ graph TD
 | `src/utest/mock/proxy/ubus.uc` | Built-in proxy for the `ubus` module. `connect()` returns an object whose `call()` method looks up `"<object>:<method>"` or `"<object>"` in mock data, and whose `disconnect()` is a recorded no-op. |
 | `src/utest/mock/proxy/uloop.uc` | Built-in proxy for the `uloop` module. Declares `api: ['init','timer','run','end']`. `timer()` queues callbacks; `run()` drains the queue synchronously. |
 | `src/utest/mock/proxy/uclient.uc` | Built-in proxy for the `uclient` module. Declares `api: ['new']`. `new()` returns a client object whose `request()` drives the callback sequence from mock data. |
+| `src/utest/property.uc` | Property-based testing engine. Implements `forall` (random generation, shrinking, persistence) and `prop` (DSL wrapper that auto-derives `persist_id` from file and describe path). |
+| `src/utest/generators.uc` | Generator library. Exports the `gen` object containing all generator factories (`int`, `bool`, `float`, `string`, `ascii`, `alphanumeric`, `array`, `tuple`, `record`, `oneof`, `frequency`, `elements`, `constant`, `optional`, `map`, `bind`, `filter`). Also exports `is_generator`. |
 | `src/utest/util.uc` | Internal utilities: `shuffle()`, `q()` (shell quoting), `format_path()`, `mkdir_p()`. |
 
 ---
