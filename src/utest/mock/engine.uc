@@ -16,16 +16,24 @@ function deep_clone(obj) {
 	return obj;
 }
 
-// Returns the channel list declared by the proxy for `name`.  Always includes
-// 'data'; extra channels come from the proxy factory's `channels` array.
+// Returns the channel list declared by the proxy for `name`, or null if no
+// proxy module exists.  Always includes 'data'; extra channels come from the
+// proxy factory's `channels` array.
 function get_proxy_channels(name) {
 	let m = null;
 	try { m = require('utest.mock.proxy.' + name); } catch(e) {}
-	if (!m || type(m.channels) !== 'array') return ['data'];
-	let channels = ['data'];
-	for (let ch in m.channels)
-		if (ch !== 'data') push(channels, ch);
+	if (!m) return null;
+	const channels = ['data'];
+	if (type(m.channels) === 'array') {
+		for (let ch in m.channels)
+			if (ch !== 'data') push(channels, ch);
+	}
 	return channels;
+}
+
+function guard_mock_target(op, name, proxy_channels, real) {
+	if (proxy_channels === null && real === null)
+		die(sprintf("[utest] %s: '%s' is not a configured proxy — no proxy module found at utest.mock.proxy.%s", op, name, name));
 }
 
 function get_registry(name) {
@@ -265,14 +273,17 @@ mock_obj.inject_builtin = function(name, fn, cb) {
 };
 
 mock_obj.inject = function(name, state, cb) {
-	const channels = get_proxy_channels(name);
+	const proxy_channels = get_proxy_channels(name);
+	const real = get_real(name);
+	guard_mock_target('mock.inject', name, proxy_channels, real);
+	const channels = proxy_channels || ['data'];
 	const reg = get_registry(name);
 	ensure_channels(reg, channels);
 	push(reg.layers, to_layer(state, channels));
 	let err = null;
 	let result;
 	try {
-		let proxy = build_proxy(name, get_real(name));
+		let proxy = build_proxy(name, real);
 		result = cb(proxy);
 	} catch (e) {
 		err = e;
@@ -284,7 +295,10 @@ mock_obj.inject = function(name, state, cb) {
 
 mock_obj.global = {
 	patch: function(name, state) {
-		const channels = get_proxy_channels(name);
+		const proxy_channels = get_proxy_channels(name);
+		const real = get_real(name);
+		guard_mock_target('mock.global.patch', name, proxy_channels, real);
+		const channels = proxy_channels || ['data'];
 		const reg = get_registry(name);
 		ensure_channels(reg, channels);
 		for (let ch in channels)
@@ -292,7 +306,7 @@ mock_obj.global = {
 		reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
 		reg.global.strict = state.strict   ? true : false;
 		reg.global.calls  = {};
-		const proxy = build_proxy(name, get_real(name));
+		const proxy = build_proxy(name, real);
 		reg.global.proxy = proxy;
 		return proxy;
 	},
