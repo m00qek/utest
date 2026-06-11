@@ -76,3 +76,9 @@ describe('mock.inject_all()', () => {
 		}, /mock\.inject_all.*no_such/);
 	});
 });
+
+describe('mock.inject() unknown proxy (expected failure)', () => {
+	it('inject() with an unknown proxy name dies with a clear error', () => {
+		mock.inject('no_such_proxy', { data: {} }, () => {});
+	});
+});

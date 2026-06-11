@@ -1,15 +1,29 @@
 {
   "stats": {
-    "total": 5,
+    "total": 6,
     "passed": 5,
     "failed": 0,
-    "errors": 0,
+    "errors": 1,
     "fatals": 0,
     "skipped": 0,
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/21_inject_all_test.uc",
+      "bundle": "examples/unit/21_inject_all_test.uc",
+      "status": "ERROR",
+      "error": "[utest] mock.inject: 'no_such_proxy' is not a configured proxy — no proxy module found at utest.mock.proxy.no_such_proxy",
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 7, "name": "mock.inject() unknown proxy (expected failure)" },
+        { "id": 8, "name": "inject() with an unknown proxy name dies with a clear error" }
+      ],
+      "index": 6
+    }
+  ],
   "results": [
     {
       "event": "TEST_RESULT",
@@ -75,6 +89,19 @@
         { "id": 6, "name": "dies immediately when a proxy name is not configured" }
       ],
       "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/21_inject_all_test.uc",
+      "bundle": "examples/unit/21_inject_all_test.uc",
+      "status": "ERROR",
+      "error": "[utest] mock.inject: 'no_such_proxy' is not a configured proxy — no proxy module found at utest.mock.proxy.no_such_proxy",
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 7, "name": "mock.inject() unknown proxy (expected failure)" },
+        { "id": 8, "name": "inject() with an unknown proxy name dies with a clear error" }
+      ],
+      "index": 6
     }
   ],
   "files": [
@@ -82,10 +109,10 @@
   ],
   "bundles": {
     "examples/unit/21_inject_all_test.uc": {
-      "total": 5,
+      "total": 6,
       "passed": 5,
       "failed": 0,
-      "errors": 0,
+      "errors": 1,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
