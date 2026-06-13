@@ -13,6 +13,17 @@ function is_currently_skipped() {
 	return false;
 }
 
+/**
+ * @callback TestCallback
+ * @returns {void}
+ */
+
+/**
+ * Defines a test suite.
+ * 
+ * @param {string} name - The name of the test suite.
+ * @param {TestCallback} fn - The callback containing the test suite definition.
+ */
 export function describe(name, fn) {
 	guard();
 	let parent = stack[length(stack)-1];
@@ -33,6 +44,12 @@ export function describe(name, fn) {
 	if (_err !== null) die(_err);
 };
 
+/**
+ * Defines a single test case.
+ * 
+ * @param {string} name - The name of the test.
+ * @param {TestCallback} fn - The test logic to execute.
+ */
 export function it(name, fn) {
 	guard();
 	let current = stack[length(stack)-1];
@@ -45,6 +62,12 @@ export function it(name, fn) {
 	});
 };
 
+/**
+ * Unconditionally skips a test case.
+ * 
+ * @param {string} name - The name of the test.
+ * @param {TestCallback} [fn] - The test logic (which will not be executed).
+ */
 export function skip(name, fn) {
 	guard();
 	let current = stack[length(stack)-1];
@@ -57,8 +80,19 @@ export function skip(name, fn) {
 	});
 };
 
+/**
+ * Alias for skip. Unconditionally skips a test case.
+ * 
+ * @type {typeof skip}
+ */
 export const xit = skip;
 
+/**
+ * Unconditionally skips an entire test suite and all tests within it.
+ * 
+ * @param {string} name - The name of the test suite.
+ * @param {TestCallback} [fn] - The callback containing the suite definition.
+ */
 export function xdescribe(name, fn) {
 	guard();
 	let parent = stack[length(stack)-1];
@@ -79,6 +113,11 @@ export function xdescribe(name, fn) {
 	if (_err !== null) die(_err);
 };
 
+/**
+ * Registers a setup function to run once before any tests in the current module.
+ * 
+ * @param {TestCallback} fn - The setup logic.
+ */
 export function setup(fn) {
 	guard();
 	if (length(stack) > 1)
@@ -88,6 +127,11 @@ export function setup(fn) {
 	root.setup = fn;
 };
 
+/**
+ * Registers a teardown function to run once after all tests in the current module.
+ * 
+ * @param {TestCallback} fn - The teardown logic.
+ */
 export function teardown(fn) {
 	guard();
 	if (length(stack) > 1)
@@ -97,11 +141,21 @@ export function teardown(fn) {
 	root.teardown = fn;
 };
 
+/**
+ * Registers a function to run before each test in the current suite.
+ * 
+ * @param {TestCallback} fn - The logic to execute.
+ */
 export function beforeEach(fn) {
 	guard();
 	push(stack[length(stack)-1].beforeEach, fn);
 };
 
+/**
+ * Registers a function to run after each test in the current suite.
+ * 
+ * @param {TestCallback} fn - The logic to execute.
+ */
 export function afterEach(fn) {
 	guard();
 	push(stack[length(stack)-1].afterEach, fn);

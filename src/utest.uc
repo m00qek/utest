@@ -1,3 +1,9 @@
+/**
+ * @module utest
+ * @description A modern, non-invasive testing framework for the ucode ecosystem.
+ * This module is the primary entry point, providing the DSL, assertions, combinators, mock engine, and property-based testing utilities.
+ */
+
 import * as dsl from 'utest.dsl';
 import { mock as _mock } from 'utest.mock.engine';
 import { spy as _spy } from 'utest.mock.spy';

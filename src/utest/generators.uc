@@ -5,16 +5,42 @@
 // caught and counted as a discarded case by forall.
 const DISCARD_MSG = sprintf('%J', { __utest__: { kind: 'property_discard' } });
 
+/**
+ * @typedef {Object} RandomSource
+ * @property {function(number): number} draw - Draws an integer in [0, bound-1].
+ * @property {Array<number>} choices - The internal sequence of drawn choices.
+ * @property {number} [seed] - The seed used for the source (only present in record mode).
+ */
+
+/**
+ * @template T
+ * @typedef {Object} Generator
+ * @property {function(RandomSource): T} generate
+ */
 const Generator = { __utest__: { kind: 'generator' } };
 
 function gen_from(fn) { return proto({ generate: fn }, Generator); }
 
+/**
+ * Checks if a value is a valid utest generator.
+ * 
+ * @param {any} v - The value to check.
+ * @returns {boolean} True if the value is a generator.
+ */
 export function is_generator(v) {
 	return type(v) === 'object' && v.__utest__ && v.__utest__.kind === 'generator';
 };
 
 // Small draws map to values near the "zero point" — the endpoint of [lo, hi]
 // closest to 0 — so gen.int(-100, 100) shrinks toward 0, not toward -100.
+/**
+ * Generates an integer uniformly distributed in the inclusive range [lo, hi].
+ * Shrinks toward 0.
+ * 
+ * @param {number} lo - The minimum bound.
+ * @param {number} hi - The maximum bound.
+ * @returns {Generator<number>} The configured generator.
+ */
 function int_gen(lo, hi) {
 	if (lo > hi) die(sprintf("gen.int: lo (%d) must be <= hi (%d)", lo, hi));
 	const span = hi - lo + 1;
@@ -27,12 +53,27 @@ function int_gen(lo, hi) {
 	});
 }
 
+/**
+ * Generates a boolean value (true or false).
+ * 
+ * @returns {Generator<boolean>} The configured generator.
+ */
 function bool_gen() {
 	return gen_from(function(source) { return source.draw(2) === 1; });
 }
 
 // Same zero-point shrinking as int_gen; precision controls the number of
 // discrete steps across [lo, hi], split proportionally between each side.
+/**
+ * Generates a floating-point number in the inclusive range [lo, hi].
+ * Shrinks toward 0.
+ * 
+ * @param {number} lo - The minimum bound.
+ * @param {number} hi - The maximum bound.
+ * @param {Object} [opts] - Configuration options.
+ * @param {number} [opts.precision=10000] - The number of discrete steps across the range.
+ * @returns {Generator<number>} The configured generator.
+ */
 function float_gen(lo, hi, opts) {
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
 	const precision = (opts !== null && (opts.precision ?? null) !== null) ? opts.precision : 10000;
@@ -56,6 +97,13 @@ function float_gen(lo, hi, opts) {
 	});
 }
 
+/**
+ * Generates a constant value unconditionally.
+ * 
+ * @template T
+ * @param {T} v - The value to constantly generate.
+ * @returns {Generator<T>} The configured generator.
+ */
 function constant_gen(v) {
 	return gen_from(function(_source) { return v; });
 }
@@ -87,6 +135,17 @@ function size_from_opts(opts, name) {
 	return { min_len: min_val, max_len };
 }
 
+/**
+ * Generates an array of elements drawn from a given generator.
+ * 
+ * @template T
+ * @param {Generator<T>} elem - The generator for individual elements.
+ * @param {Object} opts - Sizing options.
+ * @param {number} [opts.len] - The exact length.
+ * @param {number} [opts.min_len] - The minimum length (inclusive).
+ * @param {number} [opts.max_len] - The maximum length (inclusive).
+ * @returns {Generator<Array<T>>} The configured generator.
+ */
 function array_gen(elem, opts) {
 	const sz = size_from_opts(opts, "gen.array");
 	return gen_from(function(source) {
@@ -97,6 +156,12 @@ function array_gen(elem, opts) {
 	});
 }
 
+/**
+ * Generates a tuple (array) with elements drawn from specific generators per position.
+ * 
+ * @param {...Generator} gens - The generators for each position.
+ * @returns {Generator<Array<any>>} The configured generator.
+ */
 function tuple_gen(...gens) {
 	return gen_from(function(source) {
 		const out = [];
@@ -105,6 +170,12 @@ function tuple_gen(...gens) {
 	});
 }
 
+/**
+ * Generates an object matching a specific schema of keys and generators.
+ * 
+ * @param {Object} spec - A map of keys to generators.
+ * @returns {Generator<Object<string, any>>} The configured generator.
+ */
 function record_gen(spec) {
 	const ks = keys(spec);
 	return gen_from(function(source) {
@@ -126,6 +197,16 @@ function _ascii_chars() {
 	return ASCII_CHARS;
 }
 
+/**
+ * Generates a string.
+ * 
+ * @param {Object} opts - Sizing options.
+ * @param {number} [opts.len] - The exact length.
+ * @param {number} [opts.min_len] - The minimum length.
+ * @param {number} [opts.max_len] - The maximum length.
+ * @param {string} [opts.charset] - The character set to sample from.
+ * @returns {Generator<string>} The configured generator.
+ */
 function string_gen(opts) {
 	const sz = size_from_opts(opts, "gen.string");
 	const charset = ((opts.charset ?? null) !== null) ? opts.charset : STRING_CHARS;
@@ -148,14 +229,46 @@ function with_locked_charset(opts, charset, name) {
 	return merged;
 }
 
+/**
+ * Generates a string consisting of alphanumeric characters.
+ * 
+ * @param {Object} opts - Sizing options.
+ * @param {number} [opts.len] - The exact length.
+ * @param {number} [opts.min_len] - The minimum length.
+ * @param {number} [opts.max_len] - The maximum length.
+ * @returns {Generator<string>} The configured generator.
+ */
 function alphanumeric_gen(opts) { return string_gen(with_locked_charset(opts, ALPHANUMERIC_CHARS, "gen.alphanumeric")); }
+/**
+ * Generates a string consisting of visible ASCII characters.
+ * 
+ * @param {Object} opts - Sizing options.
+ * @param {number} [opts.len] - The exact length.
+ * @param {number} [opts.min_len] - The minimum length.
+ * @param {number} [opts.max_len] - The maximum length.
+ * @returns {Generator<string>} The configured generator.
+ */
 function ascii_gen(opts)        { return string_gen(with_locked_charset(opts, _ascii_chars(),    "gen.ascii"));        }
 
+/**
+ * Randomly picks one generator from the provided choices and generates a value from it.
+ * 
+ * @template T
+ * @param {...Generator<T>} gens - The generators to choose from.
+ * @returns {Generator<T>} The configured generator.
+ */
 function oneof_gen(...gens) {
 	if (length(gens) === 0) die("gen.oneof: at least one generator required");
 	return gen_from(function(source) { return gens[source.draw(length(gens))].generate(source); });
 }
 
+/**
+ * Generates a value by randomly picking one of the provided constant elements.
+ * 
+ * @template T
+ * @param {...T} arr - The constant elements to choose from.
+ * @returns {Generator<T>} The configured generator.
+ */
 function elements_gen(...arr) {
 	if (length(arr) === 0) die("gen.elements: at least one value required");
 	return gen_from(function(source) { return arr[source.draw(length(arr))]; });
@@ -163,6 +276,13 @@ function elements_gen(...arr) {
 
 // List the simplest alternative first — smaller draws select earlier entries,
 // so shrinking naturally converges toward simpler values.
+/**
+ * Selects a generator based on relative weights.
+ * 
+ * @template T
+ * @param {...[number, Generator<T>]} pairs - Weight and generator pairs, e.g. [1, gen.int(1,10)], [5, gen.int(11,20)].
+ * @returns {Generator<T>} The configured generator.
+ */
 function frequency_gen(...pairs) {
 	let total = 0;
 	for (let p in pairs) total += p[0];
@@ -177,6 +297,16 @@ function frequency_gen(...pairs) {
 	});
 }
 
+/**
+ * Generates either null or a value from the provided generator.
+ * 
+ * @template T
+ * @param {Generator<T>} generator - The generator to use.
+ * @param {Object} [opts] - Weighting options.
+ * @param {number} [opts.none_weight=1] - The relative weight for generating null.
+ * @param {number} [opts.some_weight=1] - The relative weight for generating a value.
+ * @returns {Generator<T|null>} The configured generator.
+ */
 function optional_gen(generator, opts) {
 	opts ??= {};
 	const none_weight = opts.none_weight ?? 1;
@@ -188,10 +318,26 @@ function optional_gen(generator, opts) {
 	return frequency_gen([none_weight, constant_gen(null)], [some_weight, generator]);
 }
 
+/**
+ * Maps the output of a generator through a transformation function.
+ * 
+ * @template T, U
+ * @param {Generator<T>} generator - The original generator.
+ * @param {function(T): U} fn - The mapping function.
+ * @returns {Generator<U>} The configured generator.
+ */
 function map_gen(generator, fn) {
 	return gen_from(function(source) { return fn(generator.generate(source)); });
 }
 
+/**
+ * Chains generators by passing the output of the first generator to a function that returns a second generator.
+ * 
+ * @template T, U
+ * @param {Generator<T>} generator - The primary generator.
+ * @param {function(T): Generator<U>} fn - A function that returns a new generator based on the primary value.
+ * @returns {Generator<U>} The configured generator.
+ */
 function bind_gen(generator, fn) {
 	return gen_from(function(source) {
 		const a = generator.generate(source);
@@ -199,6 +345,16 @@ function bind_gen(generator, fn) {
 	});
 }
 
+/**
+ * Filters the output of a generator, rejecting values that don't satisfy the predicate.
+ * 
+ * @template T
+ * @param {Generator<T>} generator - The base generator.
+ * @param {function(T): boolean} pred - The predicate function.
+ * @param {Object} [opts] - Filtering options.
+ * @param {number} [opts.attempts=32] - Maximum consecutive rejections before aborting.
+ * @returns {Generator<T>} The configured generator.
+ */
 function filter_gen(generator, pred, opts) {
 	const attempts = (opts !== null && (opts.attempts ?? null) !== null) ? opts.attempts : 32;
 	if (attempts < 1) die(sprintf("gen.filter: attempts (%d) must be >= 1", attempts));
@@ -211,6 +367,10 @@ function filter_gen(generator, pred, opts) {
 	});
 }
 
+/**
+ * Generator factories for property-based testing.
+ * @namespace
+ */
 export const gen = {
 	int:          int_gen,
 	bool:         bool_gen,

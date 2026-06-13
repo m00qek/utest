@@ -195,12 +195,23 @@ function build_proxy(name, real) {
 }
 
 if (!global.__utest_mock_instance) global.__utest_mock_instance = {};
+/**
+ * @namespace
+ */
 const mock_obj = global.__utest_mock_instance;
 
+/**
+ * Completely resets all mock state, clearing all registries.
+ */
 mock_obj.reset = function() {
 	reset_layers();
 };
 
+/**
+ * Takes a snapshot of the current mock registries.
+ * 
+ * @returns {Object} An opaque snapshot object.
+ */
 mock_obj.snapshot = function() {
 	let snap = {};
 	for (let name, reg in registries) {
@@ -217,6 +228,11 @@ mock_obj.snapshot = function() {
 	return snap;
 };
 
+/**
+ * Restores mock state from a previously taken snapshot.
+ * 
+ * @param {Object} snap - The snapshot object returned by `mock.snapshot()`.
+ */
 mock_obj.restore = function(snap) {
 	reset_layers();
 	for (let name, saved in snap) {
@@ -257,6 +273,14 @@ function get_real(name) {
 if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
 const builtin_overrides = global.__utest_builtin_overrides;
 
+/**
+ * Injects a temporary mock for a built-in global variable during a callback.
+ * 
+ * @param {string} name - The name of the built-in (e.g. 'fs', 'print').
+ * @param {any} fn - The mock value to inject.
+ * @param {function(): any} cb - The callback to execute while injected.
+ * @returns {any} The return value of the callback.
+ */
 mock_obj.inject_builtin = function(name, fn, cb) {
 	const orig = global[name];
 	global[name] = fn;
@@ -272,6 +296,23 @@ mock_obj.inject_builtin = function(name, fn, cb) {
 	return result;
 };
 
+/**
+ * Injects a temporary mock state for a module during a callback.
+ * 
+ * @example
+ * mock.inject('fs', { data: { '/test.txt': 'hello' } }, (fs) => {
+ *     assert.match('hello', fs.readfile('/test.txt'));
+ * });
+ * 
+ * @param {string} name - The name of the module.
+ * @param {Object} state - The mock state configuration.
+ * @param {Object} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
+ * @param {Object} [state.behavior] - Function overrides to execute custom logic.
+ * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
+ * @param {Object} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
+ * @param {function(any): any} cb - The callback to execute while injected, receiving the proxy.
+ * @returns {any} The return value of the callback.
+ */
 mock_obj.inject = function(name, state, cb) {
 	const proxy_channels = get_proxy_channels(name);
 	const real = get_real(name);
@@ -333,7 +374,25 @@ mock_obj.inject_all = function(states, cb) {
 	return result;
 };
 
+/**
+ * Global patching utilities.
+ * @namespace
+ */
 mock_obj.global = {
+	/**
+	 * Permanently patches a module with mock state.
+	 * 
+	 * @example
+	 * const fs = mock.global.patch('fs', { data: { '/test.txt': 'hello' } });
+	 * 
+	 * @param {string} name - The name of the module.
+	 * @param {Object} state - The mock state configuration.
+	 * @param {Object} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
+	 * @param {Object} [state.behavior] - Function overrides to execute custom logic.
+	 * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
+	 * @param {Object} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
+	 * @returns {any} The configured proxy.
+	 */
 	patch: function(name, state) {
 		const proxy_channels = get_proxy_channels(name);
 		const real = get_real(name);
@@ -351,6 +410,11 @@ mock_obj.global = {
 		return proxy;
 	},
 
+	/**
+	 * Removes a global patch for a module.
+	 * 
+	 * @param {string} name - The name of the module to unpatch.
+	 */
 	unpatch: function(name) {
 		const reg = get_registry(name);
 		let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
@@ -358,11 +422,22 @@ mock_obj.global = {
 		reg.global = new_global;
 	},
 
+	/**
+	 * Permanently patches a built-in global variable.
+	 * 
+	 * @param {string} name - The name of the built-in.
+	 * @param {any} fn - The mock value.
+	 */
 	patch_builtin: function(name, fn) {
 		builtin_overrides[name] = global[name];
 		global[name] = fn;
 	},
 
+	/**
+	 * Removes a global patch for a built-in global variable.
+	 * 
+	 * @param {string} name - The name of the built-in to unpatch.
+	 */
 	unpatch_builtin: function(name) {
 		if (exists(builtin_overrides, name)) {
 			global[name] = builtin_overrides[name];

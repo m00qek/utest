@@ -9,7 +9,21 @@ function unwrap_error_msg(e) {
 	return parse_thrown(e).message;
 }
 
+/**
+ * Assertion utilities.
+ * @namespace
+ */
 export const assert = {
+	/**
+	 * Asserts that a function throws an exception, optionally matching a pattern.
+	 * 
+	 * @example
+	 * assert.throws(() => { die("fatal error"); }, "fatal error");
+	 * 
+	 * @param {function} fn - The function expected to throw.
+	 * @param {string|RegExp|Combinator} [pattern] - The pattern or combinator the error message should match.
+	 * @param {string} [msg] - Custom failure message.
+	 */
 	throws: function(fn, pattern, msg) {
 		try {
 			fn();
@@ -24,6 +38,17 @@ export const assert = {
 		fail(msg || "Expected exception but none was thrown");
 	},
 
+	/**
+	 * Asserts that a value matches an expected value or combinator.
+	 * 
+	 * @example
+	 * assert.match(2, 1 + 1);
+	 * assert.match(contains("foo"), "foo bar");
+	 * 
+	 * @param {any} expected - The expected value or combinator.
+	 * @param {any} actual - The actual value to test.
+	 * @param {string} [msg] - Custom failure message.
+	 */
 	match: function(expected, actual, msg) {
 		const r = (is_combinator(expected) ? expected : equals(expected)).match(actual);
 		if (!r.ok) fail(msg ? (msg + "\n" + r.message) : r.message);

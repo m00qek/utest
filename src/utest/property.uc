@@ -301,6 +301,34 @@ function report_failure(info, runs) {
 	die(sprintf('%J', { __utest__: { kind: 'fail', message: join("\n", lines) } }));
 }
 
+/**
+ * Conditionally labels a generated test case for coverage statistics.
+ * If the condition is true (or omitted), the label is recorded.
+ * 
+ * @callback ClassifyFn
+ * @param {string} label - The classification label to record (e.g., "empty array", "negative number").
+ * @param {boolean} [cond] - If provided and false, the classification is ignored for this run.
+ * @returns {void}
+ */
+
+/**
+ * @typedef {Object} PropertyContext
+ * @property {ClassifyFn} classify - Labels the generated test case for coverage statistics.
+ */
+
+/**
+ * Executes a property test iteratively against generated values.
+ * 
+ * @template T
+ * @param {Generator<T>} generator - The generator to produce values.
+ * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
+ * @param {Object} [opts] - Execution options.
+ * @param {number} [opts.runs=100] - Number of successful cases to test.
+ * @param {number} [opts.shrink_max=500] - Maximum steps allowed during shrinking.
+ * @param {number} [opts.seed] - Fixed random seed for reproduction.
+ * @param {string} [opts.persist_id] - Unique ID for saving/replaying failing cases.
+ * @param {boolean} [opts.persist=true] - Whether to save and replay failing cases.
+ */
 export function forall(generator, prop_fn, opts) {
 	opts ??= {};
 	const runs       = opts.runs       ?? 100;
@@ -382,6 +410,20 @@ function current_describe_path() {
 	return join(" > ", parts);
 }
 
+/**
+ * Defines a property test case as an `it` block.
+ * 
+ * @template T
+ * @param {string} name - The name of the property.
+ * @param {Generator<T>} generator - The generator to produce values.
+ * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
+ * @param {Object} [opts] - Execution options.
+ * @param {number} [opts.runs=100] - Number of successful cases to test.
+ * @param {number} [opts.shrink_max=500] - Maximum steps allowed during shrinking.
+ * @param {number} [opts.seed] - Fixed random seed for reproduction.
+ * @param {string} [opts.persist_id] - Unique ID for saving/replaying failing cases.
+ * @param {boolean} [opts.persist=true] - Whether to save and replay failing cases.
+ */
 export function prop(name, generator, prop_fn, opts) {
 	opts ??= {};
 	const effective = { persist_id: null, ...opts };

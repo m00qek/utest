@@ -2,6 +2,11 @@
 
 const Combinator = { __utest__: { kind: 'combinator' } };
 
+/**
+ * @typedef {Object} Combinator
+ * @property {function(any): {ok: boolean, message?: string}} match
+ */
+
 export function is_combinator(v) {
 	return type(v) === 'object' && v.__utest__ && v.__utest__.kind === 'combinator';
 };
@@ -73,6 +78,13 @@ _normalize_equals = function(expected) {
 	return equals_scalar(expected);
 };
 
+/**
+ * Asserts that a value equals the expected value. Arrays and objects are compared structurally.
+ * 
+ * @template T
+ * @param {T} expected - The expected value or nested combinators.
+ * @returns {Combinator} The configured combinator.
+ */
 export function equals(expected) {
 	return _normalize_equals(expected);
 };
@@ -150,6 +162,12 @@ function contains_array(expected) {
 	}, Combinator);
 }
 
+/**
+ * Asserts that a string, array, or object contains the expected value(s).
+ * 
+ * @param {any} expected - The substring, subsequence, or subset of object keys to find.
+ * @returns {Combinator} The configured combinator.
+ */
 export function contains(expected) {
 	if (type(expected) === 'string')
 		return contains_string(expected);
@@ -194,6 +212,12 @@ function starts_with_array(expected) {
 	}, Combinator);
 }
 
+/**
+ * Asserts that a string or array starts with the expected sequence.
+ * 
+ * @param {string|any[]} expected - The expected starting sequence.
+ * @returns {Combinator} The configured combinator.
+ */
 export function starts_with(expected) {
 	if (type(expected) === 'string') return starts_with_string(expected);
 	if (type(expected) === 'array')  return starts_with_array(expected);
@@ -235,6 +259,12 @@ function ends_with_array(expected) {
 	}, Combinator);
 }
 
+/**
+ * Asserts that a string or array ends with the expected sequence.
+ * 
+ * @param {string|any[]} expected - The expected ending sequence.
+ * @returns {Combinator} The configured combinator.
+ */
 export function ends_with(expected) {
 	if (type(expected) === 'string') return ends_with_string(expected);
 	if (type(expected) === 'array')  return ends_with_array(expected);
@@ -244,6 +274,11 @@ export function ends_with(expected) {
 
 // ─── Scalar combinators ───────────────────────────────────────────────────────
 
+/**
+ * Asserts that a value is truthy.
+ * 
+ * @returns {Combinator} The configured combinator.
+ */
 export function truthy() {
 	return proto({
 		match: function(actual) {
@@ -254,6 +289,11 @@ export function truthy() {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a value is falsy.
+ * 
+ * @returns {Combinator} The configured combinator.
+ */
 export function falsy() {
 	return proto({
 		match: function(actual) {
@@ -264,6 +304,12 @@ export function falsy() {
 	}, Combinator);
 };
 
+/**
+ * Inverts another combinator, matching when it fails.
+ * 
+ * @param {Combinator} combinator - The combinator to invert.
+ * @returns {Combinator} The configured combinator.
+ */
 export function not(combinator) {
 	if (!is_combinator(combinator))
 		die(sprintf("not(): expected a combinator; got %s", type(combinator)));
@@ -276,6 +322,12 @@ export function not(combinator) {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a value satisfies a custom predicate function.
+ * 
+ * @param {function(any): boolean} fn - The predicate function.
+ * @returns {Combinator} The configured combinator.
+ */
 export function pred(fn) {
 	return proto({
 		match: function(actual) {
@@ -286,6 +338,12 @@ export function pred(fn) {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a string matches a regular expression.
+ * 
+ * @param {RegExp} expected - The regular expression to match against.
+ * @returns {Combinator} The configured combinator.
+ */
 export function regex(expected) {
 	return proto({
 		match: function(actual) {
@@ -296,12 +354,23 @@ export function regex(expected) {
 	}, Combinator);
 };
 
+/**
+ * A wildcard combinator that matches any value unconditionally.
+ * 
+ * @returns {Combinator} The configured combinator.
+ */
 export function any() {
 	return proto({
 		match: function(_actual) { return { ok: true }; }
 	}, Combinator);
 };
 
+/**
+ * Asserts that an array contains the exact expected elements, in any order.
+ * 
+ * @param {any[]} expected - The expected elements or combinators.
+ * @returns {Combinator} The configured combinator.
+ */
 export function any_order(expected) {
 	const matchers = [];
 	for (let m in expected)
@@ -340,6 +409,12 @@ export function any_order(expected) {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a string, array, or object has the specified length.
+ * 
+ * @param {number} n - The expected length.
+ * @returns {Combinator} The configured combinator.
+ */
 export function has_length(n) {
 	return proto({
 		match: function(actual) {
@@ -354,6 +429,13 @@ export function has_length(n) {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a number is within an inclusive range.
+ * 
+ * @param {number} min - The minimum allowed value.
+ * @param {number} max - The maximum allowed value.
+ * @returns {Combinator} The configured combinator.
+ */
 export function between(min, max) {
 	return proto({
 		match: function(actual) {
@@ -366,6 +448,12 @@ export function between(min, max) {
 	}, Combinator);
 };
 
+/**
+ * Asserts that a value is of a specific ucode type.
+ * 
+ * @param {string} expected - The expected type name (e.g. 'string', 'int', 'double', 'object', 'array').
+ * @returns {Combinator} The configured combinator.
+ */
 export function is_type(expected) {
 	return proto({
 		match: function(actual) {
