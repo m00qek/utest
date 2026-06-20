@@ -304,8 +304,9 @@ function report_failure(info, runs) {
 /**
  * Labels a generated test case for coverage statistics. The first argument
  * is the label to record (e.g. "empty array", "negative number"). The
- * optional second argument is a condition; if false, the label is not
- * recorded for this run.
+ * optional second argument is a condition; pass `false` (strictly) to
+ * suppress recording for this run. Omitting it or passing `true` always
+ * records. Other falsy values (0, null) are treated as "record".
  *
  * @typedef {function(string, ?boolean): void} ClassifyFn
  */
