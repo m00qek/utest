@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 const args = json(ARGV[0]);
 const test_file = args.file;
-root.test_file = test_file;
+root.test_file = fs.realpath(test_file) || test_file;
 root.prop_seed  = args.prop_seed ?? null;
 const test_filter = args.filter;
 const test_seed = args.seed;
