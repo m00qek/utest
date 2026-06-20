@@ -201,19 +201,7 @@ function str_hash(s) {
 }
 
 function persist_filename(test_name) {
-	let slug = "";
-	for (let i = 0; i < length(test_name) && length(slug) < 40; i++) {
-		const c = substr(test_name, i, 1);
-		const code = ord(c);
-		const ok = (code >= 48 && code <= 57)
-		        || (code >= 65 && code <= 90)
-		        || (code >= 97 && code <= 122);
-		if (ok) slug += c;
-		else if (length(slug) > 0 && substr(slug, length(slug) - 1, 1) !== "_") slug += "_";
-	}
-	while (length(slug) > 0 && substr(slug, length(slug) - 1, 1) === "_")
-		slug = substr(slug, 0, length(slug) - 1);
-	return slug + "_" + sprintf("%08x", str_hash(test_name)) + ".json";
+	return sprintf("%08x", str_hash(test_name)) + ".json";
 }
 
 function persist_path(test_name) {
