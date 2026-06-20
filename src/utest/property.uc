@@ -1,7 +1,7 @@
 import * as math from 'math';
 import * as fs from 'fs';
 import * as dsl from 'utest.dsl';
-import { parse_thrown, mkdir_p } from 'utest.util';
+import { parse_thrown, mkdir_p, format_path } from 'utest.util';
 import { root, stack } from 'utest.runner.worker.registry';
 
 const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
@@ -416,14 +416,6 @@ export function forall(generator, prop_fn, opts) {
 			runs) } }));
 };
 
-// Qualifies persist_id with file + describe path so identically-named props
-// in different files or describes don't share a persistence file.
-function current_describe_path() {
-	const parts = [];
-	for (let i = 0; i < length(stack); i++)
-		if (stack[i].id !== 0) push(parts, stack[i].name);
-	return join(" > ", parts);
-}
 
 /**
  * Defines a property test case as an `it` block.
@@ -445,7 +437,7 @@ export function prop(name, generator, prop_fn, opts) {
 	const effective = { ...opts };
 	if (!exists(opts, 'persist_id')) {
 		const file = root.test_file || "";
-		const path = current_describe_path();
+		const path = format_path(stack);
 		const prefix = (file !== "" ? file + " :: " : "")
 		             + (path !== "" ? path + " > " : "");
 		effective.persist_id = prefix + name;
