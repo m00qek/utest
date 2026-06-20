@@ -350,7 +350,15 @@ function bind_gen(generator, fn) {
 
 /**
  * Filters the output of a generator, rejecting values that don't satisfy the predicate.
- * 
+ *
+ * **Shrinking note:** during counterexample minimisation the shrinker replays candidate
+ * choice sequences through the full generator, including this filter. A candidate that
+ * exhausts `attempts` retries is treated as invalid (not fail, not pass) and skipped,
+ * but still consumes a slot from the `shrink_max` evaluation budget. With a narrow
+ * predicate this can drain the budget on structurally impossible candidates, causing the
+ * reported counterexample to be larger than the true minimum. Prefer `gen.map` or
+ * `gen.bind` over `gen.filter` when a direct construction is possible.
+ *
  * @template T
  * @param {Generator<T>} generator - The base generator.
  * @param {function(T): boolean} pred - The predicate function.
