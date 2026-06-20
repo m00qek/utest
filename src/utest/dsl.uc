@@ -14,6 +14,8 @@ function is_currently_skipped() {
 }
 
 /**
+ * A function passed to describe, it, skip, setup, teardown, beforeEach, or afterEach.
+ *
  * @typedef {function(): void} TestCallback
  */
 
