@@ -82,15 +82,18 @@ function float_gen(lo, hi, opts) {
 	const pos_room = hi - zp;
 	const neg_room = zp - lo;
 	const total = pos_room + neg_room;
-	const pos_quota = (total <= 0) ? 0 :
-	                  (neg_room === 0) ? precision :
-	                  int(precision * pos_room / (total * 1.0));
+	// Clamp to 1 so a non-zero pos_room (or neg_room) always gets at least one
+	// draw slot — without this, int() truncation erases the smaller side entirely
+	// when pos_room / total < 1/precision (e.g. gen.float(-1000, 0.001)).
+	const pos_quota_raw = (total <= 0) ? 0 :
+	                      (neg_room === 0) ? precision :
+	                      int(precision * pos_room / (total * 1.0));
+	const pos_quota = (pos_room > 0 && pos_quota_raw === 0) ? 1 : pos_quota_raw;
 	const neg_quota = precision - pos_quota;
 	return gen_from(function(source) {
 		const d = source.draw(precision + 1);
 		if (total <= 0) return zp;
 		if (d <= pos_quota) {
-			if (pos_quota === 0) return zp;
 			return zp + (d / (pos_quota * 1.0)) * pos_room;
 		}
 		return zp - ((d - pos_quota) / (neg_quota * 1.0)) * neg_room;
