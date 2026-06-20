@@ -1,6 +1,5 @@
 /**
- * @typedef {Object} Spy
- * @property {Object<string, Array<any>>} calls - The recorded calls map.
+ * @typedef {{calls: Object<string, Array<any>>}} Spy
  */
 
 /**

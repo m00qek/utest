@@ -14,8 +14,7 @@ function is_currently_skipped() {
 }
 
 /**
- * @callback TestCallback
- * @returns {void}
+ * @typedef {function(): void} TestCallback
  */
 
 /**
@@ -83,7 +82,7 @@ export function skip(name, fn) {
 /**
  * Alias for skip. Unconditionally skips a test case.
  * 
- * @type {typeof skip}
+ * @type {function}
  */
 export const xit = skip;
 

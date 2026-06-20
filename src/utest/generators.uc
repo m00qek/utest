@@ -7,9 +7,9 @@ const DISCARD_MSG = sprintf('%J', { __utest__: { kind: 'property_discard' } });
 
 /**
  * @typedef {Object} RandomSource
- * @property {function(number): number} draw - Draws an integer in [0, bound-1].
- * @property {Array<number>} choices - The internal sequence of drawn choices.
- * @property {number} [seed] - The seed used for the source (only present in record mode).
+ * @property {function(int): int} draw - Draws an integer in [0, bound-1].
+ * @property {int[]} choices - The internal sequence of drawn choices.
+ * @property {int} [seed] - The seed used for the source (only present in record mode).
  */
 
 /**
@@ -37,9 +37,9 @@ export function is_generator(v) {
  * Generates an integer uniformly distributed in the inclusive range [lo, hi].
  * Shrinks toward 0.
  * 
- * @param {number} lo - The minimum bound.
- * @param {number} hi - The maximum bound.
- * @returns {Generator<number>} The configured generator.
+ * @param {int} lo - The minimum bound.
+ * @param {int} hi - The maximum bound.
+ * @returns {Generator<int>} The configured generator.
  */
 function int_gen(lo, hi) {
 	if (lo > hi) die(sprintf("gen.int: lo (%d) must be <= hi (%d)", lo, hi));
@@ -68,11 +68,11 @@ function bool_gen() {
  * Generates a floating-point number in the inclusive range [lo, hi].
  * Shrinks toward 0.
  * 
- * @param {number} lo - The minimum bound.
- * @param {number} hi - The maximum bound.
+ * @param {float} lo - The minimum bound.
+ * @param {float} hi - The maximum bound.
  * @param {Object} [opts] - Configuration options.
- * @param {number} [opts.precision=10000] - The number of discrete steps across the range.
- * @returns {Generator<number>} The configured generator.
+ * @param {int} [opts.precision=10000] - The number of discrete steps across the range.
+ * @returns {Generator<float>} The configured generator.
  */
 function float_gen(lo, hi, opts) {
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
@@ -141,9 +141,9 @@ function size_from_opts(opts, name) {
  * @template T
  * @param {Generator<T>} elem - The generator for individual elements.
  * @param {Object} opts - Sizing options.
- * @param {number} [opts.len] - The exact length.
- * @param {number} [opts.min_len] - The minimum length (inclusive).
- * @param {number} [opts.max_len] - The maximum length (inclusive).
+ * @param {int} [opts.len] - The exact length.
+ * @param {int} [opts.min_len] - The minimum length (inclusive).
+ * @param {int} [opts.max_len] - The maximum length (inclusive).
  * @returns {Generator<Array<T>>} The configured generator.
  */
 function array_gen(elem, opts) {
@@ -201,9 +201,9 @@ function _ascii_chars() {
  * Generates a string.
  * 
  * @param {Object} opts - Sizing options.
- * @param {number} [opts.len] - The exact length.
- * @param {number} [opts.min_len] - The minimum length.
- * @param {number} [opts.max_len] - The maximum length.
+ * @param {int} [opts.len] - The exact length.
+ * @param {int} [opts.min_len] - The minimum length.
+ * @param {int} [opts.max_len] - The maximum length.
  * @param {string} [opts.charset] - The character set to sample from.
  * @returns {Generator<string>} The configured generator.
  */
@@ -233,19 +233,19 @@ function with_locked_charset(opts, charset, name) {
  * Generates a string consisting of alphanumeric characters.
  * 
  * @param {Object} opts - Sizing options.
- * @param {number} [opts.len] - The exact length.
- * @param {number} [opts.min_len] - The minimum length.
- * @param {number} [opts.max_len] - The maximum length.
+ * @param {int} [opts.len] - The exact length.
+ * @param {int} [opts.min_len] - The minimum length.
+ * @param {int} [opts.max_len] - The maximum length.
  * @returns {Generator<string>} The configured generator.
  */
 function alphanumeric_gen(opts) { return string_gen(with_locked_charset(opts, ALPHANUMERIC_CHARS, "gen.alphanumeric")); }
 /**
  * Generates a string consisting of visible ASCII characters.
- * 
+ *
  * @param {Object} opts - Sizing options.
- * @param {number} [opts.len] - The exact length.
- * @param {number} [opts.min_len] - The minimum length.
- * @param {number} [opts.max_len] - The maximum length.
+ * @param {int} [opts.len] - The exact length.
+ * @param {int} [opts.min_len] - The minimum length.
+ * @param {int} [opts.max_len] - The maximum length.
  * @returns {Generator<string>} The configured generator.
  */
 function ascii_gen(opts)        { return string_gen(with_locked_charset(opts, _ascii_chars(),    "gen.ascii"));        }
@@ -280,7 +280,7 @@ function elements_gen(...arr) {
  * Selects a generator based on relative weights.
  * 
  * @template T
- * @param {...[number, Generator<T>]} pairs - Weight and generator pairs, e.g. [1, gen.int(1,10)], [5, gen.int(11,20)].
+ * @param {...any} pairs - Weight/generator pairs; each is `[weight, generator]` where weight is a positive int. List simplest alternatives first.
  * @returns {Generator<T>} The configured generator.
  */
 function frequency_gen(...pairs) {
@@ -303,8 +303,8 @@ function frequency_gen(...pairs) {
  * @template T
  * @param {Generator<T>} generator - The generator to use.
  * @param {Object} [opts] - Weighting options.
- * @param {number} [opts.none_weight=1] - The relative weight for generating null.
- * @param {number} [opts.some_weight=1] - The relative weight for generating a value.
+ * @param {int} [opts.none_weight=1] - The relative weight for generating null.
+ * @param {int} [opts.some_weight=1] - The relative weight for generating a value.
  * @returns {Generator<T|null>} The configured generator.
  */
 function optional_gen(generator, opts) {
@@ -352,7 +352,7 @@ function bind_gen(generator, fn) {
  * @param {Generator<T>} generator - The base generator.
  * @param {function(T): boolean} pred - The predicate function.
  * @param {Object} [opts] - Filtering options.
- * @param {number} [opts.attempts=32] - Maximum consecutive rejections before aborting.
+ * @param {int} [opts.attempts=32] - Maximum consecutive rejections before aborting.
  * @returns {Generator<T>} The configured generator.
  */
 function filter_gen(generator, pred, opts) {

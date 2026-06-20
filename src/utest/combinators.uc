@@ -3,8 +3,7 @@
 const Combinator = { __utest__: { kind: 'combinator' } };
 
 /**
- * @typedef {Object} Combinator
- * @property {function(any): {ok: boolean, message?: string}} match
+ * @typedef {{match: function(any): {ok: boolean, message: string|null}}} Combinator
  */
 
 export function is_combinator(v) {
@@ -412,7 +411,7 @@ export function any_order(expected) {
 /**
  * Asserts that a string, array, or object has the specified length.
  * 
- * @param {number} n - The expected length.
+ * @param {int} n - The expected length.
  * @returns {Combinator} The configured combinator.
  */
 export function has_length(n) {
@@ -432,8 +431,8 @@ export function has_length(n) {
 /**
  * Asserts that a number is within an inclusive range.
  * 
- * @param {number} min - The minimum allowed value.
- * @param {number} max - The maximum allowed value.
+ * @param {int|float} min - The minimum allowed value.
+ * @param {int|float} max - The maximum allowed value.
  * @returns {Combinator} The configured combinator.
  */
 export function between(min, max) {
