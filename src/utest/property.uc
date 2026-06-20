@@ -187,6 +187,13 @@ function shrink(g, prop_fn, failing, max_evals) {
 
 const PERSIST_DIR = ".utest/property";
 
+function str_hash(s) {
+	let h = 0;
+	for (let i = 0; i < length(s); i++)
+		h = (h * 31 + ord(substr(s, i, 1))) % 0x7fffffff;
+	return h;
+}
+
 function persist_filename(test_name) {
 	let slug = "";
 	for (let i = 0; i < length(test_name) && length(slug) < 40; i++) {
@@ -200,10 +207,7 @@ function persist_filename(test_name) {
 	}
 	while (length(slug) > 0 && substr(slug, length(slug) - 1, 1) === "_")
 		slug = substr(slug, 0, length(slug) - 1);
-	let h = 0;
-	for (let i = 0; i < length(test_name); i++)
-		h = (h * 31 + ord(substr(test_name, i, 1))) % 0x7fffffff;
-	return slug + "_" + sprintf("%08x", h) + ".json";
+	return slug + "_" + sprintf("%08x", str_hash(test_name)) + ".json";
 }
 
 function persist_path(test_name) {
@@ -337,7 +341,10 @@ export function forall(generator, prop_fn, opts) {
 	const persist_id = opts.persist_id ?? null;
 	const persist    = (persist_id !== null) && (opts.persist !== false);
 	const t = clock();
-	const base_seed  = opts.seed       ?? root.prop_seed ?? (t[0] * 1000000000 + t[1]);
+	const id_hash    = (persist_id !== null) ? str_hash(persist_id) : 0;
+	const base_seed  = (opts.seed !== null)
+	                 ? opts.seed
+	                 : (root.prop_seed !== null ? (root.prop_seed ^ id_hash) : (t[0] * 1000000000 + t[1]));
 	const stats = { classifications: {}, discards: 0 };
 	const ctx = make_ctx(stats);
 
