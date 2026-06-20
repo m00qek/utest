@@ -353,6 +353,9 @@ export function forall(generator, prop_fn, opts) {
 					error: r.error
 				}, runs);
 			}
+			if (r.kind === 'invalid') {
+				warn(sprintf("[utest] forall: saved counterexample for '%s' is stale (generator overrun or filter exhausted); dropping and re-running from scratch\n", persist_id));
+			}
 			delete_example(persist_id);
 		}
 	}
