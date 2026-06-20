@@ -409,6 +409,11 @@ export function forall(generator, prop_fn, opts) {
 			}, runs);
 		}
 	}
+
+	if (stats.discards >= runs)
+		die(sprintf('%J', { __utest__: { kind: 'fail', message: sprintf(
+			"Property exhausted: all %d run(s) were discarded — gen.filter predicate is too restrictive or increase `runs`",
+			runs) } }));
 };
 
 // Qualifies persist_id with file + describe path so identically-named props

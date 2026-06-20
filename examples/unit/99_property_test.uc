@@ -1,4 +1,4 @@
-import { describe, it, assert, prop, gen } from 'utest';
+import { describe, it, assert, prop, forall, gen } from 'utest';
 
 // Property-based tests: instead of asserting on hand-picked inputs, you
 // declare a property that should hold for *all* values drawn from a generator.
@@ -64,6 +64,14 @@ describe("Generator validation", () => {
 
 	it("gen.string rejects negative max_len", () => {
 		assert.throws(() => gen.string({ max_len: -1 }), /max_len \(-1\) must be >= 0/);
+	});
+
+	it("forall fails when all runs are discarded", () => {
+		assert.throws(
+			() => forall(gen.filter(gen.int(0, 0), (n) => n > 0), () => null,
+			             { seed: 1, persist: false }),
+			/Property exhausted/
+		);
 	});
 });
 
