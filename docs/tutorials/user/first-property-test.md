@@ -83,7 +83,7 @@ Run the tests again. You will see output like:
          Seed:           ...
          Original value: [ -47, 91, 12 ]
          Shrunk value:   [ 0, 1, 0 ]
-         Shrink steps:   8
+         Shrink evals:   8
          Error:          clamp(1, 0, 0) = 1 is out of range
                          Expected true
                            got false

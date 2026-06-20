@@ -75,6 +75,31 @@ assert.match('enabled=1', content);
 
 ---
 
+### `mock.inject_all(states, cb)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `states` | object | Map of module names to state objects. Each entry is validated before any layer is pushed. |
+| `cb` | function | Receives an object `{ name: proxy, ... }` with one proxy per module for the duration of the call. All layers are pushed before `cb` is called and popped in reverse order when it returns or throws. |
+
+**Returns:** the value returned by `cb`.
+
+Like `mock.inject`, but injects several modules atomically in a single call. All targets are validated up front, so the callback is invoked only if every module is available. If `cb` throws, all layers are still popped and the exception is re-raised.
+
+Use `inject_all` when the code under test depends on two or more mocked modules simultaneously and passing them separately would require nested `inject` calls:
+
+```js
+const result = mock.inject_all({
+    fs:   { data: { '/etc/config': 'enabled=1' } },
+    ubus: { data: { 'network.interface': { status: 'up' } } }
+}, ({ fs: m_fs, ubus: m_ubus }) => {
+    return my_function_that_uses_both(m_fs, m_ubus);
+});
+assert.match('up', result.status);
+```
+
+---
+
 ## Global mock
 
 ### `mock.global.patch(name, state)`

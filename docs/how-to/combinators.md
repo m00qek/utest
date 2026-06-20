@@ -196,3 +196,4 @@ assert.match(contains([pred(x => x > 2)]), items);
 
 - Full signatures for all combinators: [Reference: Assertions](../reference/assertions.md#combinator-factories)
 - Use combinators with mock call logs: [How-to: Inspect calls with spy()](spy.md)
+- Learn combinators through a worked example: [Tutorial: Writing flexible assertions with combinators](../tutorials/user/first-combinators.md)
