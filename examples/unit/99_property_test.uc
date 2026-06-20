@@ -73,6 +73,19 @@ describe("Generator validation", () => {
 			/Property exhausted/
 		);
 	});
+
+	it("prop() with explicit persist_id: null disables persistence", () => {
+		let caught = null;
+		try {
+			forall(gen.int(0, 0), (n) => assert.match(1, n),
+			       { seed: 1, persist_id: null });
+		} catch (e) { caught = e; }
+		assert.match(true, caught !== null, "expected forall to fail");
+		const sentinel = json(type(caught) === 'object' ? caught.message : sprintf('%s', caught));
+		const msg = sentinel.__utest__.message;
+		assert.match(true, !!match(msg, /Property failed/),  "failure message expected");
+		assert.match(true,  !match(msg, /Saved to:/),        "no persist path expected when persist_id is null");
+	});
 });
 
 describe("Generator smoke tests", () => {

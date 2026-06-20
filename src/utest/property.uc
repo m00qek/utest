@@ -436,13 +436,14 @@ function current_describe_path() {
  * @param {int} [opts.runs=100] - Number of successful cases to test.
  * @param {int} [opts.shrink_max=1000] - Maximum property evaluations during shrinking.
  * @param {int} [opts.seed] - Fixed random seed for reproduction.
- * @param {string} [opts.persist_id] - Unique ID for saving/replaying failing cases.
+ * @param {string|null} [opts.persist_id] - Unique ID for saving/replaying failing cases.
+ *   Auto-derived when absent. Pass `null` explicitly to disable persistence for this prop.
  * @param {boolean} [opts.persist=true] - Whether to save and replay failing cases.
  */
 export function prop(name, generator, prop_fn, opts) {
 	opts ??= {};
-	const effective = { persist_id: null, ...opts };
-	if (effective.persist_id === null) {
+	const effective = { ...opts };
+	if (!exists(opts, 'persist_id')) {
 		const file = root.test_file || "";
 		const path = current_describe_path();
 		const prefix = (file !== "" ? file + " :: " : "")
