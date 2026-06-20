@@ -248,7 +248,7 @@ function make_ctx(stats) {
 	return {
 		classify: function(label, cond) {
 			if (cond === false) return;
-			stats.classifications[label] = (stats.classifications[label] || 0) + 1;
+			stats.classifications[label] = (stats.classifications[label] ?? 0) + 1;
 		}
 	};
 }
