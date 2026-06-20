@@ -90,10 +90,11 @@ function lex_smaller(a, b) {
 // Tries a shrink candidate; returns true and updates ctx if it became the new minimum.
 function shrink_step(g, prop_fn, ctx, cand) {
 	if (!lex_smaller(cand, ctx.cur)) return false;
-	if (try_choices(g, prop_fn, cand).kind !== 'fail') return false;
+	const r = try_choices(g, prop_fn, cand);
+	ctx.evals++;
+	if (ctx.evals >= ctx.max_evals) ctx.capped = true;
+	if (r.kind !== 'fail') return false;
 	ctx.cur = cand;
-	ctx.steps++;
-	if (ctx.steps >= ctx.max_steps) ctx.capped = true;
 	return true;
 }
 
@@ -112,9 +113,9 @@ function sorted_copy(arr, len) {
 //   (3) swap adjacent out-of-order pairs         — local reordering
 //   (4) lower a single value (binary search)     — reduces magnitudes
 //   (5) redistribute weight between two positions — preserves sums
-// Loops until a full pass finds no improvement OR max_steps is hit.
-function shrink(g, prop_fn, failing, max_steps) {
-	const ctx = { cur: failing, steps: 0, capped: false, max_steps };
+// Loops until a full pass finds no improvement OR max_evals is hit.
+function shrink(g, prop_fn, failing, max_evals) {
+	const ctx = { cur: failing, evals: 0, capped: false, max_evals };
 	let progress = true;
 	while (progress && !ctx.capped) {
 		progress = false;
@@ -150,17 +151,18 @@ function shrink(g, prop_fn, failing, max_steps) {
 			if (shrink_step(g, prop_fn, ctx, cand)) { progress = true; continue; }
 			// Binary search: lo known-pass, hi known-fail.
 			let lo = 0, hi = ctx.cur[i];
-			while (lo + 1 < hi) {
+			while (lo + 1 < hi && !ctx.capped) {
 				const mid = int((lo + hi) / 2);
 				const c2 = [...ctx.cur]; c2[i] = mid;
-				if (try_choices(g, prop_fn, c2).kind === 'fail') hi = mid;
+				const r2 = try_choices(g, prop_fn, c2);
+				ctx.evals++;
+				if (ctx.evals >= ctx.max_evals) ctx.capped = true;
+				if (r2.kind === 'fail') hi = mid;
 				else lo = mid;
 			}
 			if (hi < ctx.cur[i]) {
 				const c3 = [...ctx.cur]; c3[i] = hi;
 				ctx.cur = c3;
-				ctx.steps++;
-				if (ctx.steps >= ctx.max_steps) ctx.capped = true;
 				progress = true;
 			}
 		}
@@ -180,7 +182,7 @@ function shrink(g, prop_fn, failing, max_steps) {
 			}
 		}
 	}
-	return { choices: ctx.cur, steps: ctx.steps, capped: ctx.capped };
+	return { choices: ctx.cur, evals: ctx.evals, capped: ctx.capped };
 }
 
 const PERSIST_DIR = ".utest/property";
@@ -289,8 +291,8 @@ function report_failure(info, runs) {
 		push(lines, sprintf("  Seed:           %d", info.seed));
 		push(lines, sprintf("  Original value: %J", info.original_value));
 		push(lines, sprintf("  Shrunk value:   %J", info.shrunk_value));
-		push(lines, sprintf("  Shrink steps:   %d%s",
-			info.shrink_steps,
+		push(lines, sprintf("  Shrink evals:   %d%s",
+			info.shrink_evals,
 			info.shrink_capped ? " (capped — may not be minimal)" : ""));
 		push(lines, "  Error:          " + indent_continuation(parse_thrown(info.error).message, 18));
 		if (info.persist_path)
@@ -323,7 +325,7 @@ function report_failure(info, runs) {
  * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
  * @param {Object} [opts] - Execution options.
  * @param {int} [opts.runs=100] - Number of successful cases to test.
- * @param {int} [opts.shrink_max=500] - Maximum steps allowed during shrinking.
+ * @param {int} [opts.shrink_max=1000] - Maximum property evaluations during shrinking.
  * @param {int} [opts.seed] - Fixed random seed for reproduction.
  * @param {string} [opts.persist_id] - Unique ID for saving/replaying failing cases.
  * @param {boolean} [opts.persist=true] - Whether to save and replay failing cases.
@@ -331,7 +333,7 @@ function report_failure(info, runs) {
 export function forall(generator, prop_fn, opts) {
 	opts ??= {};
 	const runs       = opts.runs       ?? 100;
-	const shrink_max = opts.shrink_max ?? 500;
+	const shrink_max = opts.shrink_max ?? 1000;
 	const persist_id = opts.persist_id ?? null;
 	const persist    = (persist_id !== null) && (opts.persist !== false);
 	const t = clock();
@@ -393,7 +395,7 @@ export function forall(generator, prop_fn, opts) {
 				seed,
 				original_value: value,
 				shrunk_value,
-				shrink_steps: shrunk.steps,
+				shrink_evals: shrunk.evals,
 				shrink_capped: shrunk.capped,
 				stats,
 				error: reported_error,
@@ -421,7 +423,7 @@ function current_describe_path() {
  * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
  * @param {Object} [opts] - Execution options.
  * @param {int} [opts.runs=100] - Number of successful cases to test.
- * @param {int} [opts.shrink_max=500] - Maximum steps allowed during shrinking.
+ * @param {int} [opts.shrink_max=1000] - Maximum property evaluations during shrinking.
  * @param {int} [opts.seed] - Fixed random seed for reproduction.
  * @param {string} [opts.persist_id] - Unique ID for saving/replaying failing cases.
  * @param {boolean} [opts.persist=true] - Whether to save and replay failing cases.
