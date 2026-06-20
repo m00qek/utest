@@ -36,7 +36,7 @@ The core property testing engine. Runs the property and reports failures directl
 | Key | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `runs` | integer | `100` | The number of random inputs to generate before declaring the property passing. |
-| `shrink_max` | integer | `500` | The maximum number of shrinking steps when finding a minimal counterexample. |
+| `shrink_max` | integer | `1000` | The maximum number of shrinking steps when finding a minimal counterexample. |
 | `seed` | integer | (clock-derived) | Fix the random seed. Useful for reproducing a CI failure locally. |
 | `persist_id` | string | (none) | Key used to store and reload failing counterexamples under `.utest/property/`. When `null` (the default for bare `forall()` calls), persistence is disabled regardless of `persist`. `prop()` sets this automatically. |
 | `persist` | boolean | `true` | Set to `false` to disable counterexample persistence even when `persist_id` is set. Has no effect when `persist_id` is `null`. |
