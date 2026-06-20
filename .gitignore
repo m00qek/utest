@@ -3,6 +3,9 @@ bin/
 .include/
 references/
 
+# Property-based testing counterexample persistence
+**/.utest/
+
 # Docker
 .docker_id
 
