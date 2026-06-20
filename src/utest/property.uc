@@ -160,6 +160,9 @@ function shrink(g, prop_fn, failing, max_evals) {
 				if (r2.kind === 'fail') hi = mid;
 				else lo = mid;
 			}
+			// Direct assignment (not via shrink_step) is safe: hi < ctx.cur[i]
+			// guarantees lex_smaller for same-length arrays, so the invariant
+			// that every ctx.cur update is lex-smaller is maintained.
 			if (hi < ctx.cur[i]) {
 				const c3 = [...ctx.cur]; c3[i] = hi;
 				ctx.cur = c3;
