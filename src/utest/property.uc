@@ -1,7 +1,7 @@
 import * as math from 'math';
 import * as fs from 'fs';
 import * as dsl from 'utest.dsl';
-import { parse_thrown } from 'utest.util';
+import { parse_thrown, mkdir_p } from 'utest.util';
 import { root, stack } from 'utest.runner.worker.registry';
 
 const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
@@ -185,7 +185,10 @@ function shrink(g, prop_fn, failing, max_evals) {
 	return { choices: ctx.cur, evals: ctx.evals, capped: ctx.capped };
 }
 
-const PERSIST_DIR = ".utest/property";
+function persist_dir() {
+	const base = replace(root.test_file || "", /\/[^\/]+$/, "") || ".";
+	return base + "/.utest/property";
+}
 
 function str_hash(s) {
 	let h = 0;
@@ -211,15 +214,11 @@ function persist_filename(test_name) {
 }
 
 function persist_path(test_name) {
-	return PERSIST_DIR + "/" + persist_filename(test_name);
+	return persist_dir() + "/" + persist_filename(test_name);
 }
 
 function ensure_persist_dir() {
-	try {
-		if (!fs.access(".utest", "r"))   fs.mkdir(".utest", 493);
-		if (!fs.access(PERSIST_DIR, "r")) fs.mkdir(PERSIST_DIR, 493);
-		return true;
-	} catch (_) { return false; }
+	return mkdir_p(persist_dir());
 }
 
 function save_example(test_name, data) {
