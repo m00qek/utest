@@ -1,4 +1,6 @@
 import { describe, it, assert, prop, forall, gen } from 'utest';
+import * as fs from 'fs';
+import { mkdir_p } from 'utest.util';
 
 // Property-based tests: instead of asserting on hand-picked inputs, you
 // declare a property that should hold for *all* values drawn from a generator.
@@ -166,6 +168,33 @@ describe("Generator smoke tests", () => {
 		gen.string({ len: 5 }),
 		(s) => assert.match(5, length(s)),
 		{ seed: 1, persist: false });
+});
+
+describe("Regression tests", () => {
+	it("gen.float with strongly asymmetric range generates values on both sides of zero", () => {
+		// Before the fix, int() truncated pos_quota to 0 when pos_room/total < 1/precision.
+		// With precision=10 and gen.float(-1000, 1): pos_quota was 0, making the entire
+		// positive side unreachable regardless of the draw.
+		let saw_positive = false;
+		forall(gen.float(-1000.0, 1.0, { precision: 10 }),
+		       (f) => {
+		           assert.match(true, f >= -1000.0 && f <= 1.0);
+		           if (f > 0) saw_positive = true;
+		       },
+		       { seed: 1, runs: 50, persist: false });
+		assert.match(true, saw_positive, "gen.float with asymmetric range must reach the positive side");
+	});
+
+	it("mkdir_p creates directories at relative paths without redirecting to root", () => {
+		// Before the fix, the first non-empty path segment was joined as '/'+part
+		// instead of part, turning './.utest/test' into '/./.utest/test'.
+		const dir = ".utest/mkdir_regression_test";
+		assert.match(true, mkdir_p(dir), "mkdir_p must succeed for a relative path");
+		assert.match(true, !!fs.access(dir, "r"), "directory must exist at the relative path");
+		assert.match(false, !!fs.access("/.utest/mkdir_regression_test", "r"),
+		             "directory must NOT exist under the root filesystem");
+		fs.rmdir(dir);
+	});
 });
 
 describe("Failing properties (demonstrate shrinking output)", () => {
