@@ -344,20 +344,23 @@ mock_obj.inject_all = function(states, cb) {
 		const proxy_channels = get_proxy_channels(name);
 		const real = get_real(name);
 		guard_mock_target('mock.inject_all', name, proxy_channels, real);
+		if (type(states[name]) !== 'object' || states[name] === null)
+			die(sprintf("mock.inject_all: state for '%s' must be a non-null object", name));
 		reals[name] = real;
 		channels_map[name] = proxy_channels || ['data'];
 	}
 
-	// Push one layer per proxy.
-	for (let name in names) {
-		const reg = get_registry(name);
-		ensure_channels(reg, channels_map[name]);
-		push(reg.layers, to_layer(states[name], channels_map[name]));
-	}
-
+	// Push one layer per proxy, tracking count so cleanup covers only what was pushed.
+	let pushed = 0;
 	let err = null;
 	let result;
 	try {
+		for (let name in names) {
+			const reg = get_registry(name);
+			ensure_channels(reg, channels_map[name]);
+			push(reg.layers, to_layer(states[name], channels_map[name]));
+			pushed++;
+		}
 		const deps = {};
 		for (let name in names)
 			deps[name] = build_proxy(name, reals[name]);
@@ -366,8 +369,8 @@ mock_obj.inject_all = function(states, cb) {
 		err = e;
 	}
 
-	// Pop in reverse order to mirror push order.
-	for (let i = length(names) - 1; i >= 0; i--)
+	// Pop in reverse order, limited to what was successfully pushed.
+	for (let i = pushed - 1; i >= 0; i--)
 		pop(get_registry(names[i]).layers);
 
 	if (err !== null) die(err);
