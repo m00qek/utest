@@ -121,6 +121,8 @@ export function xdescribe(name, fn) {
  */
 export function setup(fn) {
 	guard();
+	if (type(fn) !== 'function')
+		die("setup() requires a function argument");
 	if (length(stack) > 1)
 		die("setup() can only be used at module level (outside describe)");
 	if (root.setup !== null)
@@ -135,6 +137,8 @@ export function setup(fn) {
  */
 export function teardown(fn) {
 	guard();
+	if (type(fn) !== 'function')
+		die("teardown() requires a function argument");
 	if (length(stack) > 1)
 		die("teardown() can only be used at module level (outside describe)");
 	if (root.teardown !== null)
