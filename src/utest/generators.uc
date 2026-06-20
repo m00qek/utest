@@ -76,7 +76,7 @@ function bool_gen() {
  */
 function float_gen(lo, hi, opts) {
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
-	const precision = (opts?.precision ?? null) !== null ? opts.precision : 10000;
+	const precision = (opts !== null && opts.precision !== null) ? opts.precision : 10000;
 	if (precision < 1) die(sprintf("gen.float: precision (%d) must be >= 1", precision));
 	const zp = (lo > 0) ? lo : ((hi < 0) ? hi : 0.0);
 	const pos_room = hi - zp;
@@ -356,7 +356,7 @@ function bind_gen(generator, fn) {
  * @returns {Generator<T>} The configured generator.
  */
 function filter_gen(generator, pred, opts) {
-	const attempts = (opts?.attempts ?? null) !== null ? opts.attempts : 32;
+	const attempts = (opts !== null && opts.attempts !== null) ? opts.attempts : 32;
 	if (attempts < 1) die(sprintf("gen.filter: attempts (%d) must be >= 1", attempts));
 	return gen_from(function(source) {
 		for (let i = 0; i < attempts; i++) {
