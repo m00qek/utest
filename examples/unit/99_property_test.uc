@@ -67,6 +67,86 @@ describe("Generator validation", () => {
 	});
 });
 
+describe("Generator smoke tests", () => {
+	prop("gen.bool produces only true or false",
+		gen.bool(),
+		(b) => assert.match(true, b === true || b === false),
+		{ seed: 1, persist: false });
+
+	prop("gen.float is within bounds",
+		gen.float(-1.0, 1.0),
+		(f) => assert.match(true, f >= -1.0 && f <= 1.0),
+		{ seed: 1, persist: false });
+
+	prop("gen.string has bounded length",
+		gen.string({ max_len: 10 }),
+		(s) => assert.match(true, length(s) <= 10),
+		{ seed: 1, persist: false });
+
+	prop("gen.ascii has bounded length",
+		gen.ascii({ max_len: 8 }),
+		(s) => assert.match(true, length(s) <= 8),
+		{ seed: 1, persist: false });
+
+	prop("gen.alphanumeric has bounded length",
+		gen.alphanumeric({ max_len: 8 }),
+		(s) => assert.match(true, length(s) <= 8),
+		{ seed: 1, persist: false });
+
+	prop("gen.record produces an object with correct field ranges",
+		gen.record({ x: gen.int(0, 10), y: gen.int(0, 10) }),
+		(r) => {
+			assert.match(true, r.x >= 0 && r.x <= 10);
+			assert.match(true, r.y >= 0 && r.y <= 10);
+		},
+		{ seed: 1, persist: false });
+
+	prop("gen.oneof picks one of the given generators",
+		gen.oneof(gen.int(0, 0), gen.int(1, 1)),
+		(n) => assert.match(true, n === 0 || n === 1),
+		{ seed: 1, persist: false });
+
+	prop("gen.elements picks one of the given values",
+		gen.elements("a", "b", "c"),
+		(s) => assert.match(true, s === "a" || s === "b" || s === "c"),
+		{ seed: 1, persist: false });
+
+	prop("gen.frequency picks a value from one of the weighted generators",
+		gen.frequency([1, gen.int(0, 0)], [2, gen.int(1, 1)]),
+		(n) => assert.match(true, n === 0 || n === 1),
+		{ seed: 1, persist: false });
+
+	prop("gen.optional produces null or a value in range",
+		gen.optional(gen.int(0, 10)),
+		(v) => assert.match(true, v === null || (v >= 0 && v <= 10)),
+		{ seed: 1, persist: false });
+
+	prop("gen.map transforms the output of a generator",
+		gen.map(gen.int(0, 10), (n) => n * 2),
+		(n) => assert.match(true, n >= 0 && n <= 20 && n % 2 === 0),
+		{ seed: 1, persist: false });
+
+	prop("gen.constant always produces the same value",
+		gen.constant(42),
+		(n) => assert.match(42, n),
+		{ seed: 1, persist: false });
+
+	prop("gen.filter only returns values matching the predicate",
+		gen.filter(gen.int(0, 10), (n) => n % 2 === 0),
+		(n) => assert.match(true, n % 2 === 0),
+		{ seed: 1, persist: false });
+
+	prop("gen.array with exact length via len option",
+		gen.array(gen.int(0, 9), { len: 3 }),
+		(xs) => assert.match(3, length(xs)),
+		{ seed: 1, persist: false });
+
+	prop("gen.string with exact length via len option",
+		gen.string({ len: 5 }),
+		(s) => assert.match(5, length(s)),
+		{ seed: 1, persist: false });
+});
+
 describe("Failing properties (demonstrate shrinking output)", () => {
 	// Bogus claim: every int in [0, 1000] is < 50.  When this fails the
 	// framework shrinks the counterexample to the boundary value, 50.
