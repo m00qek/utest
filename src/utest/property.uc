@@ -363,7 +363,7 @@ export function forall(generator, prop_fn, opts) {
 				}, runs);
 			}
 			if (r.kind === 'invalid') {
-				warn(sprintf("[utest] forall: saved counterexample for '%s' is stale (generator overrun or filter exhausted); dropping and re-running from scratch\n", persist_id));
+				warn(sprintf("[utest] forall: saved counterexample for '%s' is stale (generator overrun or filter exhausted); dropping and re-running from scratch\n  Saved choices were: %J\n", persist_id, saved.choices));
 			}
 			delete_example(persist_id);
 		}
