@@ -49,7 +49,7 @@ export function mkdir_p(path) {
 	let cur = "";
 	for (let part in parts) {
 		if (!length(part)) { cur = "/"; continue; }
-		cur = (cur === "/" ? "/" : cur + "/") + part;
+		cur = (cur === "" ? "" : (cur === "/" ? "/" : cur + "/")) + part;
 		if (!fs.access(cur, "r") && !fs.mkdir(cur, 493))
 			return false;
 	}
