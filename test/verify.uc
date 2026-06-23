@@ -10,6 +10,11 @@ const format_path = _util.format_path;
  */
 
 function normalize(obj) {
+    if (type(obj) === "array") {
+        let n = [];
+        for (let item in obj) push(n, normalize(item));
+        return n;
+    }
     if (type(obj) !== "object") return obj;
     let n = { ...obj };
     delete n.duration_ms;
@@ -98,18 +103,22 @@ function main() {
     sort(a_results, cmp_results);
     sort(e_results, cmp_results);
 
-    if (length(e_results) > 0) {
-        for (let i = 0; i < length(e_results); i++) {
-            let e = e_results[i];
-            let a = a_results[i];
-            let test_path = get_test_path(e);
+    if (length(a_results) !== length(e_results)) {
+        print(sprintf("  [FAIL] %s (Result count: expected %d, got %d)\n",
+            example_file, length(e_results), length(a_results)));
+        all_pass = false;
+    }
 
-            if (a && deep_equal(a, e)) {
-                print(sprintf("  [PASS] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
-            } else {
-                print(sprintf("  [FAIL] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
-                all_pass = false;
-            }
+    for (let i = 0; i < length(e_results); i++) {
+        let e = e_results[i];
+        let a = a_results[i];
+        let test_path = get_test_path(e);
+
+        if (a && deep_equal(a, e)) {
+            print(sprintf("  [PASS] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
+        } else {
+            print(sprintf("  [FAIL] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
+            all_pass = false;
         }
     }
 
