@@ -64,6 +64,11 @@ rm "$temp_list"
 # Multi-bundle run: exercises cross-bundle stat aggregation and the bundles{} map.
 # The two test files in examples/multi/ have no individual baselines so the main loop
 # skips them; they are verified here as a combined two-bundle invocation.
+#
+# The space-separated value is passed as a single shell word to run_verify, which
+# forwards it as ARGV[0] to verify.uc.  verify.uc interpolates it into a shell
+# command string, so the shell splits it into two separate utest arguments.
+# This relies on the paths containing no spaces.
 multi_arg="BundleA:examples/multi/01_bundle_a_test.uc BundleB:examples/multi/02_bundle_b_test.uc"
 if run_verify "$multi_arg" "test/json/multi/bundle_test.json"; then
     :

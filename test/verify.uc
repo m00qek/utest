@@ -84,8 +84,10 @@ function main() {
     if (actual_nonzero === expected_nonzero) {
         print(sprintf("  [PASS] %s (Exit Code)\n", example_file));
     } else {
-        print(sprintf("  [FAIL] %s (Exit Code: expected %s, got raw status %d)\n",
-            example_file, expected_nonzero ? "non-zero" : "0", raw_status));
+        print(sprintf("  [FAIL] %s (Exit Code: expected %s, got %s)\n",
+            example_file,
+            expected_nonzero ? "non-zero" : "0",
+            actual_nonzero   ? "non-zero" : "0"));
         all_pass = false;
     }
 

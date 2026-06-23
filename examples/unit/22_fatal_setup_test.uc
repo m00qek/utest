@@ -1,7 +1,7 @@
 import { describe, it, assert, setup } from 'utest';
 
 // Demonstrates a module-level setup() that throws.
-// All tests in the module are skipped and a FATAL is reported.
+// setup() failure is fatal: no test results are emitted and stats.fatals is 1.
 
 setup(() => {
 	die("intentional");
