@@ -76,6 +76,16 @@ else
     failed_tests="$failed_tests multi_bundle"
 fi
 
+# Parallel run: exercises the parallel executor (-j 2) using the same
+# examples/multi/ files as the multi-bundle test, but as a single bundle.
+# Results arrive in nondeterministic order; verify.uc's (suite, index) sort
+# makes the comparison stable.
+if run_verify "examples/multi/" "test/json/multi/parallel_test.json" "-j 2"; then
+    :
+else
+    failed_tests="$failed_tests parallel_test"
+fi
+
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
     exit 0

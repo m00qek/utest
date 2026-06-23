@@ -1,0 +1,55 @@
+{
+  "stats": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 1,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [
+    {
+      "event": "FATAL",
+      "suite": "examples/unit/24_fatal_teardown_test.uc",
+      "bundle": "examples/unit/24_fatal_teardown_test.uc",
+      "error": "Module teardown failed: intentional"
+    }
+  ],
+  "results": [
+    {
+      "event": "FATAL",
+      "suite": "examples/unit/24_fatal_teardown_test.uc",
+      "bundle": "examples/unit/24_fatal_teardown_test.uc",
+      "error": "Module teardown failed: intentional"
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/24_fatal_teardown_test.uc",
+      "bundle": "examples/unit/24_fatal_teardown_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 1, "name": "Fatal teardown demo" },
+        { "id": 2, "name": "runs before teardown() throws" }
+      ],
+      "index": 1
+    }
+  ],
+  "files": [
+    "examples/unit/24_fatal_teardown_test.uc"
+  ],
+  "bundles": {
+    "examples/unit/24_fatal_teardown_test.uc": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 1,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}
