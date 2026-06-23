@@ -61,6 +61,16 @@ done < "$temp_list"
 
 rm "$temp_list"
 
+# Multi-bundle run: exercises cross-bundle stat aggregation and the bundles{} map.
+# The two test files in examples/multi/ have no individual baselines so the main loop
+# skips them; they are verified here as a combined two-bundle invocation.
+multi_arg="BundleA:examples/multi/01_bundle_a_test.uc BundleB:examples/multi/02_bundle_b_test.uc"
+if run_verify "$multi_arg" "test/json/multi/bundle_test.json"; then
+    :
+else
+    failed_tests="$failed_tests multi_bundle"
+fi
+
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
     exit 0

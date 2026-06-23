@@ -1,0 +1,65 @@
+{
+  "stats": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 2
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/multi/01_bundle_a_test.uc",
+      "bundle": "BundleA",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 1, "name": "Bundle A" },
+        { "id": 2, "name": "passes in bundle A" }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/multi/02_bundle_b_test.uc",
+      "bundle": "BundleB",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 1, "name": "Bundle B" },
+        { "id": 2, "name": "passes in bundle B" }
+      ],
+      "index": 1
+    }
+  ],
+  "files": [
+    "examples/multi/01_bundle_a_test.uc",
+    "examples/multi/02_bundle_b_test.uc"
+  ],
+  "bundles": {
+    "BundleA": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    },
+    "BundleB": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

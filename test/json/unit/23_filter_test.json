@@ -1,0 +1,55 @@
+{
+  "stats": {
+    "total": 2,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 1,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/23_filter_test.uc",
+      "bundle": "examples/unit/23_filter_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 1, "name": "Filter demo" },
+        { "id": 2, "name": "matches the filter" }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/23_filter_test.uc",
+      "bundle": "examples/unit/23_filter_test.uc",
+      "status": "IGNORE",
+      "error": null,
+      "path": [
+        { "id": 0, "name": "root" },
+        { "id": 1, "name": "Filter demo" },
+        { "id": 3, "name": "does not match and is ignored" }
+      ],
+      "index": 2
+    }
+  ],
+  "files": [
+    "examples/unit/23_filter_test.uc"
+  ],
+  "bundles": {
+    "examples/unit/23_filter_test.uc": {
+      "total": 2,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 1
+    }
+  }
+}

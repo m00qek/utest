@@ -1,0 +1,42 @@
+{
+  "stats": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 1,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [
+    {
+      "event": "FATAL",
+      "suite": "examples/unit/22_fatal_setup_test.uc",
+      "bundle": "examples/unit/22_fatal_setup_test.uc",
+      "error": "Module setup failed: intentional"
+    }
+  ],
+  "results": [
+    {
+      "event": "FATAL",
+      "suite": "examples/unit/22_fatal_setup_test.uc",
+      "bundle": "examples/unit/22_fatal_setup_test.uc",
+      "error": "Module setup failed: intentional"
+    }
+  ],
+  "files": [
+    "examples/unit/22_fatal_setup_test.uc"
+  ],
+  "bundles": {
+    "examples/unit/22_fatal_setup_test.uc": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 1,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

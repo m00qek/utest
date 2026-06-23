@@ -29,6 +29,15 @@ function get_test_path(test) {
     return format_path(test.path);
 }
 
+// Sort by (suite, index) for stable comparison across FATAL events (no index)
+// and multi-bundle runs (duplicate indices from independent workers).
+function cmp_results(a, b) {
+    let sa = a.suite || "";
+    let sb = b.suite || "";
+    if (sa < sb) return -1;
+    if (sa > sb) return 1;
+    return (a.index || 0) - (b.index || 0);
+}
 
 function main() {
     let example_file = ARGV[0];
@@ -41,7 +50,7 @@ function main() {
     let cmd = sprintf("utest -r json %s %s", extra_flags, example_file);
     let proc = popen(cmd);
     let actual_raw = proc.read("all");
-    proc.close();
+    let raw_status = proc.close();
 
     let actual_json = json(actual_raw);
     if (!actual_json) {
@@ -69,13 +78,23 @@ function main() {
         all_pass = false;
     }
 
+    // 3b. Verify exit code matches failure status in the baseline.
+    let expected_nonzero = (e_stats.failed > 0 || e_stats.errors > 0 || e_stats.fatals > 0);
+    let actual_nonzero = (raw_status !== 0);
+    if (actual_nonzero === expected_nonzero) {
+        print(sprintf("  [PASS] %s (Exit Code)\n", example_file));
+    } else {
+        print(sprintf("  [FAIL] %s (Exit Code: expected %s, got raw status %d)\n",
+            example_file, expected_nonzero ? "non-zero" : "0", raw_status));
+        all_pass = false;
+    }
+
     // 4. Verify EVERY individual test result
     let a_results = normalize(actual_json.results || []);
     let e_results = normalize(expected_json.results || []);
 
-    // Sort to ensure stable comparison (tests are emitted in execution order)
-    sort(a_results, (a, b) => (a.index - b.index));
-    sort(e_results, (a, b) => (a.index - b.index));
+    sort(a_results, cmp_results);
+    sort(e_results, cmp_results);
 
     if (length(e_results) > 0) {
         for (let i = 0; i < length(e_results); i++) {
@@ -84,9 +103,9 @@ function main() {
             let test_path = get_test_path(e);
 
             if (a && deep_equal(a, e)) {
-                print(sprintf("  [PASS] %s > %s (%s)\n", example_file, test_path, e.status));
+                print(sprintf("  [PASS] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
             } else {
-                print(sprintf("  [FAIL] %s > %s (%s)\n", example_file, test_path, e.status));
+                print(sprintf("  [FAIL] %s > %s (%s)\n", example_file, test_path, e.status || e.event));
                 all_pass = false;
             }
         }
