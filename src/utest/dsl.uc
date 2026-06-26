@@ -83,8 +83,8 @@ export function skip(name, fn) {
 
 /**
  * Alias for skip. Unconditionally skips a test case.
- * 
- * @type {function}
+ *
+ * @type {function(string, ?TestCallback): void}
  */
 export const xit = skip;
 

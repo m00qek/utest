@@ -1,5 +1,4 @@
-import { describe, it } from 'utest';
-import { assert } from 'utest.assert';
+import { describe, it, assert } from 'utest';
 
 describe("Slow Suite 2", () => {
 	it("takes 2 seconds", () => {

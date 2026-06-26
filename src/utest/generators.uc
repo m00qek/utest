@@ -6,16 +6,12 @@
 const DISCARD_MSG = sprintf('%J', { __utest__: { kind: 'property_discard' } });
 
 /**
- * @typedef {Object} RandomSource
- * @property {function(int): int} draw - Draws an integer in [0, bound-1].
- * @property {int[]} choices - The internal sequence of drawn choices.
- * @property {int} [seed] - The seed used for the source (only present in record mode).
+ * @typedef {{ draw: function(int): int, choices: int[], seed: int | null }} RandomSource
  */
 
 /**
  * @template T
- * @typedef {Object} Generator
- * @property {function(RandomSource): T} generate
+ * @typedef {{ generate: function(RandomSource): T }} Generator
  */
 const Generator = { __utest__: { kind: 'generator' } };
 
@@ -70,7 +66,7 @@ function bool_gen() {
  * 
  * @param {float} lo - The minimum bound.
  * @param {float} hi - The maximum bound.
- * @param {Object} [opts] - Configuration options.
+ * @param {dict<any>} [opts] - Configuration options.
  * @param {int} [opts.precision=10000] - The number of discrete steps across the range.
  * @returns {Generator<float>} The configured generator.
  */
@@ -143,11 +139,11 @@ function size_from_opts(opts, name) {
  * 
  * @template T
  * @param {Generator<T>} elem - The generator for individual elements.
- * @param {Object} opts - Sizing options.
+ * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length (inclusive).
  * @param {int} [opts.max_len] - The maximum length (inclusive).
- * @returns {Generator<Array<T>>} The configured generator.
+ * @returns {Generator<T[]>} The configured generator.
  */
 function array_gen(elem, opts) {
 	const sz = size_from_opts(opts, "gen.array");
@@ -163,7 +159,7 @@ function array_gen(elem, opts) {
  * Generates a tuple (array) with elements drawn from specific generators per position.
  * 
  * @param {...Generator} gens - The generators for each position.
- * @returns {Generator<Array<any>>} The configured generator.
+ * @returns {Generator<any[]>} The configured generator.
  */
 function tuple_gen(...gens) {
 	return gen_from(function(source) {
@@ -176,8 +172,8 @@ function tuple_gen(...gens) {
 /**
  * Generates an object matching a specific schema of keys and generators.
  * 
- * @param {Object} spec - A map of keys to generators.
- * @returns {Generator<Object<string, any>>} The configured generator.
+ * @param {dict<Generator<any>>} spec - A map of keys to generators.
+ * @returns {Generator<dict<any>>} The configured generator.
  */
 function record_gen(spec) {
 	const ks = keys(spec);
@@ -203,7 +199,7 @@ function _ascii_chars() {
 /**
  * Generates a string.
  * 
- * @param {Object} opts - Sizing options.
+ * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length.
  * @param {int} [opts.max_len] - The maximum length.
@@ -235,7 +231,7 @@ function with_locked_charset(opts, charset, name) {
 /**
  * Generates a string consisting of alphanumeric characters.
  * 
- * @param {Object} opts - Sizing options.
+ * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length.
  * @param {int} [opts.max_len] - The maximum length.
@@ -245,7 +241,7 @@ function alphanumeric_gen(opts) { return string_gen(with_locked_charset(opts, AL
 /**
  * Generates a string consisting of visible ASCII characters.
  *
- * @param {Object} opts - Sizing options.
+ * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length.
  * @param {int} [opts.max_len] - The maximum length.
@@ -305,7 +301,7 @@ function frequency_gen(...pairs) {
  * 
  * @template T
  * @param {Generator<T>} generator - The generator to use.
- * @param {Object} [opts] - Weighting options.
+ * @param {dict<any>} [opts] - Weighting options.
  * @param {int} [opts.none_weight=1] - The relative weight for generating null.
  * @param {int} [opts.some_weight=1] - The relative weight for generating a value.
  * @returns {Generator<T|null>} The configured generator.
@@ -362,7 +358,7 @@ function bind_gen(generator, fn) {
  * @template T
  * @param {Generator<T>} generator - The base generator.
  * @param {function(T): boolean} pred - The predicate function.
- * @param {Object} [opts] - Filtering options.
+ * @param {dict<any>} [opts] - Filtering options.
  * @param {int} [opts.attempts=32] - Maximum consecutive rejections before aborting.
  * @returns {Generator<T>} The configured generator.
  */
@@ -380,7 +376,6 @@ function filter_gen(generator, pred, opts) {
 
 /**
  * Generator factories for property-based testing.
- * @namespace
  */
 export const gen = {
 	int:          int_gen,

@@ -317,7 +317,7 @@ function report_failure(info, runs) {
  * @template T
  * @param {Generator<T>} generator - The generator to produce values.
  * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
- * @param {Object} [opts] - Execution options.
+ * @param {dict<any>} [opts] - Execution options.
  * @param {int} [opts.runs=100] - Number of successful cases to test.
  * @param {int} [opts.shrink_max=1000] - Maximum property evaluations during shrinking.
  * @param {int} [opts.seed] - Fixed random seed for reproduction.
@@ -415,7 +415,7 @@ export function forall(generator, prop_fn, opts) {
  * @param {string} name - The name of the property.
  * @param {Generator<T>} generator - The generator to produce values.
  * @param {function(T, PropertyContext): void} prop_fn - The property test logic.
- * @param {Object} [opts] - Execution options.
+ * @param {dict<any>} [opts] - Execution options.
  * @param {int} [opts.runs=100] - Number of successful cases to test.
  * @param {int} [opts.shrink_max=1000] - Maximum property evaluations during shrinking.
  * @param {int} [opts.seed] - Fixed random seed for reproduction.

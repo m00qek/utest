@@ -1,11 +1,11 @@
 /**
- * @typedef {{calls: Object<string, Array<any>>}} Spy
+ * @typedef {{ calls: dict<any[]> }} Spy
  */
 
 /**
  * Returns a spy interface to inspect calls made to a mock proxy.
- * 
- * @param {Object} obj - The mock proxy object.
+ *
+ * @param {any} obj - The mock proxy object.
  * @returns {Spy} An object containing the recorded calls.
  */
 export function spy(obj) {
