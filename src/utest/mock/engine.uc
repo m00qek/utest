@@ -445,6 +445,17 @@ mock_obj.global = {
 	}
 };
 
+/**
+ * Mock engine for the utest framework.
+ *
+ * Provides module mocking, state injection, and global patching
+ * for isolated, reproducible unit tests.
+ *
+ * @example
+ * mock.inject('fs', { data: { '/etc/config': 'hello' } }, (fs) => {
+ *     assert.match('hello', fs.readfile('/etc/config'));
+ * });
+ */
 export const mock = {
 	/**
 	 * Completely resets all mock state, clearing all registries.
