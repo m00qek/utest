@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 2,
-    "passed": 2,
+    "total": 4,
+    "passed": 4,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -54,17 +54,61 @@
         }
       ],
       "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/01_assertions_test.uc",
+      "bundle": "examples/unit/01_assertions_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Assertions"
+        },
+        {
+          "id": 4,
+          "name": "assert.throws() accepts a string pattern (regex string)"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/01_assertions_test.uc",
+      "bundle": "examples/unit/01_assertions_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Assertions"
+        },
+        {
+          "id": 5,
+          "name": "assert.throws() accepts a combinator as pattern"
+        }
+      ],
+      "index": 4
     }
   ],
   "files": [
     "examples/unit/01_assertions_test.uc"
   ],
-  "duration_ms": 5,
-  "seed": 763078580,
+  "duration_ms": 9,
+  "seed": 201625847,
   "bundles": {
     "examples/unit/01_assertions_test.uc": {
-      "total": 2,
-      "passed": 2,
+      "total": 4,
+      "passed": 4,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

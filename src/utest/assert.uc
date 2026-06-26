@@ -5,7 +5,7 @@
  */
 
 import { parse_thrown } from 'utest.util';
-import { is_combinator, equals } from 'utest.combinators';
+import { is_combinator, equals, regex as _regex, contains } from 'utest.combinators';
 
 function fail(msg) {
 	die(sprintf('%J', { __utest__: { kind: 'fail', message: msg } }));
@@ -22,7 +22,7 @@ function unwrap_error_msg(e) {
  * assert.throws(() => { die("fatal error"); }, "fatal error");
  *
  * @param {function} fn - The function expected to throw.
- * @param {string|RegExp|Combinator} [pattern] - The pattern or combinator the error message should match.
+ * @param {string|RegExp|Combinator<string>} [pattern] - Substring (string), regex, or combinator the error message must satisfy.
  * @param {string} [msg] - Custom failure message.
  */
 export function throws(fn, pattern, msg) {
@@ -31,7 +31,9 @@ export function throws(fn, pattern, msg) {
 	} catch (e) {
 		if (pattern) {
 			const emsg = unwrap_error_msg(e);
-			if (!match(emsg, pattern))
+			const combinator = is_combinator(pattern) ? pattern :
+				(type(pattern) === 'regexp' ? _regex(pattern) : contains(pattern));
+			if (!combinator.match(emsg).ok)
 				fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pattern));
 		}
 		return;

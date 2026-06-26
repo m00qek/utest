@@ -1,4 +1,4 @@
-import { describe, it, assert } from 'utest';
+import { describe, it, assert, contains } from 'utest';
 
 describe("Assertions", () => {
 	it("assert.match() passes for deeply equal values", () => {
@@ -13,6 +13,23 @@ describe("Assertions", () => {
 		assert.throws(() => assert.throws(() => {}), /Expected exception/);
 		assert.throws(
 			() => assert.throws(() => die('boom'), /xyz/),
+			/did not match/
+		);
+	});
+
+	it("assert.throws() accepts a string pattern (regex string)", () => {
+		assert.throws(() => die("fatal error"), "fatal error");
+		assert.throws(() => die("fatal error"), "fatal");
+		assert.throws(
+			() => assert.throws(() => die("boom"), "xyz"),
+			/did not match/
+		);
+	});
+
+	it("assert.throws() accepts a combinator as pattern", () => {
+		assert.throws(() => die("fatal error"), contains("fatal"));
+		assert.throws(
+			() => assert.throws(() => die("boom"), contains("xyz")),
 			/did not match/
 		);
 	});
