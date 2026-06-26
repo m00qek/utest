@@ -20,11 +20,8 @@ function normalize(obj) {
     delete n.duration_ms;
     delete n.seed;
     for (let k, v in n) {
-        if (type(v) === "object") n[k] = normalize(v);
-        else if (type(v) === "array") {
-            n[k] = [];
-            for (let item in v) push(n[k], normalize(item));
-        }
+        if (type(v) === "object" || type(v) === "array")
+            n[k] = normalize(v);
     }
     return n;
 }
