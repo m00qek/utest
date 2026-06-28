@@ -406,13 +406,32 @@ export const mock = {
 			const channels = proxy_channels || ['data'];
 			const reg = get_registry(name);
 			ensure_channels(reg, channels);
+			// Build the new global atomically: save the old state so we can roll back
+			// if build_proxy fails (e.g. a custom proxy factory throws).
+			const prev_global = reg.global;
+			let new_global = {
+				fns:    state.behavior ? { ...state.behavior } : {},
+				strict: state.strict   ? true : false,
+				calls:  {},
+				proxy:  null
+			};
+			for (let ch in reg.channels)
+				new_global[ch] = prev_global[ch] ?? {};
 			for (let ch in channels)
-				reg.global[ch] = state[ch] ? deep_clone(state[ch]) : {};
-			reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
-			reg.global.strict = state.strict   ? true : false;
-			reg.global.calls  = {};
-			const proxy = build_proxy(name, real);
-			reg.global.proxy = proxy;
+				new_global[ch] = state[ch] ? deep_clone(state[ch]) : {};
+			reg.global = new_global;
+			let err = null;
+			let proxy;
+			try {
+				proxy = build_proxy(name, real);
+			} catch(e) {
+				err = e;
+			}
+			if (err !== null) {
+				reg.global = prev_global;
+				die(err);
+			}
+			new_global.proxy = proxy;
 			return proxy;
 		},
 
