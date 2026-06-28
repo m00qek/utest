@@ -87,9 +87,6 @@ function reset_layers() {
 if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
 const builtin_overrides = global.__utest_builtin_overrides;
 
-// Private implementations shared by full channel methods and their 'data' shorthands.
-// Defined as module-level functions so the internal_obj literal can reference them
-// without a self-reference (ucode raises a TDZ error for those at compile time).
 function _channel_get(name, channel, key) {
 	const reg = get_registry(name);
 	for (let i = length(reg.layers) - 1; i >= 0; i--) {
@@ -121,25 +118,9 @@ function _channel_all_keys(name, channel) {
 }
 
 const internal_obj = {
-	get_channel: function(name, channel, key) {
-		return _channel_get(name, channel, key);
-	},
-
-	set_channel: function(name, channel, key, val) {
-		_channel_set(name, channel, key, val);
-	},
-
-	get_all_channel_keys: function(name, channel) {
-		return _channel_all_keys(name, channel);
-	},
-
-	get_data: function(name, key) {
-		return _channel_get(name, 'data', key);
-	},
-
-	set_data: function(name, key, val) {
-		_channel_set(name, 'data', key, val);
-	},
+	get_channel:          _channel_get,
+	set_channel:          _channel_set,
+	get_all_channel_keys: _channel_all_keys,
 
 	get_fn: function(name, fn_name) {
 		const reg = get_registry(name);
@@ -157,10 +138,6 @@ const internal_obj = {
 		for (let ch in reg.channels)
 			if (length(keys(reg.global[ch])) > 0) return true;
 		return false;
-	},
-
-	get_all_data_keys: function(name) {
-		return _channel_all_keys(name, 'data');
 	},
 
 	record_call: function(name, fn_name, args) {
