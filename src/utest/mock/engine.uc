@@ -1,3 +1,9 @@
+/**
+ * Mock engine: state registry, layer stack, proxy construction, and snapshot/restore.
+ *
+ * @module utest.mock.engine
+ */
+
 if (!global.__utest_registries) global.__utest_registries = {};
 const registries = global.__utest_registries;
 
@@ -225,11 +231,6 @@ function build_proxy(name, real) {
 }
 
 /**
- * Mock engine for the utest framework.
- *
- * Provides module mocking, state injection, and global patching
- * for isolated, reproducible unit tests.
- *
  * @example
  * mock.inject('fs', { data: { '/etc/config': 'hello' } }, (fs) => {
  *     assert.match('hello', fs.readfile('/etc/config'));
