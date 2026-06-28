@@ -1,7 +1,7 @@
 {
     "stats": {
-        "total": 6,
-        "passed": 6,
+        "total": 7,
+        "passed": 7,
         "failed": 0,
         "errors": 0,
         "fatals": 0,
@@ -27,11 +27,11 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 7,
-                    "name": "mock.reset() discards all active inject() layers"
+                    "id": 4,
+                    "name": "inject() layer is visible on top of a global patch"
                 }
             ],
-            "index": 6
+            "index": 3
         },
         {
             "event": "TEST_RESULT",
@@ -49,11 +49,11 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 4,
-                    "name": "inject() layer is visible on top of a global patch"
+                    "id": 7,
+                    "name": "mock.reset() discards all active inject() layers"
                 }
             ],
-            "index": 3
+            "index": 6
         },
         {
             "event": "TEST_RESULT",
@@ -93,11 +93,15 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 3,
-                    "name": "mock.global.patch() intercepts the imported module via the shim"
+                    "id": 8,
+                    "name": "pre_body_snap is always restored before afterEach runs"
+                },
+                {
+                    "id": 9,
+                    "name": "patch without unpatch does not leak into afterEach"
                 }
             ],
-            "index": 2
+            "index": 7
         },
         {
             "event": "TEST_RESULT",
@@ -137,6 +141,28 @@
                     "name": "Mock State"
                 },
                 {
+                    "id": 3,
+                    "name": "mock.global.patch() intercepts the imported module via the shim"
+                }
+            ],
+            "index": 2
+        },
+        {
+            "event": "TEST_RESULT",
+            "suite": "examples/unit/09_mock_state_test.uc",
+            "bundle": "examples/unit/09_mock_state_test.uc",
+            "status": "PASS",
+            "error": null,
+            "path": [
+                {
+                    "id": 0,
+                    "name": "root"
+                },
+                {
+                    "id": 1,
+                    "name": "Mock State"
+                },
+                {
                     "id": 5,
                     "name": "mock.snapshot() and mock.restore() save and recover global state"
                 }
@@ -148,11 +174,11 @@
         "examples/unit/09_mock_state_test.uc"
     ],
     "duration_ms": 9,
-    "seed": 106563308,
+    "seed": 225364814,
     "bundles": {
         "examples/unit/09_mock_state_test.uc": {
-            "total": 6,
-            "passed": 6,
+            "total": 7,
+            "passed": 7,
             "failed": 0,
             "errors": 0,
             "fatals": 0,

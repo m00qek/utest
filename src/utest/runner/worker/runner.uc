@@ -81,7 +81,7 @@ export function run_tests(reporter, filter, seed) {
 				try { test.fn(); } catch (e) { error = e; }
 			}
 
-			if (error !== null && pre_body_snap !== null) mock.restore(pre_body_snap);
+			if (pre_body_snap !== null) mock.restore(pre_body_snap);
 
 			for (let hook in test.afterEach) {
 				try { hook(); } catch (e) {

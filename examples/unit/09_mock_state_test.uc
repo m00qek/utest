@@ -1,4 +1,4 @@
-import { describe, it, assert, mock, spy } from 'utest';
+import { describe, it, afterEach, assert, mock, spy } from 'utest';
 import * as fs from 'fs';
 
 // Covers the mock state API: inject(), global.patch/unpatch, snapshot/restore, reset().
@@ -56,6 +56,20 @@ describe('Mock State', () => {
 			assert.match('layer', m_fs.readfile('/tmp/r.txt'));
 			mock.reset();
 			assert.match(null, m_fs.readfile('/tmp/r.txt'), 'layer cleared by reset');
+		});
+	});
+
+	describe('pre_body_snap is always restored before afterEach runs', () => {
+		afterEach(() => {
+			// If pre_body_snap was not restored, the patch from the test body would
+			// still be active here and readfile would return 'leaked' instead of null.
+			assert.match(null, fs.readfile('/tmp/leaked.txt'),
+				'test body patch must not be visible in afterEach');
+		});
+
+		it('patch without unpatch does not leak into afterEach', () => {
+			// Intentionally patch without unpatching — pre_body_snap should restore.
+			mock.global.patch('fs', { data: { '/tmp/leaked.txt': 'leaked' } });
 		});
 	});
 });
