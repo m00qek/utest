@@ -112,7 +112,7 @@ export function float(lo, hi, opts) {
 	return gen_from(function(source) {
 		const d = source.draw(precision + 1);
 		if (total <= 0) return zp;
-		if (d <= pos_quota) {
+		if (pos_quota > 0 && d <= pos_quota) {
 			return zp + (d / (pos_quota * 1.0)) * pos_room;
 		}
 		return zp - ((d - pos_quota) / (neg_quota * 1.0)) * neg_room;

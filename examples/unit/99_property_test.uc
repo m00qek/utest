@@ -101,6 +101,16 @@ describe("Generator smoke tests", () => {
 		(f) => assert.match(true, f >= -1.0 && f <= 1.0),
 		{ seed: 1, persist: false });
 
+	prop("gen.float with hi=0 never produces NaN",
+		gen.float(-1.0, 0.0),
+		(f) => assert.match(true, f === f && f >= -1.0 && f <= 0.0),
+		{ seed: 1, persist: false });
+
+	prop("gen.float with lo=0 never produces NaN",
+		gen.float(0.0, 1.0),
+		(f) => assert.match(true, f === f && f >= 0.0 && f <= 1.0),
+		{ seed: 1, persist: false });
+
 	prop("gen.string has bounded length",
 		gen.string({ max_len: 10 }),
 		(s) => assert.match(true, length(s) <= 10),
