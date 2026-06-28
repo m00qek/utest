@@ -80,7 +80,7 @@ return {
 			if (v !== null) return v;
 			if (ctx.is_strict())
 				die("strict mock: 'fs.readfile' called with unmocked path: " + path);
-			return real.readfile(path);
+			return real ? real.readfile(path) : null;
 		};
 
 		proxy.writefile = function(path, data) {
@@ -91,7 +91,7 @@ return {
 				ctx.set_data(path, data);
 				return length(data);
 			}
-			return real.writefile(path, data);
+			return real ? real.writefile(path, data) : null;
 		};
 
 		proxy.access = function(path, mode) {
@@ -181,7 +181,7 @@ return {
 			ctx.record_call('lsdir', [path]);
 			let f = ctx.get_behavior('lsdir');
 			if (f) return f(path);
-			let real_entries = ctx.is_strict() ? null : real.lsdir(path);
+			let real_entries = ctx.is_strict() ? null : (real ? real.lsdir(path) : null);
 			let virtual_paths = ctx.get_all_data_keys();
 			let entries = {};
 			if (type(real_entries) === "array") {
@@ -207,7 +207,7 @@ return {
 			ctx.record_call('glob', [pattern]);
 			let f = ctx.get_behavior('glob');
 			if (f) return f(pattern);
-			let real_files = ctx.is_strict() ? null : real.glob(pattern);
+			let real_files = ctx.is_strict() ? null : (real ? real.glob(pattern) : null);
 			let virtual_paths = ctx.get_all_data_keys();
 			let files = {};
 			if (type(real_files) === "array") {
