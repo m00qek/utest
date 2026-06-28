@@ -77,10 +77,14 @@ function reset_layers() {
 	}
 }
 
-if (!global.__utest_internal_instance) global.__utest_internal_instance = {};
-const internal_obj = global.__utest_internal_instance;
+// Saved originals for mock.global.patch_builtin(); keyed by built-in name.
+if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
+const builtin_overrides = global.__utest_builtin_overrides;
 
-internal_obj.get_channel = function(name, channel, key) {
+// Private implementations shared by full channel methods and their 'data' shorthands.
+// Defined as module-level functions so the internal_obj literal can reference them
+// without a self-reference (ucode raises a TDZ error for those at compile time).
+function _channel_get(name, channel, key) {
 	const reg = get_registry(name);
 	for (let i = length(reg.layers) - 1; i >= 0; i--) {
 		if (reg.layers[i][channel] && exists(reg.layers[i][channel], key))
@@ -89,17 +93,17 @@ internal_obj.get_channel = function(name, channel, key) {
 	if (reg.global[channel] && exists(reg.global[channel], key))
 		return reg.global[channel][key];
 	return null;
-};
+}
 
-internal_obj.set_channel = function(name, channel, key, val) {
+function _channel_set(name, channel, key, val) {
 	const reg = get_registry(name);
 	const layers = reg.layers;
 	const target = length(layers) > 0 ? layers[length(layers) - 1] : reg.global;
 	if (!target[channel]) target[channel] = {};
 	target[channel][key] = val;
-};
+}
 
-internal_obj.get_all_channel_keys = function(name, channel) {
+function _channel_all_keys(name, channel) {
 	const reg = get_registry(name);
 	let keys_map = {};
 	for (let i = length(reg.layers) - 1; i >= 0; i--)
@@ -108,62 +112,88 @@ internal_obj.get_all_channel_keys = function(name, channel) {
 	if (reg.global[channel])
 		for (let k, v in reg.global[channel]) keys_map[k] = true;
 	return keys(keys_map);
-};
+}
 
-internal_obj.get_data = function(name, key) {
-	return internal_obj.get_channel(name, 'data', key);
-};
+const internal_obj = {
+	get_channel: function(name, channel, key) {
+		return _channel_get(name, channel, key);
+	},
 
-internal_obj.set_data = function(name, key, val) {
-	internal_obj.set_channel(name, 'data', key, val);
-};
+	set_channel: function(name, channel, key, val) {
+		_channel_set(name, channel, key, val);
+	},
 
-internal_obj.get_fn = function(name, fn_name) {
-	const reg = get_registry(name);
-	for (let i = length(reg.layers) - 1; i >= 0; i--) {
-		if (exists(reg.layers[i].fns, fn_name)) return reg.layers[i].fns[fn_name];
+	get_all_channel_keys: function(name, channel) {
+		return _channel_all_keys(name, channel);
+	},
+
+	get_data: function(name, key) {
+		return _channel_get(name, 'data', key);
+	},
+
+	set_data: function(name, key, val) {
+		_channel_set(name, 'data', key, val);
+	},
+
+	get_fn: function(name, fn_name) {
+		const reg = get_registry(name);
+		for (let i = length(reg.layers) - 1; i >= 0; i--) {
+			if (exists(reg.layers[i].fns, fn_name)) return reg.layers[i].fns[fn_name];
+		}
+		if (exists(reg.global.fns, fn_name)) return reg.global.fns[fn_name];
+		return null;
+	},
+
+	is_active: function(name) {
+		const reg = get_registry(name);
+		if (length(reg.layers) > 0 || reg.global.proxy !== null || length(keys(reg.global.fns)) > 0)
+			return true;
+		for (let ch in reg.channels)
+			if (length(keys(reg.global[ch])) > 0) return true;
+		return false;
+	},
+
+	get_all_data_keys: function(name) {
+		return _channel_all_keys(name, 'data');
+	},
+
+	record_call: function(name, fn_name, args) {
+		const reg = get_registry(name);
+		const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
+		if (!target.calls[fn_name]) target.calls[fn_name] = [];
+		push(target.calls[fn_name], args);
+	},
+
+	get_calls: function(name) {
+		const reg = get_registry(name);
+		const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
+		return target.calls;
+	},
+
+	get_proxy_global: function(name) {
+		return get_registry(name).global.proxy || null;
+	},
+
+	is_strict: function(name) {
+		const reg = get_registry(name);
+		if (reg.global.strict) return true;
+		for (let i = 0; i < length(reg.layers); i++)
+			if (reg.layers[i].strict) return true;
+		return false;
 	}
-	if (exists(reg.global.fns, fn_name)) return reg.global.fns[fn_name];
+};
+
+if (!global.__utest_internal_instance) global.__utest_internal_instance = internal_obj;
+
+// When a shim is in -L, require(name) finds the shim's ES-module .uc and fails
+// (program mode forbids import/export). Try real_<name> first (the symlink to
+// the actual module created by manager.uc), then fall back to require(name).
+function get_real(name) {
+	try { return require('real_' + name); } catch(e) {}
+	try { return require(name); }           catch(e) {}
+	warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
 	return null;
-};
-
-internal_obj.is_active = function(name) {
-	const reg = get_registry(name);
-	if (length(reg.layers) > 0 || reg.global.proxy !== null || length(keys(reg.global.fns)) > 0)
-		return true;
-	for (let ch in reg.channels)
-		if (length(keys(reg.global[ch])) > 0) return true;
-	return false;
-};
-
-internal_obj.get_all_data_keys = function(name) {
-	return internal_obj.get_all_channel_keys(name, 'data');
-};
-
-internal_obj.record_call = function(name, fn_name, args) {
-	const reg = get_registry(name);
-	const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
-	if (!target.calls[fn_name]) target.calls[fn_name] = [];
-	push(target.calls[fn_name], args);
-};
-
-internal_obj.get_calls = function(name) {
-	const reg = get_registry(name);
-	const target = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
-	return target.calls;
-};
-
-internal_obj.get_proxy_global = function(name) {
-	return get_registry(name).global.proxy || null;
-};
-
-internal_obj.is_strict = function(name) {
-	const reg = get_registry(name);
-	if (reg.global.strict) return true;
-	for (let i = 0; i < length(reg.layers); i++)
-		if (reg.layers[i].strict) return true;
-	return false;
-};
+}
 
 function build_proxy(name, real) {
 	const proxy_base = require('utest.mock.proxy_base');
@@ -194,257 +224,6 @@ function build_proxy(name, real) {
 	return ctx.base();
 }
 
-if (!global.__utest_mock_instance) global.__utest_mock_instance = {};
-const mock_obj = global.__utest_mock_instance;
-
-/**
- * Completely resets all mock state, clearing all registries.
- */
-mock_obj.reset = function() {
-	reset_layers();
-};
-
-/**
- * Takes a snapshot of the current mock registries.
- * 
- * @returns {dict<any>} An opaque snapshot object.
- */
-mock_obj.snapshot = function() {
-	let snap = {};
-	for (let name, reg in registries) {
-		let s = {
-			fns:    { ...reg.global.fns },
-			strict: reg.global.strict,
-			proxy:  reg.global.proxy
-			// calls intentionally omitted — restore() always resets them to {}
-		};
-		for (let ch in reg.channels)
-			s[ch] = deep_clone(reg.global[ch] ?? {});
-		snap[name] = s;
-	}
-	return snap;
-};
-
-/**
- * Restores mock state from a previously taken snapshot.
- * 
- * @param {dict<any>} snap - The snapshot object returned by `mock.snapshot()`.
- */
-mock_obj.restore = function(snap) {
-	reset_layers();
-	for (let name, saved in snap) {
-		const reg = get_registry(name);
-		// Deep-clone channel data so successive restores from the same snapshot
-		// each get an independent copy; set_channel() mutations cannot corrupt snap.
-		let new_global = {
-			fns:    { ...saved.fns },
-			strict: saved.strict,
-			proxy:  saved.proxy,
-			calls:  {}
-		};
-		for (let ch in reg.channels)
-			new_global[ch] = deep_clone(saved[ch] ?? {});
-		reg.global = new_global;
-	}
-	for (let name in keys(registries)) {
-		if (!exists(snap, name)) {
-			const reg = registries[name];
-			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
-			for (let ch in reg.channels) new_global[ch] = {};
-			reg.global = new_global;
-		}
-	}
-};
-
-// When a shim is in -L, require(name) finds the shim's ES-module .uc and fails
-// (program mode forbids import/export). Try real_<name> first (the symlink to
-// the actual module created by manager.uc), then fall back to require(name).
-function get_real(name) {
-	try { return require('real_' + name); } catch(e) {}
-	try { return require(name); }           catch(e) {}
-	warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
-	return null;
-}
-
-// Saved originals for mock.global.patch_builtin(); keyed by built-in name.
-if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
-const builtin_overrides = global.__utest_builtin_overrides;
-
-/**
- * Injects a temporary mock for a built-in global variable during a callback.
- * 
- * @param {string} name - The name of the built-in (e.g. 'fs', 'print').
- * @param {any} fn - The mock value to inject.
- * @param {function(): any} cb - The callback to execute while injected.
- * @returns {any} The return value of the callback.
- */
-mock_obj.inject_builtin = function(name, fn, cb) {
-	const orig = global[name];
-	global[name] = fn;
-	let err = null;
-	let result;
-	try {
-		result = cb();
-	} catch (e) {
-		err = e;
-	}
-	global[name] = orig;
-	if (err !== null) die(err);
-	return result;
-};
-
-/**
- * Injects a temporary mock state for a module during a callback.
- * 
- * @example
- * mock.inject('fs', { data: { '/test.txt': 'hello' } }, (fs) => {
- *     assert.match('hello', fs.readfile('/test.txt'));
- * });
- * 
- * @param {string} name - The name of the module.
- * @param {dict<any>} state - The mock state configuration.
- * @param {dict<any>} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
- * @param {dict<function>} [state.behavior] - Function overrides to execute custom logic.
- * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
- * @param {dict<string>} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
- * @param {function(any): any} cb - The callback to execute while injected, receiving the proxy.
- * @returns {any} The return value of the callback.
- */
-mock_obj.inject = function(name, state, cb) {
-	const proxy_channels = get_proxy_channels(name);
-	const real = get_real(name);
-	guard_mock_target('mock.inject', name, proxy_channels, real);
-	const channels = proxy_channels || ['data'];
-	const reg = get_registry(name);
-	ensure_channels(reg, channels);
-	push(reg.layers, to_layer(state, channels));
-	let err = null;
-	let result;
-	try {
-		let proxy = build_proxy(name, real);
-		result = cb(proxy);
-	} catch (e) {
-		err = e;
-	}
-	pop(reg.layers);
-	if (err !== null) die(err);
-	return result;
-};
-
-mock_obj.inject_all = function(states, cb) {
-	const names = keys(states);
-
-	// Validate all targets before touching any registry state.
-	const reals = {};
-	const channels_map = {};
-	for (let name in names) {
-		const proxy_channels = get_proxy_channels(name);
-		const real = get_real(name);
-		guard_mock_target('mock.inject_all', name, proxy_channels, real);
-		if (type(states[name]) !== 'object' || states[name] === null)
-			die(sprintf("mock.inject_all: state for '%s' must be a non-null object", name));
-		reals[name] = real;
-		channels_map[name] = proxy_channels || ['data'];
-	}
-
-	// Push one layer per proxy, tracking count so cleanup covers only what was pushed.
-	let pushed = 0;
-	let err = null;
-	let result;
-	try {
-		for (let name in names) {
-			const reg = get_registry(name);
-			ensure_channels(reg, channels_map[name]);
-			push(reg.layers, to_layer(states[name], channels_map[name]));
-			pushed++;
-		}
-		const deps = {};
-		for (let name in names)
-			deps[name] = build_proxy(name, reals[name]);
-		result = cb(deps);
-	} catch (e) {
-		err = e;
-	}
-
-	// Pop in reverse order, limited to what was successfully pushed.
-	for (let i = pushed - 1; i >= 0; i--)
-		pop(get_registry(names[i]).layers);
-
-	if (err !== null) die(err);
-	return result;
-};
-
-/**
- * Global patching utilities.
- */
-mock_obj.global = {
-	/**
-	 * Permanently patches a module with mock state.
-	 * 
-	 * @example
-	 * const fs = mock.global.patch('fs', { data: { '/test.txt': 'hello' } });
-	 * 
-	 * @param {string} name - The name of the module.
-	 * @param {dict<any>} state - The mock state configuration.
-	 * @param {dict<any>} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
-	 * @param {dict<function>} [state.behavior] - Function overrides to execute custom logic.
-	 * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
-	 * @param {dict<string>} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
-	 * @returns {any} The configured proxy.
-	 */
-	patch: function(name, state) {
-		const proxy_channels = get_proxy_channels(name);
-		const real = get_real(name);
-		guard_mock_target('mock.global.patch', name, proxy_channels, real);
-		const channels = proxy_channels || ['data'];
-		const reg = get_registry(name);
-		ensure_channels(reg, channels);
-		for (let ch in channels)
-			reg.global[ch] = state[ch] ? deep_clone(state[ch]) : {};
-		reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
-		reg.global.strict = state.strict   ? true : false;
-		reg.global.calls  = {};
-		const proxy = build_proxy(name, real);
-		reg.global.proxy = proxy;
-		return proxy;
-	},
-
-	/**
-	 * Removes a global patch for a module.
-	 * 
-	 * @param {string} name - The name of the module to unpatch.
-	 */
-	unpatch: function(name) {
-		const reg = get_registry(name);
-		let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
-		for (let ch in reg.channels) new_global[ch] = {};
-		reg.global = new_global;
-	},
-
-	/**
-	 * Permanently patches a built-in global variable.
-	 * 
-	 * @param {string} name - The name of the built-in.
-	 * @param {any} fn - The mock value.
-	 */
-	patch_builtin: function(name, fn) {
-		builtin_overrides[name] = global[name];
-		global[name] = fn;
-	},
-
-	/**
-	 * Removes a global patch for a built-in global variable.
-	 * 
-	 * @param {string} name - The name of the built-in to unpatch.
-	 */
-	unpatch_builtin: function(name) {
-		if (exists(builtin_overrides, name)) {
-			global[name] = builtin_overrides[name];
-			delete builtin_overrides[name];
-		}
-	}
-};
-
 /**
  * Mock engine for the utest framework.
  *
@@ -456,5 +235,242 @@ mock_obj.global = {
  *     assert.match('hello', fs.readfile('/etc/config'));
  * });
  */
-export const mock = mock_obj;
+export const mock = {
+	/**
+	 * Completely resets all mock state, clearing all registries.
+	 */
+	reset: function() {
+		reset_layers();
+	},
+
+	/**
+	 * Takes a snapshot of the current mock registries.
+	 *
+	 * @returns {dict<any>} An opaque snapshot object.
+	 */
+	snapshot: function() {
+		let snap = {};
+		for (let name, reg in registries) {
+			let s = {
+				fns:    { ...reg.global.fns },
+				strict: reg.global.strict,
+				proxy:  reg.global.proxy
+				// calls intentionally omitted — restore() always resets them to {}
+			};
+			for (let ch in reg.channels)
+				s[ch] = deep_clone(reg.global[ch] ?? {});
+			snap[name] = s;
+		}
+		return snap;
+	},
+
+	/**
+	 * Restores mock state from a previously taken snapshot.
+	 *
+	 * @param {dict<any>} snap - The snapshot object returned by `mock.snapshot()`.
+	 */
+	restore: function(snap) {
+		reset_layers();
+		for (let name, saved in snap) {
+			const reg = get_registry(name);
+			// Deep-clone channel data so successive restores from the same snapshot
+			// each get an independent copy; set_channel() mutations cannot corrupt snap.
+			let new_global = {
+				fns:    { ...saved.fns },
+				strict: saved.strict,
+				proxy:  saved.proxy,
+				calls:  {}
+			};
+			for (let ch in reg.channels)
+				new_global[ch] = deep_clone(saved[ch] ?? {});
+			reg.global = new_global;
+		}
+		for (let name in keys(registries)) {
+			if (!exists(snap, name)) {
+				const reg = registries[name];
+				let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
+				for (let ch in reg.channels) new_global[ch] = {};
+				reg.global = new_global;
+			}
+		}
+	},
+
+	/**
+	 * Injects a temporary mock for a built-in global variable during a callback.
+	 *
+	 * @param {string} name - The name of the built-in (e.g. 'fs', 'print').
+	 * @param {any} fn - The mock value to inject.
+	 * @param {function(): any} cb - The callback to execute while injected.
+	 * @returns {any} The return value of the callback.
+	 */
+	inject_builtin: function(name, fn, cb) {
+		const orig = global[name];
+		global[name] = fn;
+		let err = null;
+		let result;
+		try {
+			result = cb();
+		} catch (e) {
+			err = e;
+		}
+		global[name] = orig;
+		if (err !== null) die(err);
+		return result;
+	},
+
+	/**
+	 * Injects a temporary mock state for a module during a callback.
+	 *
+	 * @example
+	 * mock.inject('fs', { data: { '/test.txt': 'hello' } }, (fs) => {
+	 *     assert.match('hello', fs.readfile('/test.txt'));
+	 * });
+	 *
+	 * @param {string} name - The name of the module.
+	 * @param {dict<any>} state - The mock state configuration.
+	 * @param {dict<any>} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
+	 * @param {dict<function>} [state.behavior] - Function overrides to execute custom logic.
+	 * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
+	 * @param {dict<string>} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
+	 * @param {function(any): any} cb - The callback to execute while injected, receiving the proxy.
+	 * @returns {any} The return value of the callback.
+	 */
+	inject: function(name, state, cb) {
+		const proxy_channels = get_proxy_channels(name);
+		const real = get_real(name);
+		guard_mock_target('mock.inject', name, proxy_channels, real);
+		const channels = proxy_channels || ['data'];
+		const reg = get_registry(name);
+		ensure_channels(reg, channels);
+		push(reg.layers, to_layer(state, channels));
+		let err = null;
+		let result;
+		try {
+			let proxy = build_proxy(name, real);
+			result = cb(proxy);
+		} catch (e) {
+			err = e;
+		}
+		pop(reg.layers);
+		if (err !== null) die(err);
+		return result;
+	},
+
+	inject_all: function(states, cb) {
+		const names = keys(states);
+
+		// Validate all targets before touching any registry state.
+		const reals = {};
+		const channels_map = {};
+		for (let name in names) {
+			const proxy_channels = get_proxy_channels(name);
+			const real = get_real(name);
+			guard_mock_target('mock.inject_all', name, proxy_channels, real);
+			if (type(states[name]) !== 'object' || states[name] === null)
+				die(sprintf("mock.inject_all: state for '%s' must be a non-null object", name));
+			reals[name] = real;
+			channels_map[name] = proxy_channels || ['data'];
+		}
+
+		// Push one layer per proxy, tracking count so cleanup covers only what was pushed.
+		let pushed = 0;
+		let err = null;
+		let result;
+		try {
+			for (let name in names) {
+				const reg = get_registry(name);
+				ensure_channels(reg, channels_map[name]);
+				push(reg.layers, to_layer(states[name], channels_map[name]));
+				pushed++;
+			}
+			const deps = {};
+			for (let name in names)
+				deps[name] = build_proxy(name, reals[name]);
+			result = cb(deps);
+		} catch (e) {
+			err = e;
+		}
+
+		// Pop in reverse order, limited to what was successfully pushed.
+		for (let i = pushed - 1; i >= 0; i--)
+			pop(get_registry(names[i]).layers);
+
+		if (err !== null) die(err);
+		return result;
+	},
+
+	/**
+	 * Global patching utilities.
+	 */
+	global: {
+		/**
+		 * Permanently patches a module with mock state.
+		 *
+		 * @example
+		 * const fs = mock.global.patch('fs', { data: { '/test.txt': 'hello' } });
+		 *
+		 * @param {string} name - The name of the module.
+		 * @param {dict<any>} state - The mock state configuration.
+		 * @param {dict<any>} [state.data] - Declarative state channels (e.g. file contents or UCI trees).
+		 * @param {dict<function>} [state.behavior] - Function overrides to execute custom logic.
+		 * @param {boolean} [state.strict] - If true, unmocked accesses throw an error.
+		 * @param {dict<string>} [state.commands] - Pre-seeded shell command outputs (used by 'fs.popen').
+		 * @returns {any} The configured proxy.
+		 */
+		patch: function(name, state) {
+			const proxy_channels = get_proxy_channels(name);
+			const real = get_real(name);
+			guard_mock_target('mock.global.patch', name, proxy_channels, real);
+			const channels = proxy_channels || ['data'];
+			const reg = get_registry(name);
+			ensure_channels(reg, channels);
+			for (let ch in channels)
+				reg.global[ch] = state[ch] ? deep_clone(state[ch]) : {};
+			reg.global.fns    = state.behavior ? { ...state.behavior }  : {};
+			reg.global.strict = state.strict   ? true : false;
+			reg.global.calls  = {};
+			const proxy = build_proxy(name, real);
+			reg.global.proxy = proxy;
+			return proxy;
+		},
+
+		/**
+		 * Removes a global patch for a module.
+		 *
+		 * @param {string} name - The name of the module to unpatch.
+		 */
+		unpatch: function(name) {
+			const reg = get_registry(name);
+			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
+			for (let ch in reg.channels) new_global[ch] = {};
+			reg.global = new_global;
+		},
+
+		/**
+		 * Permanently patches a built-in global variable.
+		 *
+		 * @param {string} name - The name of the built-in.
+		 * @param {any} fn - The mock value.
+		 */
+		patch_builtin: function(name, fn) {
+			builtin_overrides[name] = global[name];
+			global[name] = fn;
+		},
+
+		/**
+		 * Removes a global patch for a built-in global variable.
+		 *
+		 * @param {string} name - The name of the built-in to unpatch.
+		 */
+		unpatch_builtin: function(name) {
+			if (exists(builtin_overrides, name)) {
+				global[name] = builtin_overrides[name];
+				delete builtin_overrides[name];
+			}
+		}
+	}
+};
+
+if (!global.__utest_mock_instance) global.__utest_mock_instance = mock;
+
 export const __internal__ = internal_obj;
