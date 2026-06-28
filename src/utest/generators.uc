@@ -32,7 +32,12 @@ export function is_generator(v) {
 /**
  * Generates an integer uniformly distributed in the inclusive range [lo, hi].
  * Shrinks toward 0.
- * 
+ *
+ * @example
+ * forall(gen.int(1, 100), n => {
+ *     assert.match(between(1, 100), n);
+ * });
+ *
  * @param {int} lo - The minimum bound.
  * @param {int} hi - The maximum bound.
  * @returns {Generator<int>} The configured generator.
@@ -51,7 +56,12 @@ function int_gen(lo, hi) {
 
 /**
  * Generates a boolean value (true or false).
- * 
+ *
+ * @example
+ * forall(gen.bool(), b => {
+ *     assert.match(is_type('boolean'), b);
+ * });
+ *
  * @returns {Generator<boolean>} The configured generator.
  */
 function bool_gen() {
@@ -63,7 +73,12 @@ function bool_gen() {
 /**
  * Generates a floating-point number in the inclusive range [lo, hi].
  * Shrinks toward 0.
- * 
+ *
+ * @example
+ * forall(gen.float(0.0, 1.0), x => {
+ *     assert.match(between(0.0, 1.0), x);
+ * });
+ *
  * @param {float} lo - The minimum bound.
  * @param {float} hi - The maximum bound.
  * @param {dict<any>} [opts] - Configuration options.
@@ -98,7 +113,13 @@ function float_gen(lo, hi, opts) {
 
 /**
  * Generates a constant value unconditionally.
- * 
+ * Useful as a fixed alternative inside gen.oneof or gen.frequency.
+ *
+ * @example
+ * forall(gen.oneof(gen.int(0, 99), gen.constant(null)), v => {
+ *     assert.match(pred(x => x === null || type(x) === 'int'), v);
+ * });
+ *
  * @template T
  * @param {T} v - The value to constantly generate.
  * @returns {Generator<T>} The configured generator.
@@ -136,7 +157,16 @@ function size_from_opts(opts, name) {
 
 /**
  * Generates an array of elements drawn from a given generator.
- * 
+ *
+ * @example
+ * forall(gen.array(gen.int(0, 9), { max_len: 5 }), arr => {
+ *     assert.match(pred(a => length(a) <= 5), arr);
+ * });
+ * // Exact length:
+ * forall(gen.array(gen.bool(), { len: 3 }), arr => {
+ *     assert.match(has_length(3), arr);
+ * });
+ *
  * @template T
  * @param {Generator<T>} elem - The generator for individual elements.
  * @param {dict<any>} opts - Sizing options.
@@ -157,7 +187,13 @@ function array_gen(elem, opts) {
 
 /**
  * Generates a tuple (array) with elements drawn from specific generators per position.
- * 
+ *
+ * @example
+ * forall(gen.tuple(gen.int(0, 10), gen.bool()), pair => {
+ *     assert.match(is_type('int'),     pair[0]);
+ *     assert.match(is_type('boolean'), pair[1]);
+ * });
+ *
  * @param {...Generator} gens - The generators for each position.
  * @returns {Generator<any[]>} The configured generator.
  */
@@ -171,7 +207,12 @@ function tuple_gen(...gens) {
 
 /**
  * Generates an object matching a specific schema of keys and generators.
- * 
+ *
+ * @example
+ * forall(gen.record({ id: gen.int(1, 100), active: gen.bool() }), obj => {
+ *     assert.match(contains({ id: between(1, 100) }), obj);
+ * });
+ *
  * @param {dict<Generator<any>>} spec - A map of keys to generators.
  * @returns {Generator<dict<any>>} The configured generator.
  */
@@ -198,7 +239,16 @@ function _ascii_chars() {
 
 /**
  * Generates a string.
- * 
+ *
+ * @example
+ * forall(gen.string({ max_len: 20 }), s => {
+ *     assert.match(is_type('string'), s);
+ * });
+ * // Custom charset (e.g. binary strings):
+ * forall(gen.string({ len: 8, charset: "01" }), s => {
+ *     assert.match(regex(/^[01]{8}$/), s);
+ * });
+ *
  * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length.
@@ -230,7 +280,12 @@ function with_locked_charset(opts, charset, name) {
 
 /**
  * Generates a string consisting of alphanumeric characters.
- * 
+ *
+ * @example
+ * forall(gen.alphanumeric({ max_len: 10 }), s => {
+ *     assert.match(regex(/^[a-zA-Z0-9]*$/), s);
+ * });
+ *
  * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
  * @param {int} [opts.min_len] - The minimum length.
@@ -239,7 +294,12 @@ function with_locked_charset(opts, charset, name) {
  */
 function alphanumeric_gen(opts) { return string_gen(with_locked_charset(opts, ALPHANUMERIC_CHARS, "gen.alphanumeric")); }
 /**
- * Generates a string consisting of visible ASCII characters.
+ * Generates a string consisting of visible ASCII characters (codepoints 32–126).
+ *
+ * @example
+ * forall(gen.ascii({ min_len: 1, max_len: 50 }), s => {
+ *     assert.match(not(equals("")), s);
+ * });
  *
  * @param {dict<any>} opts - Sizing options.
  * @param {int} [opts.len] - The exact length.
@@ -251,7 +311,13 @@ function ascii_gen(opts)        { return string_gen(with_locked_charset(opts, _a
 
 /**
  * Randomly picks one generator from the provided choices and generates a value from it.
- * 
+ * Each alternative is equally likely. For weighted selection use gen.frequency.
+ *
+ * @example
+ * forall(gen.oneof(gen.int(0, 99), gen.string({ len: 4 })), v => {
+ *     assert.match(pred(x => type(x) === 'int' || type(x) === 'string'), v);
+ * });
+ *
  * @template T
  * @param {...Generator<T>} gens - The generators to choose from.
  * @returns {Generator<T>} The configured generator.
@@ -263,7 +329,12 @@ function oneof_gen(...gens) {
 
 /**
  * Generates a value by randomly picking one of the provided constant elements.
- * 
+ *
+ * @example
+ * forall(gen.elements("GET", "POST", "PUT", "DELETE"), method => {
+ *     assert.match(regex(/^(GET|POST|PUT|DELETE)$/), method);
+ * });
+ *
  * @template T
  * @param {...T} arr - The constant elements to choose from.
  * @returns {Generator<T>} The configured generator.
@@ -277,7 +348,14 @@ function elements_gen(...arr) {
 // so shrinking naturally converges toward simpler values.
 /**
  * Selects a generator based on relative weights.
- * 
+ * List simpler alternatives first so shrinking converges toward them.
+ *
+ * @example
+ * // 80% small int, 20% large int
+ * forall(gen.frequency([4, gen.int(0, 10)], [1, gen.int(100, 1000)]), n => {
+ *     assert.match(between(0, 1000), n);
+ * });
+ *
  * @template T
  * @param {...any} pairs - Weight/generator pairs; each is `[weight, generator]` where weight is a positive int. List simplest alternatives first.
  * @returns {Generator<T>} The configured generator.
@@ -298,7 +376,14 @@ function frequency_gen(...pairs) {
 
 /**
  * Generates either null or a value from the provided generator.
- * 
+ *
+ * @example
+ * forall(gen.optional(gen.int(1, 10)), v => {
+ *     assert.match(pred(x => x === null || type(x) === 'int'), v);
+ * });
+ * // Bias toward non-null (3:1):
+ * gen.optional(gen.string({ max_len: 8 }), { none_weight: 1, some_weight: 3 });
+ *
  * @template T
  * @param {Generator<T>} generator - The generator to use.
  * @param {dict<any>} [opts] - Weighting options.
@@ -319,7 +404,14 @@ function optional_gen(generator, opts) {
 
 /**
  * Maps the output of a generator through a transformation function.
- * 
+ * Prefer gen.map over gen.filter when a direct construction is possible.
+ *
+ * @example
+ * // Generate only even numbers
+ * forall(gen.map(gen.int(0, 50), n => n * 2), n => {
+ *     assert.match(pred(x => x % 2 === 0), n);
+ * });
+ *
  * @template T, U
  * @param {Generator<T>} generator - The original generator.
  * @param {function(T): U} fn - The mapping function.
@@ -330,8 +422,15 @@ function map_gen(generator, fn) {
 }
 
 /**
- * Chains generators by passing the output of the first generator to a function that returns a second generator.
- * 
+ * Chains generators: the output of the first generator determines which generator runs next.
+ * Use when a later generator's parameters depend on an earlier generated value.
+ *
+ * @example
+ * // Generate an array whose length is itself random
+ * forall(gen.bind(gen.int(1, 5), n => gen.array(gen.int(0, 9), { len: n })), arr => {
+ *     assert.match(between(1, 5), length(arr));
+ * });
+ *
  * @template T, U
  * @param {Generator<T>} generator - The primary generator.
  * @param {function(T): Generator<U>} fn - A function that returns a new generator based on the primary value.
@@ -354,6 +453,12 @@ function bind_gen(generator, fn) {
  * predicate this can drain the budget on structurally impossible candidates, causing the
  * reported counterexample to be larger than the true minimum. Prefer `gen.map` or
  * `gen.bind` over `gen.filter` when a direct construction is possible.
+ *
+ * @example
+ * // Only odd numbers (wide predicate, filter is appropriate)
+ * forall(gen.filter(gen.int(0, 100), n => n % 2 !== 0), n => {
+ *     assert.match(pred(x => x % 2 !== 0), n);
+ * });
  *
  * @template T
  * @param {Generator<T>} generator - The base generator.

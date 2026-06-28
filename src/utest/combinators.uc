@@ -80,7 +80,12 @@ _normalize_equals = function(expected) {
 
 /**
  * Asserts that a value equals the expected value. Arrays and objects are compared structurally.
- * 
+ * Nested combinators inside arrays or objects are matched against the corresponding element.
+ *
+ * @example
+ * assert.match(equals({ status: 200, body: contains("ok") }), response);
+ * assert.match(equals([1, any(), 3]), [1, 99, 3]);
+ *
  * @template T
  * @param {T} expected - The expected value or nested combinators.
  * @returns {Combinator<T>} The configured combinator.
@@ -164,7 +169,14 @@ function contains_array(expected) {
 
 /**
  * Asserts that a string, array, or object contains the expected value(s).
- * 
+ * For strings: substring match. For arrays: ordered subsequence (with backtracking).
+ * For objects: subset of keys (deep, combinators allowed as values).
+ *
+ * @example
+ * assert.match(contains("error"), "fatal error: permission denied");
+ * assert.match(contains([2, 4]), [1, 2, 3, 4, 5]);
+ * assert.match(contains({ status: 200 }), { status: 200, body: "ok", latency: 12 });
+ *
  * @param {any} expected - The substring, subsequence, or subset of object keys to find.
  * @returns {Combinator<string|any[]|dict<any>>} The configured combinator.
  */
@@ -214,7 +226,11 @@ function starts_with_array(expected) {
 
 /**
  * Asserts that a string or array starts with the expected sequence.
- * 
+ *
+ * @example
+ * assert.match(starts_with("hello"), "hello world");
+ * assert.match(starts_with([1, 2]), [1, 2, 3, 4]);
+ *
  * @param {string|any[]} expected - The expected starting sequence.
  * @returns {Combinator<string|any[]>} The configured combinator.
  */
@@ -261,7 +277,11 @@ function ends_with_array(expected) {
 
 /**
  * Asserts that a string or array ends with the expected sequence.
- * 
+ *
+ * @example
+ * assert.match(ends_with(".uc"), "utest.uc");
+ * assert.match(ends_with([3, 4]), [1, 2, 3, 4]);
+ *
  * @param {string|any[]} expected - The expected ending sequence.
  * @returns {Combinator<string|any[]>} The configured combinator.
  */
@@ -307,6 +327,10 @@ export function falsy() {
 /**
  * Inverts another combinator, matching when it fails.
  *
+ * @example
+ * assert.match(not(contains("error")), "all systems go");
+ * assert.match(not(equals(null)), someValue);
+ *
  * @template T
  * @param {Combinator<T>} combinator - The combinator to invert.
  * @returns {Combinator<T>} The configured combinator.
@@ -325,6 +349,11 @@ export function not(combinator) {
 
 /**
  * Asserts that a value satisfies a custom predicate function.
+ * Use when no built-in combinator fits; prefer composing combinators when possible.
+ *
+ * @example
+ * assert.match(pred(n => n % 2 === 0), 42);
+ * assert.match(pred(s => length(s) > 0 && s[0] === "/"), "/etc/config");
  *
  * @template T
  * @param {function(T): boolean} fn - The predicate function.
@@ -342,7 +371,11 @@ export function pred(fn) {
 
 /**
  * Asserts that a string matches a regular expression.
- * 
+ *
+ * @example
+ * assert.match(regex(/^\d{3}-\d{4}$/), "555-1234");
+ * assert.match(regex(/^(ok|error)$/), status);
+ *
  * @param {RegExp} expected - The regular expression to match against.
  * @returns {Combinator<string>} The configured combinator.
  */
@@ -369,7 +402,13 @@ export function any() {
 
 /**
  * Asserts that an array contains the exact expected elements, in any order.
- * 
+ * Combinators are accepted as elements; backtracking prevents greedy wildcards
+ * from stealing slots that later specific matchers need.
+ *
+ * @example
+ * assert.match(any_order([1, 2, 3]), [3, 1, 2]);
+ * assert.match(any_order([equals(42), any()]), [99, 42]);
+ *
  * @param {any[]} expected - The expected elements or combinators.
  * @returns {Combinator<any[]>} The configured combinator.
  */
