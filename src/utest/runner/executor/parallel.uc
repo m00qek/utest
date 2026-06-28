@@ -82,6 +82,26 @@ export function create() {
 					}
 
 					if (fs.access(worker.done_file, "r")) {
+						// Second drain: pick up any lines the worker wrote after our last
+						// read loop finished but before we noticed done_file.
+						let fh2 = fs.open(worker.out_file, "r");
+						if (fh2) {
+							fh2.seek(worker.offset, 0);
+							let line;
+							while ((line = fh2.read("line")) !== null) {
+								if (ord(line, length(line) - 1) !== 10) break;
+								let msg;
+								try { msg = json(line); } catch (e) {
+									warn(rtrim(line) + "\n");
+									worker.offset += length(line);
+									continue;
+								}
+								dispatch(msg, reporter);
+								worker.offset += length(line);
+								worker.received_any = true;
+							}
+							fh2.close();
+						}
 						if (!worker.received_any) {
 							let captured = rtrim(fs.readfile(worker.out_file) || "");
 							let err = length(captured) > 0
