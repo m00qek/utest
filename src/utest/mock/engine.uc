@@ -262,6 +262,10 @@ export const mock = {
 			for (let ch in reg.channels)
 				new_global[ch] = deep_clone(saved[ch] ?? {});
 			reg.global = new_global;
+			// Repoint the proxy's call-tracking dict to the freshly created one so
+			// spy(proxy).calls stays in sync with record_call() after restore().
+			if (new_global.proxy && new_global.proxy.__utest__)
+				new_global.proxy.__utest__.calls = new_global.calls;
 		}
 		for (let name in keys(registries)) {
 			if (!exists(snap, name)) {

@@ -1,4 +1,4 @@
-import { describe, it, assert, mock } from 'utest';
+import { describe, it, assert, mock, spy } from 'utest';
 import * as fs from 'fs';
 
 // Covers the mock state API: inject(), global.patch/unpatch, snapshot/restore, reset().
@@ -36,6 +36,19 @@ describe('Mock State', () => {
 		assert.match('hello', fs.readfile('/tmp/snap.txt'));
 		mock.restore(snap);
 		assert.match(null, fs.readfile('/tmp/snap.txt'), 'state restored to pre-patch');
+	});
+
+	it('restore() repoints spy(proxy).calls to the fresh dict so call tracking stays consistent', () => {
+		const m_fs = mock.global.patch('fs', { data: { '/pre': 'x', '/post': 'y' } });
+		m_fs.readfile('/pre');
+		const snap = mock.snapshot();
+		m_fs.readfile('/between');
+		mock.restore(snap);
+		// After restore(), only calls made after the restore are visible through spy —
+		// the /pre and /between calls are gone.
+		m_fs.readfile('/post');
+		assert.match([ ['/post'] ], spy(m_fs).calls.readfile, 'only post-restore calls visible');
+		mock.global.unpatch('fs');
 	});
 
 	it('mock.reset() discards all active inject() layers', () => {
