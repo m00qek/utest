@@ -1,5 +1,10 @@
-// Source contract: generators MUST read randomness only through source.draw(bound),
-// never via math.rand() directly — bypassing the source silently corrupts shrinking.
+/**
+ * Generator factories for property-based testing.
+ * All generators must read randomness only through `source.draw(bound)`,
+ * never via `math.rand()` directly — bypassing the source silently corrupts shrinking.
+ *
+ * @module utest.generators
+ */
 
 // Thrown by gen.filter when the predicate fails `attempts` times in a row;
 // caught and counted as a discarded case by forall.
@@ -30,8 +35,6 @@ export function is_generator(v) {
 	return type(v) === 'object' && v.__utest__ && v.__utest__.kind === 'generator';
 };
 
-// Small draws map to values near the "zero point" — the endpoint of [lo, hi]
-// closest to 0 — so gen.int(-100, 100) shrinks toward 0, not toward -100.
 /**
  * Generates an integer uniformly distributed in the inclusive range [lo, hi].
  * Shrinks toward 0.
@@ -71,8 +74,6 @@ export function bool() {
 	return gen_from(function(source) { return source.draw(2) === 1; });
 };
 
-// Same zero-point shrinking as int; precision controls the number of
-// discrete steps across [lo, hi], split proportionally between each side.
 /**
  * Generates a floating-point number in the inclusive range [lo, hi].
  * Shrinks toward 0.
@@ -348,8 +349,6 @@ export function elements(...arr) {
 	return gen_from(function(source) { return arr[source.draw(length(arr))]; });
 };
 
-// List the simplest alternative first — smaller draws select earlier entries,
-// so shrinking naturally converges toward simpler values.
 /**
  * Selects a generator based on relative weights.
  * List simpler alternatives first so shrinking converges toward them.
@@ -481,15 +480,4 @@ export function filter(generator, pred, opts) {
 		}
 		die(DISCARD_MSG);
 	});
-};
-
-/**
- * Generator factories for property-based testing.
- */
-export const gen = {
-	int, bool, float, constant,
-	array, tuple, record,
-	string, alphanumeric, ascii,
-	oneof, elements, frequency, optional,
-	map, bind, filter,
 };
