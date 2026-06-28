@@ -44,8 +44,8 @@ describe('Mock State', () => {
 		const snap = mock.snapshot();
 		m_fs.readfile('/between');
 		mock.restore(snap);
-		// After restore(), only calls made after the restore are visible through spy —
-		// the /pre and /between calls are gone.
+		// After restore(), the calls dict is fresh: pre- and between-calls are gone.
+		assert.match(null, spy(m_fs).calls.readfile, 'calls dict reset after restore');
 		m_fs.readfile('/post');
 		assert.match([ ['/post'] ], spy(m_fs).calls.readfile, 'only post-restore calls visible');
 		mock.global.unpatch('fs');

@@ -27,11 +27,11 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 6,
-                    "name": "restore() repoints spy(proxy).calls to the fresh dict so call tracking stays consistent"
+                    "id": 7,
+                    "name": "mock.reset() discards all active inject() layers"
                 }
             ],
-            "index": 5
+            "index": 6
         },
         {
             "event": "TEST_RESULT",
@@ -71,33 +71,11 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 5,
-                    "name": "mock.snapshot() and mock.restore() save and recover global state"
+                    "id": 2,
+                    "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
                 }
             ],
-            "index": 4
-        },
-        {
-            "event": "TEST_RESULT",
-            "suite": "examples/unit/09_mock_state_test.uc",
-            "bundle": "examples/unit/09_mock_state_test.uc",
-            "status": "PASS",
-            "error": null,
-            "path": [
-                {
-                    "id": 0,
-                    "name": "root"
-                },
-                {
-                    "id": 1,
-                    "name": "Mock State"
-                },
-                {
-                    "id": 7,
-                    "name": "mock.reset() discards all active inject() layers"
-                }
-            ],
-            "index": 6
+            "index": 1
         },
         {
             "event": "TEST_RESULT",
@@ -137,18 +115,40 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 2,
-                    "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
+                    "id": 6,
+                    "name": "restore() repoints spy(proxy).calls to the fresh dict so call tracking stays consistent"
                 }
             ],
-            "index": 1
+            "index": 5
+        },
+        {
+            "event": "TEST_RESULT",
+            "suite": "examples/unit/09_mock_state_test.uc",
+            "bundle": "examples/unit/09_mock_state_test.uc",
+            "status": "PASS",
+            "error": null,
+            "path": [
+                {
+                    "id": 0,
+                    "name": "root"
+                },
+                {
+                    "id": 1,
+                    "name": "Mock State"
+                },
+                {
+                    "id": 5,
+                    "name": "mock.snapshot() and mock.restore() save and recover global state"
+                }
+            ],
+            "index": 4
         }
     ],
     "files": [
         "examples/unit/09_mock_state_test.uc"
     ],
-    "duration_ms": 10,
-    "seed": 877259849,
+    "duration_ms": 9,
+    "seed": 106563308,
     "bundles": {
         "examples/unit/09_mock_state_test.uc": {
             "total": 6,

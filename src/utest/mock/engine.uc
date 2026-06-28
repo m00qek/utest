@@ -194,10 +194,13 @@ function build_proxy(name, real) {
 		const proxy = factory(name, real, ctx);
 		// Pre-initialize calls for declared API methods so spy(proxy).calls.X is
 		// always [] and never undefined, even before the first call is made.
+		// Store the api list on the proxy so restore() can replicate this after
+		// swapping the calls dict without re-requiring the proxy module.
 		if (m && type(m.api) === 'array') {
 			const calls = internal_obj.get_calls(name);
 			for (let fn_name in m.api)
 				if (!calls[fn_name]) calls[fn_name] = [];
+			proxy.__utest__.api = m.api;
 		}
 		return proxy;
 	}
@@ -263,8 +266,15 @@ export const mock = {
 			reg.global = new_global;
 			// Repoint the proxy's call-tracking dict to the freshly created one so
 			// spy(proxy).calls stays in sync with record_call() after restore().
-			if (new_global.proxy && new_global.proxy.__utest__)
+			// Re-seed declared API methods to [] so spy(proxy).calls.X is never
+			// undefined — mirrors the pre-initialization done in build_proxy().
+			if (new_global.proxy && new_global.proxy.__utest__) {
 				new_global.proxy.__utest__.calls = new_global.calls;
+				if (type(new_global.proxy.__utest__.api) === 'array') {
+					for (let fn_name in new_global.proxy.__utest__.api)
+						if (!new_global.calls[fn_name]) new_global.calls[fn_name] = [];
+				}
+			}
 		}
 		for (let name in keys(registries)) {
 			if (!exists(snap, name)) {
