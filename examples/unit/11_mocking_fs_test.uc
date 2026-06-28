@@ -298,4 +298,14 @@ describe('FS Mocking', () => {
 		}, /strict mock/);
 	});
 
+	it('inject with strict:false suppresses a global strict:true', () => {
+		mock.global.patch('fs', { strict: true, data: { '/base': 'x' } });
+		// Without the fix, is_strict() always returned true because it checked
+		// global first; the inner inject's strict:false was silently ignored.
+		mock.inject('fs', { strict: false, data: {} }, (m_fs) => {
+			assert.match(null, m_fs.readfile('/unmocked'), 'strict:false layer must win over global strict:true');
+		});
+		mock.global.unpatch('fs');
+	});
+
 });

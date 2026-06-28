@@ -159,10 +159,9 @@ const internal_obj = {
 
 	is_strict: function(name) {
 		const reg = get_registry(name);
-		if (reg.global.strict) return true;
-		for (let i = 0; i < length(reg.layers); i++)
-			if (reg.layers[i].strict) return true;
-		return false;
+		if (length(reg.layers) > 0)
+			return reg.layers[length(reg.layers) - 1].strict ? true : false;
+		return reg.global.strict ? true : false;
 	}
 };
 
