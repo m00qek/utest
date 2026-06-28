@@ -39,10 +39,10 @@ export function describe(name, fn) {
 	};
 	push(parent.groups, group);
 	push(stack, group);
-	let _err = null;
-	try { fn(); } catch(e) { _err = e; }
+	let _err, _had_err = false;
+	try { fn(); } catch(e) { _err = e; _had_err = true; }
 	pop(stack);
-	if (_err !== null) die(_err);
+	if (_had_err) die(_err);
 };
 
 /**
@@ -103,10 +103,10 @@ export function xdescribe(name, fn) {
 	};
 	push(parent.groups, group);
 	push(stack, group);
-	let _err = null;
-	try { if (fn) fn(); } catch(e) { _err = e; }
+	let _err, _had_err = false;
+	try { if (fn) fn(); } catch(e) { _err = e; _had_err = true; }
 	pop(stack);
-	if (_err !== null) die(_err);
+	if (_had_err) die(_err);
 };
 
 /**

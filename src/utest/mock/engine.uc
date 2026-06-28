@@ -297,15 +297,15 @@ export const mock = {
 	inject_builtin: function(name, fn, cb) {
 		const orig = global[name];
 		global[name] = fn;
-		let err = null;
+		let err, had_err = false;
 		let result;
 		try {
 			result = cb();
 		} catch (e) {
-			err = e;
+			err = e; had_err = true;
 		}
 		global[name] = orig;
-		if (err !== null) die(err);
+		if (had_err) die(err);
 		return result;
 	},
 
@@ -334,16 +334,16 @@ export const mock = {
 		const reg = get_registry(name);
 		ensure_channels(reg, channels);
 		push(reg.layers, to_layer(state, channels));
-		let err = null;
+		let err, had_err = false;
 		let result;
 		try {
 			let proxy = build_proxy(name, real);
 			result = cb(proxy);
 		} catch (e) {
-			err = e;
+			err = e; had_err = true;
 		}
 		pop(reg.layers);
-		if (err !== null) die(err);
+		if (had_err) die(err);
 		return result;
 	},
 
@@ -365,7 +365,7 @@ export const mock = {
 
 		// Push one layer per proxy, tracking count so cleanup covers only what was pushed.
 		let pushed = 0;
-		let err = null;
+		let err, had_err = false;
 		let result;
 		try {
 			for (let name in names) {
@@ -379,14 +379,14 @@ export const mock = {
 				deps[name] = build_proxy(name, reals[name]);
 			result = cb(deps);
 		} catch (e) {
-			err = e;
+			err = e; had_err = true;
 		}
 
 		// Pop in reverse order, limited to what was successfully pushed.
 		for (let i = pushed - 1; i >= 0; i--)
 			pop(get_registry(names[i]).layers);
 
-		if (err !== null) die(err);
+		if (had_err) die(err);
 		return result;
 	},
 
@@ -429,14 +429,14 @@ export const mock = {
 			for (let ch in channels)
 				new_global[ch] = state[ch] ? deep_clone(state[ch]) : {};
 			reg.global = new_global;
-			let err = null;
+			let err, had_err = false;
 			let proxy;
 			try {
 				proxy = build_proxy(name, real);
 			} catch(e) {
-				err = e;
+				err = e; had_err = true;
 			}
-			if (err !== null) {
+			if (had_err) {
 				reg.global = prev_global;
 				die(err);
 			}
