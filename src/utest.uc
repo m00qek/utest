@@ -6,8 +6,9 @@
  */
 
 import * as dsl from 'utest.dsl';
-import * as _mock from 'utest.mock';
-import * as _spy from 'utest.mock.spy';
+import * as _mock   from 'utest.mock';
+import * as _global from 'utest.mock.global';
+import * as _spy    from 'utest.mock.spy';
 import * as _assert from 'utest.assert';
 import * as _combinators from 'utest.combinators';
 import * as _property from 'utest.property';
@@ -23,7 +24,15 @@ export const afterEach = dsl.afterEach;
 export const setup = dsl.setup;
 export const teardown = dsl.teardown;
 
-export const mock = _mock;
+export const mock = {
+	reset:          _mock.reset,
+	snapshot:       _mock.snapshot,
+	restore:        _mock.restore,
+	inject_builtin: _mock.inject_builtin,
+	inject:         _mock.inject,
+	inject_all:     _mock.inject_all,
+	global:         _global,
+};
 export const spy = _spy.spy;
 
 export const assert = _assert;
