@@ -5,9 +5,9 @@
  */
 
 if (!global.__utest_registries) global.__utest_registries = {};
-const registries = global.__utest_registries;
+export const registries = global.__utest_registries;
 
-function deep_clone(obj) {
+export function deep_clone(obj) {
 	if (type(obj) === 'array') {
 		let r = [];
 		for (let v in obj) push(r, deep_clone(v));
@@ -20,12 +20,12 @@ function deep_clone(obj) {
 	}
 	// scalars (string, int, bool, null) and functions are immutable — share the reference
 	return obj;
-}
+};
 
 // Returns the channel list declared by the proxy for `name`, or null if no
 // proxy module exists.  Always includes 'data'; extra channels come from the
 // proxy factory's `channels` array.
-function get_proxy_channels(name) {
+export function get_proxy_channels(name) {
 	let m = null;
 	try { m = require('utest.mock.proxy.' + name); } catch(e) {}
 	if (!m) return null;
@@ -35,14 +35,14 @@ function get_proxy_channels(name) {
 			if (ch !== 'data') push(channels, ch);
 	}
 	return channels;
-}
+};
 
-function guard_mock_target(op, name, proxy_channels, real) {
+export function guard_mock_target(op, name, proxy_channels, real) {
 	if (proxy_channels === null && real === null)
 		die(sprintf("[utest] %s: '%s' is not a configured proxy — no proxy module found at utest.mock.proxy.%s", op, name, name));
-}
+};
 
-function get_registry(name) {
+export function get_registry(name) {
 	if (!registries[name]) {
 		registries[name] = {
 			name: name,
@@ -52,11 +52,11 @@ function get_registry(name) {
 		};
 	}
 	return registries[name];
-}
+};
 
 // Adds any channels that are not yet tracked to the registry's channel list
 // and ensures their slot exists on the global state object.
-function ensure_channels(reg, channels) {
+export function ensure_channels(reg, channels) {
 	for (let ch in channels) {
 		if (!exists(reg.global, ch)) reg.global[ch] = {};
 		let found = false;
@@ -64,9 +64,9 @@ function ensure_channels(reg, channels) {
 			if (existing === ch) { found = true; break; }
 		if (!found) push(reg.channels, ch);
 	}
-}
+};
 
-function to_layer(state, channels) {
+export function to_layer(state, channels) {
 	let layer = {
 		fns:    state.behavior ? { ...state.behavior } : {},
 		strict: state.strict   ? true : false,
@@ -75,17 +75,17 @@ function to_layer(state, channels) {
 	for (let ch in channels)
 		layer[ch] = state[ch] ? deep_clone(state[ch]) : {};
 	return layer;
-}
+};
 
-function reset_layers() {
+export function reset_layers() {
 	for (let name, reg in registries) {
 		reg.layers = [];
 	}
-}
+};
 
 // Saved originals for mock.global.patch_builtin(); keyed by built-in name.
 if (!global.__utest_builtin_overrides) global.__utest_builtin_overrides = {};
-const builtin_overrides = global.__utest_builtin_overrides;
+export const builtin_overrides = global.__utest_builtin_overrides;
 
 function _channel_get(name, channel, key) {
 	const reg = get_registry(name);
@@ -170,14 +170,14 @@ if (!global.__utest_internal_instance) global.__utest_internal_instance = intern
 // When a shim is in -L, require(name) finds the shim's ES-module .uc and fails
 // (program mode forbids import/export). Try real_<name> first (the symlink to
 // the actual module created by manager.uc), then fall back to require(name).
-function get_real(name) {
+export function get_real(name) {
 	try { return require('real_' + name); } catch(e) {}
 	try { return require(name); }           catch(e) {}
 	warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
 	return null;
-}
+};
 
-function build_proxy(name, real) {
+export function build_proxy(name, real) {
 	const proxy_base = require('utest.mock.proxy_base');
 	const ctx = proxy_base.context(name, real);
 
@@ -204,21 +204,6 @@ function build_proxy(name, real) {
 
 	// Generic proxy: behavior overrides, passthrough to real otherwise
 	return ctx.base();
-}
+};
 
 export const __internal__ = internal_obj;
-
-// Internal API consumed by utest.mock — not part of the public surface.
-export const _engine = {
-	registries,
-	builtin_overrides,
-	deep_clone,
-	reset_layers,
-	get_registry,
-	get_proxy_channels,
-	get_real,
-	guard_mock_target,
-	ensure_channels,
-	to_layer,
-	build_proxy,
-};

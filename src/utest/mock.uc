@@ -4,22 +4,11 @@
  * @module utest.mock
  */
 
-import { _engine } from 'utest.mock.engine';
+import { registries, builtin_overrides, deep_clone, reset_layers, get_registry } from 'utest.mock.engine';
+import { get_proxy_channels, get_real, guard_mock_target, ensure_channels, to_layer, build_proxy } from 'utest.mock.engine';
 
 // Capture the interpreter's global scope before we shadow 'global' below.
-const _global          = global;
-
-const registries       = _engine.registries;
-const builtin_overrides = _engine.builtin_overrides;
-const deep_clone       = _engine.deep_clone;
-const reset_layers     = _engine.reset_layers;
-const get_registry     = _engine.get_registry;
-const get_proxy_channels = _engine.get_proxy_channels;
-const get_real         = _engine.get_real;
-const guard_mock_target = _engine.guard_mock_target;
-const ensure_channels  = _engine.ensure_channels;
-const to_layer         = _engine.to_layer;
-const build_proxy      = _engine.build_proxy;
+const _global = global;
 
 /**
  * Clears all active `mock.inject()` layers across every registered module.
