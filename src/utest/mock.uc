@@ -6,6 +6,9 @@
 
 import { _engine } from 'utest.mock.engine';
 
+// Capture the interpreter's global scope before we shadow 'global' below.
+const _global          = global;
+
 const registries       = _engine.registries;
 const builtin_overrides = _engine.builtin_overrides;
 const deep_clone       = _engine.deep_clone;
@@ -131,8 +134,8 @@ export function restore(snap) {
  * assert.match(['test message\n'], captured);
  */
 export function inject_builtin(name, fn, cb) {
-	const orig = global[name];
-	global[name] = fn;
+	const orig = _global[name];
+	_global[name] = fn;
 	let err, had_err = false;
 	let result;
 	try {
@@ -140,7 +143,7 @@ export function inject_builtin(name, fn, cb) {
 	} catch (e) {
 		err = e; had_err = true;
 	}
-	global[name] = orig;
+	_global[name] = orig;
 	if (had_err) die(err);
 	return result;
 };
@@ -263,7 +266,6 @@ export function inject_all(states, cb) {
 };
 
 // ── mock.global.* ────────────────────────────────────────────────────────────
-// Assembled into mock.global by utest.uc so the public API remains unchanged.
 
 /**
  * Installs persistent global state for one module and returns a proxy. When
@@ -357,8 +359,8 @@ export function unpatch(name) {
  * @param {any} fn - Replacement installed in `global[name]` until unpatch_builtin.
  */
 export function patch_builtin(name, fn) {
-	builtin_overrides[name] = global[name];
-	global[name] = fn;
+	builtin_overrides[name] = _global[name];
+	_global[name] = fn;
 };
 
 /**
@@ -370,13 +372,15 @@ export function patch_builtin(name, fn) {
  */
 export function unpatch_builtin(name) {
 	if (exists(builtin_overrides, name)) {
-		global[name] = builtin_overrides[name];
+		_global[name] = builtin_overrides[name];
 		delete builtin_overrides[name];
 	}
 };
 
+export const global = { patch, unpatch, patch_builtin, unpatch_builtin };
+
 // The worker runner reads this global to call snapshot()/restore() around each
 // test without importing this module directly (it must stay decoupled so tests
 // that do not use mocking never trigger the engine at all).
-if (!global.__utest_mock_instance)
-	global.__utest_mock_instance = { snapshot, restore, reset };
+if (!_global.__utest_mock_instance)
+	_global.__utest_mock_instance = { snapshot, restore, reset };
