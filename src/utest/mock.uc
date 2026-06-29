@@ -4,8 +4,7 @@
  * @module utest.mock
  */
 
-import { registries, builtin_overrides, deep_clone, reset_layers, get_registry } from 'utest.mock.engine';
-import { get_proxy_channels, get_real, guard_mock_target, ensure_channels, to_layer, build_proxy } from 'utest.mock.engine';
+import * as engine from 'utest.mock.engine';
 
 // Capture the interpreter's global scope before we shadow 'global' below.
 const _global = global;
@@ -18,7 +17,7 @@ const _global = global;
  * to a prior checkpoint.
  */
 export function reset() {
-	reset_layers();
+	engine.reset_layers();
 };
 
 /**
@@ -41,7 +40,7 @@ export function reset() {
  */
 export function snapshot() {
 	let snap = {};
-	for (let name, reg in registries) {
+	for (let name, reg in engine.registries) {
 		let s = {
 			fns:    { ...reg.global.fns },
 			strict: reg.global.strict,
@@ -49,7 +48,7 @@ export function snapshot() {
 			// calls intentionally omitted — restore() always resets them to {}
 		};
 		for (let ch in reg.channels)
-			s[ch] = deep_clone(reg.global[ch] ?? {});
+			s[ch] = engine.deep_clone(reg.global[ch] ?? {});
 		snap[name] = s;
 	}
 	return snap;
@@ -72,9 +71,9 @@ export function snapshot() {
  * mock.restore(snap);   // uci patch gone, layers cleared
  */
 export function restore(snap) {
-	reset_layers();
+	engine.reset_layers();
 	for (let name, saved in snap) {
-		const reg = get_registry(name);
+		const reg = engine.get_registry(name);
 		// Deep-clone channel data so successive restores from the same snapshot
 		// each get an independent copy; set_channel() mutations cannot corrupt snap.
 		let new_global = {
@@ -84,12 +83,12 @@ export function restore(snap) {
 			calls:  {}
 		};
 		for (let ch in reg.channels)
-			new_global[ch] = deep_clone(saved[ch] ?? {});
+			new_global[ch] = engine.deep_clone(saved[ch] ?? {});
 		reg.global = new_global;
 	}
-	for (let name in keys(registries)) {
+	for (let name in keys(engine.registries)) {
 		if (!exists(snap, name)) {
-			const reg = registries[name];
+			const reg = engine.registries[name];
 			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
 			for (let ch in reg.channels) new_global[ch] = {};
 			reg.global = new_global;
@@ -167,17 +166,17 @@ export function inject_builtin(name, fn, cb) {
  * assert.match('enabled=1', content);
  */
 export function inject(name, state, cb) {
-	const proxy_channels = get_proxy_channels(name);
-	const real = get_real(name);
-	guard_mock_target('mock.inject', name, proxy_channels, real);
+	const proxy_channels = engine.get_proxy_channels(name);
+	const real = engine.get_real(name);
+	engine.guard_mock_target('mock.inject', name, proxy_channels, real);
 	const channels = proxy_channels || ['data'];
-	const reg = get_registry(name);
-	ensure_channels(reg, channels);
-	push(reg.layers, to_layer(state, channels));
+	const reg = engine.get_registry(name);
+	engine.ensure_channels(reg, channels);
+	push(reg.layers, engine.to_layer(state, channels));
 	let err, had_err = false;
 	let result;
 	try {
-		let proxy = build_proxy(name, real);
+		let proxy = engine.build_proxy(name, real);
 		result = cb(proxy);
 	} catch (e) {
 		err = e; had_err = true;
@@ -218,9 +217,9 @@ export function inject_all(states, cb) {
 	const reals = {};
 	const channels_map = {};
 	for (let name in names) {
-		const proxy_channels = get_proxy_channels(name);
-		const real = get_real(name);
-		guard_mock_target('mock.inject_all', name, proxy_channels, real);
+		const proxy_channels = engine.get_proxy_channels(name);
+		const real = engine.get_real(name);
+		engine.guard_mock_target('mock.inject_all', name, proxy_channels, real);
 		if (type(states[name]) !== 'object' || states[name] === null)
 			die(sprintf("mock.inject_all: state for '%s' must be a non-null object", name));
 		reals[name] = real;
@@ -233,14 +232,14 @@ export function inject_all(states, cb) {
 	let result;
 	try {
 		for (let name in names) {
-			const reg = get_registry(name);
-			ensure_channels(reg, channels_map[name]);
-			push(reg.layers, to_layer(states[name], channels_map[name]));
+			const reg = engine.get_registry(name);
+			engine.ensure_channels(reg, channels_map[name]);
+			push(reg.layers, engine.to_layer(states[name], channels_map[name]));
 			pushed++;
 		}
 		const deps = {};
 		for (let name in names)
-			deps[name] = build_proxy(name, reals[name]);
+			deps[name] = engine.build_proxy(name, reals[name]);
 		result = cb(deps);
 	} catch (e) {
 		err = e; had_err = true;
@@ -248,7 +247,7 @@ export function inject_all(states, cb) {
 
 	// Pop in reverse order, limited to what was successfully pushed.
 	for (let i = pushed - 1; i >= 0; i--)
-		pop(get_registry(names[i]).layers);
+		pop(engine.get_registry(names[i]).layers);
 
 	if (had_err) die(err);
 	return result;
@@ -287,12 +286,12 @@ export function inject_all(states, cb) {
  * mock.global.unpatch('fs');
  */
 export function patch(name, state) {
-	const proxy_channels = get_proxy_channels(name);
-	const real = get_real(name);
-	guard_mock_target('mock.global.patch', name, proxy_channels, real);
+	const proxy_channels = engine.get_proxy_channels(name);
+	const real = engine.get_real(name);
+	engine.guard_mock_target('mock.global.patch', name, proxy_channels, real);
 	const channels = proxy_channels || ['data'];
-	const reg = get_registry(name);
-	ensure_channels(reg, channels);
+	const reg = engine.get_registry(name);
+	engine.ensure_channels(reg, channels);
 	// Build the new global atomically: save the old state so we can roll back
 	// if build_proxy fails (e.g. a custom proxy factory throws).
 	const prev_global = reg.global;
@@ -305,12 +304,12 @@ export function patch(name, state) {
 	for (let ch in reg.channels)
 		new_global[ch] = prev_global[ch] ?? {};
 	for (let ch in channels)
-		new_global[ch] = state[ch] ? deep_clone(state[ch]) : {};
+		new_global[ch] = state[ch] ? engine.deep_clone(state[ch]) : {};
 	reg.global = new_global;
 	let err, had_err = false;
 	let proxy;
 	try {
-		proxy = build_proxy(name, real);
+		proxy = engine.build_proxy(name, real);
 	} catch(e) {
 		err = e; had_err = true;
 	}
@@ -329,7 +328,7 @@ export function patch(name, state) {
  * @param {string} name - Module name to unpatch.
  */
 export function unpatch(name) {
-	const reg = get_registry(name);
+	const reg = engine.get_registry(name);
 	let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
 	for (let ch in reg.channels) new_global[ch] = {};
 	reg.global = new_global;
@@ -348,7 +347,7 @@ export function unpatch(name) {
  * @param {any} fn - Replacement installed in `global[name]` until unpatch_builtin.
  */
 export function patch_builtin(name, fn) {
-	builtin_overrides[name] = _global[name];
+	engine.builtin_overrides[name] = _global[name];
 	_global[name] = fn;
 };
 
@@ -360,9 +359,9 @@ export function patch_builtin(name, fn) {
  * @param {string} name - Built-in name to restore.
  */
 export function unpatch_builtin(name) {
-	if (exists(builtin_overrides, name)) {
-		_global[name] = builtin_overrides[name];
-		delete builtin_overrides[name];
+	if (exists(engine.builtin_overrides, name)) {
+		_global[name] = engine.builtin_overrides[name];
+		delete engine.builtin_overrides[name];
 	}
 };
 
