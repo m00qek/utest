@@ -45,5 +45,5 @@ export const is_type = _combinators.is_type;
 
 export const prop = _property.prop;
 export const forall = _property.forall;
-export const gen = _generators.gen;
+export const gen = _generators;
 export const is_generator = _generators.is_generator;
