@@ -67,6 +67,26 @@ describe('spy()', () => {
 			assert.match([], spy(m_fs2).calls.readfile);
 			mock.global.unpatch('fs');
 		});
+
+		it('spy() on a global-patch proxy reflects the active layer during inject()', () => {
+			// m_fs is the global-patch proxy; its calls are tracked in reg.global.calls.
+			// When mock.inject() pushes a layer, record_call() writes to that layer's
+			// calls dict instead.  spy(m_fs) must do a live lookup so it returns the
+			// inject layer's dict while inside the callback — not the stale global dict.
+			const m_fs = mock.global.patch('fs', { data: { '/pre': 'a', '/in': 'b', '/post': 'c' } });
+			m_fs.readfile('/pre');
+
+			mock.inject('fs', {}, () => {
+				m_fs.readfile('/in');
+				assert.match([ ['/in'] ], spy(m_fs).calls.readfile,
+					'spy must see inject-layer calls during inject');
+			});
+
+			m_fs.readfile('/post');
+			assert.match([ ['/pre'], ['/post'] ], spy(m_fs).calls.readfile,
+				'spy must see global-layer calls after inject');
+			mock.global.unpatch('fs');
+		});
 	});
 
 	describe('on an auto-generated proxy (math)', () => {

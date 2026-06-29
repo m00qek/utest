@@ -41,7 +41,7 @@ return {
 						proxy[fn_name] = fn;
 					}
 				}
-				proxy.__utest__ = { calls: calls };
+				proxy.__utest__ = { name: name };
 				return proxy;
 			}
 		};

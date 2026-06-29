@@ -27,50 +27,6 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 4,
-                    "name": "inject() layer is visible on top of a global patch"
-                }
-            ],
-            "index": 3
-        },
-        {
-            "event": "TEST_RESULT",
-            "suite": "examples/unit/09_mock_state_test.uc",
-            "bundle": "examples/unit/09_mock_state_test.uc",
-            "status": "PASS",
-            "error": null,
-            "path": [
-                {
-                    "id": 0,
-                    "name": "root"
-                },
-                {
-                    "id": 1,
-                    "name": "Mock State"
-                },
-                {
-                    "id": 7,
-                    "name": "mock.reset() discards all active inject() layers"
-                }
-            ],
-            "index": 6
-        },
-        {
-            "event": "TEST_RESULT",
-            "suite": "examples/unit/09_mock_state_test.uc",
-            "bundle": "examples/unit/09_mock_state_test.uc",
-            "status": "PASS",
-            "error": null,
-            "path": [
-                {
-                    "id": 0,
-                    "name": "root"
-                },
-                {
-                    "id": 1,
-                    "name": "Mock State"
-                },
-                {
                     "id": 2,
                     "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
                 }
@@ -93,37 +49,11 @@
                     "name": "Mock State"
                 },
                 {
-                    "id": 8,
-                    "name": "pre_body_snap is always restored before afterEach runs"
-                },
-                {
-                    "id": 9,
-                    "name": "patch without unpatch does not leak into afterEach"
+                    "id": 7,
+                    "name": "mock.reset() discards all active inject() layers"
                 }
             ],
-            "index": 7
-        },
-        {
-            "event": "TEST_RESULT",
-            "suite": "examples/unit/09_mock_state_test.uc",
-            "bundle": "examples/unit/09_mock_state_test.uc",
-            "status": "PASS",
-            "error": null,
-            "path": [
-                {
-                    "id": 0,
-                    "name": "root"
-                },
-                {
-                    "id": 1,
-                    "name": "Mock State"
-                },
-                {
-                    "id": 6,
-                    "name": "restore() repoints spy(proxy).calls to the fresh dict so call tracking stays consistent"
-                }
-            ],
-            "index": 5
+            "index": 6
         },
         {
             "event": "TEST_RESULT",
@@ -168,13 +98,83 @@
                 }
             ],
             "index": 4
+        },
+        {
+            "event": "TEST_RESULT",
+            "suite": "examples/unit/09_mock_state_test.uc",
+            "bundle": "examples/unit/09_mock_state_test.uc",
+            "status": "PASS",
+            "error": null,
+            "path": [
+                {
+                    "id": 0,
+                    "name": "root"
+                },
+                {
+                    "id": 1,
+                    "name": "Mock State"
+                },
+                {
+                    "id": 6,
+                    "name": "spy(proxy) sees the fresh calls dict after restore()"
+                }
+            ],
+            "index": 5
+        },
+        {
+            "event": "TEST_RESULT",
+            "suite": "examples/unit/09_mock_state_test.uc",
+            "bundle": "examples/unit/09_mock_state_test.uc",
+            "status": "PASS",
+            "error": null,
+            "path": [
+                {
+                    "id": 0,
+                    "name": "root"
+                },
+                {
+                    "id": 1,
+                    "name": "Mock State"
+                },
+                {
+                    "id": 4,
+                    "name": "inject() layer is visible on top of a global patch"
+                }
+            ],
+            "index": 3
+        },
+        {
+            "event": "TEST_RESULT",
+            "suite": "examples/unit/09_mock_state_test.uc",
+            "bundle": "examples/unit/09_mock_state_test.uc",
+            "status": "PASS",
+            "error": null,
+            "path": [
+                {
+                    "id": 0,
+                    "name": "root"
+                },
+                {
+                    "id": 1,
+                    "name": "Mock State"
+                },
+                {
+                    "id": 8,
+                    "name": "pre_body_snap is always restored before afterEach runs"
+                },
+                {
+                    "id": 9,
+                    "name": "patch without unpatch does not leak into afterEach"
+                }
+            ],
+            "index": 7
         }
     ],
     "files": [
         "examples/unit/09_mock_state_test.uc"
     ],
-    "duration_ms": 9,
-    "seed": 225364814,
+    "duration_ms": 10,
+    "seed": 644215892,
     "bundles": {
         "examples/unit/09_mock_state_test.uc": {
             "total": 7,

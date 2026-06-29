@@ -38,13 +38,14 @@ describe('Mock State', () => {
 		assert.match(null, fs.readfile('/tmp/snap.txt'), 'state restored to pre-patch');
 	});
 
-	it('restore() repoints spy(proxy).calls to the fresh dict so call tracking stays consistent', () => {
+	it('spy(proxy) sees the fresh calls dict after restore()', () => {
 		const m_fs = mock.global.patch('fs', { data: { '/pre': 'x', '/post': 'y' } });
 		m_fs.readfile('/pre');
 		const snap = mock.snapshot();
 		m_fs.readfile('/between');
 		mock.restore(snap);
-		// After restore(), the calls dict is fresh: pre- and between-calls are gone.
+		// spy() does a live lookup into the registry, so after restore() swaps in a
+		// fresh reg.global.calls, pre- and between-calls are gone automatically.
 		assert.match(null, spy(m_fs).calls.readfile, 'calls dict reset after restore');
 		m_fs.readfile('/post');
 		assert.match([ ['/post'] ], spy(m_fs).calls.readfile, 'only post-restore calls visible');
