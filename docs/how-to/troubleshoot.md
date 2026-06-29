@@ -146,6 +146,37 @@ return { color: true };
 
 ---
 
+## `mock.reset()` did not clear a global.patch()
+
+**Symptom**: After calling `mock.reset()`, a module patched with
+`mock.global.patch()` is still intercepting calls — the mock data is still
+active.
+
+**Cause**: `mock.reset()` clears only transient layers created by
+`mock.inject()`. It does not touch global state installed by
+`mock.global.patch()`.
+
+**Fix**: To remove a specific global patch, call `mock.global.unpatch()`:
+
+```js
+mock.global.unpatch('fs');
+```
+
+To roll back to a known checkpoint that includes global state, use
+`mock.snapshot()` and `mock.restore()`:
+
+```js
+const snap = mock.snapshot();       // save before patching
+mock.global.patch('fs', { ... });
+// … tests …
+mock.restore(snap);                 // removes the global patch and all layers
+```
+
+See [How-to: Save and restore mock state](snapshot-restore.md) for a full
+walkthrough.
+
+---
+
 ## An unrecognised option error
 
 **Symptom**: `utest: Unknown option: -x`

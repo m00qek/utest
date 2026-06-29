@@ -21,7 +21,9 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 | Guide | Goal |
 | :--- | :--- |
 | [Mock a module with inject()](mock-inject.md) | Scoped mock for code that receives a module as a parameter |
+| [Mock multiple modules at once](mock-inject-all.md) | Inject two or more modules in a single call instead of nesting |
 | [Patch global state](mock-global-patch.md) | Replace the module import itself for the duration of a test |
+| [Save and restore mock state](snapshot-restore.md) | Checkpoint global mock state and roll it back after a test |
 | [Mock the filesystem](mock-fs.md) | Intercept `fs` calls with virtual files |
 | [Mock a built-in global](mock-builtin.md) | Intercept `warn`, `system`, `print`, etc. |
 | [Mock UCI configuration](mock-uci.md) | Provide test UCI packages without touching the real config |

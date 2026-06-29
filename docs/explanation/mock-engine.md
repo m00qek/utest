@@ -31,6 +31,24 @@ calls work correctly: the inner layer shadows the outer one for keys it
 defines, and the outer values become visible again the moment the inner
 callback returns.
 
+```mermaid
+graph TB
+    subgraph reg["global.__utest_registries['fs']"]
+        direction TB
+        G["global\n{ data, fns, strict, proxy, calls }"]
+        L0["layers[0] — outer inject\n{ data, fns, strict, calls }"]
+        L1["layers[1] — inner inject  ◄ top\n{ data, fns, strict, calls }"]
+    end
+
+    READ["get_channel / get_fn\n(read)"]
+    WRITE["record_call / set_channel\n(write)"]
+
+    READ -->|"1. check top"| L1
+    READ -->|"2. miss → check next"| L0
+    READ -->|"3. miss → fall back"| G
+    WRITE -->|"always targets top"| L1
+```
+
 If the engine used a flat mutable map instead, every test that needed to nest
 mocks would have to save and restore state manually. A missed restore would
 silently corrupt every test that ran after it. The stack makes restore
