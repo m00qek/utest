@@ -1,10 +1,50 @@
 /**
- * Persistent global patching: mock.global.patch / unpatch / patch_builtin / unpatch_builtin.
+ * Global and persistent built-in patching: mock.global.* and mock.inject_builtin.
  *
  * @module utest.mock.global
  */
 
 import * as engine from 'utest.mock.engine';
+
+/**
+ * Replaces a built-in global (such as `warn`, `system`, or `print`) for the
+ * duration of a callback, then unconditionally restores the original — even
+ * when the callback throws.
+ *
+ * Calls to `inject_builtin` may be nested. The inner call saves whatever
+ * `global[name]` holds at the moment of the call (which may itself already be
+ * a replacement) and restores it on exit, so inner and outer scopes remain
+ * independent.
+ *
+ * Use `mock.global.patch_builtin()` instead when the replacement must be
+ * active outside a callback (e.g. at file scope before any `describe` runs).
+ *
+ * @param {string} name - Name of the built-in to replace (e.g. `'warn'`, `'system'`).
+ * @param {any} fn - Replacement installed in `global[name]` for the duration of `cb`.
+ * @param {() => any} cb - Called with no arguments while the replacement is active.
+ * @returns {any} The return value of `cb`.
+ *
+ * @example
+ * const captured = [];
+ * mock.inject_builtin('warn', (...args) => push(captured, join('', args)), () => {
+ *     warn('test message\n');
+ * });
+ * assert.match(['test message\n'], captured);
+ */
+export function inject_builtin(name, fn, cb) {
+	const orig = global[name];
+	global[name] = fn;
+	let err, had_err = false;
+	let result;
+	try {
+		result = cb();
+	} catch (e) {
+		err = e; had_err = true;
+	}
+	global[name] = orig;
+	if (had_err) die(err);
+	return result;
+};
 
 /**
  * Installs persistent global state for one module and returns a proxy. When
