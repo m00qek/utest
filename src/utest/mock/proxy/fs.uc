@@ -139,8 +139,10 @@ return {
 			let f = ctx.get_behavior('rename');
 			if (f) return f(old_path, new_path);
 			if (ctx.has_data(old_path)) {
-				if (ctx.get_data(old_path) === null) return false;  // deleted in mock
-				ctx.set_data(new_path, ctx.get_data(old_path));
+				let v = ctx.get_data(old_path);
+				if (v === null) return false;       // deleted in mock
+				if (old_path === new_path) return true;  // rename onto self is a no-op
+				ctx.set_data(new_path, v);
 				ctx.set_data(old_path, null);
 				return true;
 			}
@@ -197,14 +199,17 @@ return {
 			let prefix = path;
 			if (path !== "/" && substr(prefix, length(prefix) - 1) !== "/") prefix += "/";
 			for (let vp in virtual_paths) {
-				if (ctx.get_data(vp) === null) continue;
-				if (substr(vp, 0, length(prefix)) === prefix) {
-					let relative = substr(vp, length(prefix));
-					let parts = split(relative, "/");
-					if (length(parts) > 0 && parts[0] !== "") {
-						entries[parts[0]] = true;
-					}
-				}
+				if (substr(vp, 0, length(prefix)) !== prefix) continue;
+				let relative = substr(vp, length(prefix));
+				let parts = split(relative, "/");
+				if (length(parts) === 0 || parts[0] === "") continue;
+				// A deleted (null) direct child removes the entry even if it exists on
+				// the real filesystem; a non-null path (direct or nested) adds its
+				// top-level component.
+				if (length(parts) === 1 && ctx.get_data(vp) === null)
+					delete entries[parts[0]];
+				else if (ctx.get_data(vp) !== null)
+					entries[parts[0]] = true;
 			}
 			let result = keys(entries);
 			return length(result) > 0 ? result : null;
@@ -245,8 +250,11 @@ return {
 			let re_pattern = "^" + p + "$";
 			let re = regexp(re_pattern);
 			for (let vp in virtual_paths) {
-				if (ctx.get_data(vp) === null) continue;
-				if (match(vp, re)) files[vp] = true;
+				if (!match(vp, re)) continue;
+				// A matching path mocked as deleted (null) must be removed even when the
+				// real glob returned it, not merely skipped.
+				if (ctx.get_data(vp) === null) delete files[vp];
+				else files[vp] = true;
 			}
 			return length(keys(files)) > 0 ? keys(files) : null;
 		};

@@ -57,13 +57,17 @@ return {
 						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
 						return;
 					}
+					let matched = false;
 					for (let sec_name, sec in p) {
 						if (type(sec) !== 'object' || sec['.type'] !== type_name) continue;
 						let s = { ...sec };
 						s['.name'] = sec_name;
 						cb(s);
+						matched = true;
 					}
-					return true;
+					// Real uci foreach returns false when no section of the type exists,
+					// so callers can detect "no matching sections" — don't always claim true.
+					return matched;
 				},
 
 				set: function(pkg, sec, opt, val) {
