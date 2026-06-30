@@ -40,9 +40,10 @@ export function snapshot() {
 	let snap = {};
 	for (let name, reg in engine.registries) {
 		let s = {
-			fns:    { ...reg.global.fns },
-			strict: reg.global.strict,
-			proxy:  reg.global.proxy
+			channels: [...reg.channels],
+			fns:      { ...reg.global.fns },
+			strict:   reg.global.strict,
+			proxy:    reg.global.proxy
 			// calls intentionally omitted — restore() always resets them to {}
 		};
 		for (let ch in reg.channels)
@@ -72,6 +73,7 @@ export function restore(snap) {
 	engine.reset_layers();
 	for (let name, saved in snap) {
 		const reg = engine.get_registry(name);
+		reg.channels = [...saved.channels];
 		// Deep-clone channel data so successive restores from the same snapshot
 		// each get an independent copy; set_channel() mutations cannot corrupt snap.
 		let new_global = {
@@ -80,16 +82,15 @@ export function restore(snap) {
 			proxy:  saved.proxy,
 			calls:  {}
 		};
-		for (let ch in reg.channels)
+		for (let ch in saved.channels)
 			new_global[ch] = engine.deep_clone(saved[ch] ?? {});
 		reg.global = new_global;
 	}
-	for (let name in keys(engine.registries)) {
+	for (let name in engine.registries) {
 		if (!exists(snap, name)) {
 			const reg = engine.registries[name];
-			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
-			for (let ch in reg.channels) new_global[ch] = {};
-			reg.global = new_global;
+			reg.channels = ['data'];
+			reg.global = { fns: {}, strict: false, proxy: null, calls: {}, data: {} };
 		}
 	}
 };
