@@ -43,7 +43,7 @@ return {
 					return existing !== null ? make_handle(existing, null) : null;
 				}
 				if (ctx.is_strict()) die("strict mock: 'fs.open' called with unmocked path: " + path);
-				return real ? real.open(path, mode) : null;
+				return ctx.real_call('open', [path, mode], null);
 			}
 
 			let existing = ctx.get_data(path);
@@ -52,7 +52,7 @@ return {
 				return make_handle('', (data) => ctx.set_data(path, base + data));
 			}
 
-			return real ? real.open(path, mode) : null;
+			return ctx.real_call('open', [path, mode], null);
 		};
 
 		proxy.popen = function(cmd, mode) {
@@ -68,7 +68,7 @@ return {
 					return existing !== null ? make_handle(existing, null) : null;
 				}
 				if (ctx.is_strict()) die("strict mock: 'fs.popen' called with unmocked command: " + cmd);
-				return real ? real.popen(cmd, mode) : null;
+				return ctx.real_call('popen', [cmd, mode], null);
 			}
 
 			let existing = ctx.get('commands', cmd);
@@ -76,7 +76,7 @@ return {
 			if (ctx.is_active())
 				return make_handle('', (data) => ctx.set('commands', cmd, data));
 
-			return real ? real.popen(cmd, mode) : null;
+			return ctx.real_call('popen', [cmd, mode], null);
 		};
 
 		proxy.readfile = function(path) {
@@ -86,7 +86,7 @@ return {
 			if (ctx.has_data(path)) return ctx.get_data(path);
 			if (ctx.is_strict())
 				die("strict mock: 'fs.readfile' called with unmocked path: " + path);
-			return real ? real.readfile(path) : null;
+			return ctx.real_call('readfile', [path], null);
 		};
 
 		proxy.writefile = function(path, data) {
@@ -97,7 +97,7 @@ return {
 				ctx.set_data(path, data);
 				return length(data);
 			}
-			return real ? real.writefile(path, data) : null;
+			return ctx.real_call('writefile', [path, data], null);
 		};
 
 		proxy.access = function(path, mode) {
@@ -111,7 +111,7 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.access' called with unmocked path: " + path);
-			return real ? real.access(path, mode) : null;
+			return ctx.real_call('access', [path, mode], null);
 		};
 
 		proxy.stat = function(path) {
@@ -131,7 +131,7 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.stat' called with unmocked path: " + path);
-			return real ? real.stat(path) : null;
+			return ctx.real_call('stat', [path], null);
 		};
 
 		proxy.rename = function(old_path, new_path) {
@@ -148,7 +148,7 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.rename' called with unmocked path: " + old_path);
-			return real ? real.rename(old_path, new_path) : false;
+			return ctx.real_call('rename', [old_path, new_path], false);
 		};
 
 		proxy.unlink = function(path) {
@@ -162,7 +162,7 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.unlink' called with unmocked path: " + path);
-			return real ? real.unlink(path) : false;
+			return ctx.real_call('unlink', [path], false);
 		};
 
 		proxy.mkdir = function(path, mode) {
@@ -190,7 +190,7 @@ return {
 			ctx.record_call('lsdir', [path]);
 			let f = ctx.get_behavior('lsdir');
 			if (f) return f(path);
-			let real_entries = ctx.is_strict() ? null : (real ? real.lsdir(path) : null);
+			let real_entries = ctx.is_strict() ? null : ctx.real_call('lsdir', [path], null);
 			let virtual_paths = ctx.get_all_data_keys();
 			let entries = {};
 			if (type(real_entries) === "array") {
@@ -219,7 +219,7 @@ return {
 			ctx.record_call('glob', [pattern]);
 			let f = ctx.get_behavior('glob');
 			if (f) return f(pattern);
-			let real_files = ctx.is_strict() ? null : (real ? real.glob(pattern) : null);
+			let real_files = ctx.is_strict() ? null : ctx.real_call('glob', [pattern], null);
 			let virtual_paths = ctx.get_all_data_keys();
 			let files = {};
 			if (type(real_files) === "array") {

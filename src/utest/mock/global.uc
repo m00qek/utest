@@ -6,6 +6,16 @@
 
 import * as engine from 'utest.mock.engine';
 
+// A pristine global state record for a module: no behavior, non-strict, no
+// recorded calls, no proxy, and every declared channel reset to empty.  Used by
+// patch() (as the base it overrides) and unpatch() so the "blank global" shape
+// is defined in exactly one place.
+function blank_global(reg) {
+	let g = { fns: {}, strict: false, calls: {}, proxy: null };
+	for (let ch in reg.channels) g[ch] = {};
+	return g;
+}
+
 /**
  * Replaces a built-in global (such as `warn`, `system`, or `print`) for the
  * duration of a callback, then unconditionally restores the original — even
@@ -86,18 +96,13 @@ export function patch(name, state) {
 	// Build the new global atomically: save the old state so we can roll back
 	// if build_proxy fails (e.g. a custom proxy factory throws).
 	const prev_global = reg.global;
-	let new_global = {
-		fns:    state.behavior ? { ...state.behavior } : {},
-		strict: state.strict   ? true : false,
-		calls:  {},
-		proxy:  null
-	};
-	// patch() installs a complete new state: every channel starts empty so a
-	// re-patch cannot leak data from a previous patch through a channel the new
-	// state omits.  A channel explicitly present but null is also treated as
-	// empty, matching to_layer()'s handling for mock.inject().
-	for (let ch in reg.channels)
-		new_global[ch] = {};
+	// patch() installs a complete new state: blank_global() starts every channel
+	// empty so a re-patch cannot leak data from a previous patch through a channel
+	// the new state omits.  A channel explicitly present but null is also treated
+	// as empty below, matching to_layer()'s handling for mock.inject().
+	let new_global = blank_global(reg);
+	if (state.behavior) new_global.fns = { ...state.behavior };
+	if (state.strict)   new_global.strict = true;
 	for (let ch in channels)
 		new_global[ch] = (exists(state, ch) && state[ch] !== null) ? engine.deep_clone(state[ch]) : {};
 	reg.global = new_global;
@@ -124,9 +129,7 @@ export function patch(name, state) {
  */
 export function unpatch(name) {
 	const reg = engine.get_registry(name);
-	let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
-	for (let ch in reg.channels) new_global[ch] = {};
-	reg.global = new_global;
+	reg.global = blank_global(reg);
 };
 
 /**

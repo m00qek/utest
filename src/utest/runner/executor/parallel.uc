@@ -88,9 +88,11 @@ export function create() {
 						// Suppress the timeout fatal if the drain just revealed the worker
 						// had actually completed (SUITE_END) or already reported its own
 						// fatal right before the deadline — otherwise we double-report.
-						if (!worker.suite_ended && !worker.fatal_received)
-							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
-								error: sprintf("worker timed out after %ds", int(WORKER_TIMEOUT_MS / 1000)) });
+						let tmsg = this.terminal_fatal({ received_any: worker.received_any,
+							suite_ended: worker.suite_ended, fatal_received: worker.fatal_received,
+							timed_out: true, timeout: int(WORKER_TIMEOUT_MS / 1000), captured: "" });
+						if (tmsg !== null)
+							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: tmsg });
 						finished_count++;
 						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
 						continue;
@@ -112,18 +114,14 @@ export function create() {
 							drain(worker, fh2);
 							fh2.close();
 						}
-						if (!worker.received_any) {
-							let captured = rtrim(fs.readfile(worker.out_file) || "");
-							let err = length(captured) > 0
-								? "worker produced no test output. Captured:\n" + captured
-								: "worker produced no output (possible spawn failure)";
-							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: err });
-						} else if (!worker.suite_ended && !worker.fatal_received) {
-							// The worker already emitted its own FATAL — don't pile a second
-							// one on top.  Only flag an unexplained early exit here.
-							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
-								error: "worker terminated before completing (partial results above)" });
-						}
+						// The worker already emitted its own FATAL — don't pile a second one
+						// on top.  Only flag missing output or an unexplained early exit.
+						let captured = !worker.received_any ? rtrim(fs.readfile(worker.out_file) || "") : "";
+						let dmsg = this.terminal_fatal({ received_any: worker.received_any,
+							suite_ended: worker.suite_ended, fatal_received: worker.fatal_received,
+							timed_out: false, timeout: 0, captured: captured });
+						if (dmsg !== null)
+							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: dmsg });
 						finished_count++;
 						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
 					} else {

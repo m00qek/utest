@@ -48,20 +48,12 @@ export function create() {
 				// SIGSEGV(139), SIGABRT(134), SIGKILL/OOM(137) — as a timeout.
 				let timed_out = (exit_code === 143);
 
-				if (!received_any) {
-					let err = timed_out
-						? sprintf("worker timed out after %ds", timeout)
-						: length(captured) > 0
-							? "worker produced no test output. Captured:\n" + join("\n", captured)
-							: "worker produced no output (possible spawn failure)";
-					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name, error: err });
-				} else if (!suite_ended && !fatal_received) {
-					// The worker already emitted its own FATAL — don't double-report.
-					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name,
-						error: timed_out
-							? sprintf("worker timed out after %ds (partial results above)", timeout)
-							: "worker terminated before completing (partial results above)" });
-				}
+				// The worker already emitted its own FATAL — don't double-report.
+				let smsg = this.terminal_fatal({ received_any: received_any, suite_ended: suite_ended,
+					fatal_received: fatal_received, timed_out: timed_out, timeout: timeout,
+					captured: join("\n", captured) });
+				if (smsg !== null)
+					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name, error: smsg });
 			}
 		}
 	}, ExecutorBase);

@@ -33,5 +33,24 @@ export const ExecutorBase = {
 			seed = t[0] * 1000000000 + t[1];
 		}
 		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed, timeout || 60, lib_paths || [], mocks || [], prop_seed);
+	},
+
+	// Given the terminal state of a finished or killed worker, return the FATAL
+	// error string to report, or null when the worker completed cleanly (or
+	// already emitted its own FATAL).  Shared by both executors so the -j1 and
+	// -jN paths cannot drift in their wording or suppression rule.
+	//   st = { received_any, suite_ended, fatal_received, timed_out, timeout, captured }
+	terminal_fatal: function(st) {
+		if (!st.received_any)
+			return st.timed_out
+				? sprintf("worker timed out after %ds", st.timeout)
+				: length(st.captured) > 0
+					? "worker produced no test output. Captured:\n" + st.captured
+					: "worker produced no output (possible spawn failure)";
+		if (!st.suite_ended && !st.fatal_received)
+			return st.timed_out
+				? sprintf("worker timed out after %ds (partial results above)", st.timeout)
+				: "worker terminated before completing (partial results above)";
+		return null;
 	}
 };

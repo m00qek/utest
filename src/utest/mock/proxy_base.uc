@@ -32,6 +32,10 @@ return {
 			record_call:       function(fn_name, args){ __internal__.record_call(name, fn_name, args); },
 			is_active:         function()             { return __internal__.is_active(name); },
 			is_strict:         function()             { return __internal__.is_strict(name); },
+			// Forward to the real module, or return `fallback` when it could not be
+			// loaded (real === null).  Centralizes the null-guard so a proxy method
+			// can never accidentally dereference a null real module.
+			real_call:         function(fn_name, args, fallback) { return real ? real[fn_name](...args) : fallback; },
 			base: function() {
 				let proxy = {};
 				const calls = __internal__.get_calls(name);
