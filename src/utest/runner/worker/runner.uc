@@ -101,7 +101,9 @@ export function run_tests(reporter, filter, seed) {
 				reporter.test_result(null, test.path, "PASS", test.index);
 			}
 
-			if (mock_snap !== null) mock.restore(mock_snap);
+			try {
+				if (mock_snap !== null) mock.restore(mock_snap);
+			} catch (_) {}
 		}
 
 		root.is_running = false;

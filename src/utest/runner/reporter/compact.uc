@@ -116,10 +116,12 @@ export function create(use_color) {
 			} else if (msg.status === "FAIL") {
 				print_dot(msg.bundle, "■", t.FAIL);
 				let b = get_bundle(msg.bundle);
+				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
 				push(b.file_failures[msg.suite], msg);
 			} else if (msg.status === "ERROR") {
 				print_dot(msg.bundle, "▲", t.ERROR);
 				let b = get_bundle(msg.bundle);
+				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
 				push(b.file_failures[msg.suite], msg);
 			}
 		},

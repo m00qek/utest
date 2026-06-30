@@ -29,7 +29,7 @@ export function throws(fn, pattern, msg) {
 	try {
 		fn();
 	} catch (e) {
-		if (pattern) {
+		if (pattern !== null) {
 			const emsg = unwrap_error_msg(e);
 			const combinator = is_combinator(pattern) ? pattern :
 				(type(pattern) === 'regexp' ? _regex(pattern) : contains(pattern));
