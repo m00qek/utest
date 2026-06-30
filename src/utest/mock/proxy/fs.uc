@@ -36,14 +36,17 @@ return {
 			if (f) return f(path, mode);
 
 			mode ??= 'r';
-			let existing = ctx.get_data(path);
 
 			if (substr(mode, 0, 1) === 'r') {
-				if (existing !== null) return make_handle(existing, null);
+				if (ctx.has_data(path)) {
+					let existing = ctx.get_data(path);
+					return existing !== null ? make_handle(existing, null) : null;
+				}
 				if (ctx.is_strict()) die("strict mock: 'fs.open' called with unmocked path: " + path);
 				return real ? real.open(path, mode) : null;
 			}
 
+			let existing = ctx.get_data(path);
 			if (ctx.is_active()) {
 				let base = (substr(mode, 0, 1) === 'a') ? (existing ?? '') : '';
 				return make_handle('', (data) => ctx.set_data(path, base + data));
@@ -76,8 +79,7 @@ return {
 			ctx.record_call('readfile', [path]);
 			let f = ctx.get_behavior('readfile');
 			if (f) return f(path);
-			let v = ctx.get_data(path);
-			if (v !== null) return v;
+			if (ctx.has_data(path)) return ctx.get_data(path);
 			if (ctx.is_strict())
 				die("strict mock: 'fs.readfile' called with unmocked path: " + path);
 			return real ? real.readfile(path) : null;
@@ -98,7 +100,7 @@ return {
 			ctx.record_call('access', [path, mode]);
 			let f = ctx.get_behavior('access');
 			if (f) return f(path, mode);
-			if (ctx.get_data(path) !== null) return true;
+			if (ctx.has_data(path)) return ctx.get_data(path) !== null;
 			let prefix = (path !== "/" && substr(path, length(path) - 1) !== "/") ? path + "/" : path;
 			for (let vp in ctx.get_all_data_keys()) {
 				if (ctx.get_data(vp) !== null && substr(vp, 0, length(prefix)) === prefix) return true;
@@ -112,8 +114,9 @@ return {
 			ctx.record_call('stat', [path]);
 			let f = ctx.get_behavior('stat');
 			if (f) return f(path);
-			let v = ctx.get_data(path);
-			if (v !== null) {
+			if (ctx.has_data(path)) {
+				let v = ctx.get_data(path);
+				if (v === null) return null;
 				let size = (type(v) === 'string') ? length(v) : 0;
 				return { size, mtime: 0, type: 'regular' };
 			}
@@ -146,8 +149,8 @@ return {
 			ctx.record_call('unlink', [path]);
 			let f = ctx.get_behavior('unlink');
 			if (f) return f(path);
-			let v = ctx.get_data(path);
-			if (v !== null) {
+			if (ctx.has_data(path)) {
+				if (ctx.get_data(path) === null) return false;  // already deleted in mock
 				ctx.set_data(path, null);
 				return true;
 			}

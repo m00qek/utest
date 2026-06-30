@@ -308,4 +308,29 @@ describe('FS Mocking', () => {
 		mock.global.unpatch('fs');
 	});
 
+	it('readfile() returns null (not a strict error) for a path deleted with unlink()', () => {
+		// In strict mode: if readfile() cannot distinguish a deleted key (value null)
+		// from an absent key, it falls through to the strict guard and dies.
+		mock.inject('fs', { strict: true, data: { '/tmp/sentinel.txt': 'content' } }, (m_fs) => {
+			m_fs.unlink('/tmp/sentinel.txt');
+			assert.match(null, m_fs.readfile('/tmp/sentinel.txt'), 'deleted path must return null, not throw');
+		});
+	});
+
+	it('access() returns false (not a real-fs lookup) for a path deleted with unlink()', () => {
+		// /etc/banner exists on disk; without the fix, access() after unlink()
+		// falls through to real.access() and returns truthy.
+		mock.inject('fs', { data: { '/etc/banner': 'mocked' } }, (m_fs) => {
+			m_fs.unlink('/etc/banner');
+			assert.match(false, m_fs.access('/etc/banner'), 'deleted file must not be accessible');
+		});
+	});
+
+	it('stat() returns null (not real stat) for a path deleted with unlink()', () => {
+		mock.inject('fs', { data: { '/etc/banner': 'mocked' } }, (m_fs) => {
+			m_fs.unlink('/etc/banner');
+			assert.match(null, m_fs.stat('/etc/banner'), 'deleted file must stat to null');
+		});
+	});
+
 });

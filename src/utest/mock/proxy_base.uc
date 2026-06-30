@@ -25,6 +25,8 @@ return {
 			get_data:          function(key)      { return __internal__.get_channel(name, 'data', key); },
 			set_data:          function(key, val) { __internal__.set_channel(name, 'data', key, val); },
 			get_all_data_keys: function()         { return __internal__.get_all_channel_keys(name, 'data'); },
+			has_data:          function(key)      { return __internal__.has_channel(name, 'data', key); },
+			has:               function(ch, key)  { return __internal__.has_channel(name, ch, key); },
 
 			get_behavior:      function(fn_name)      { return __internal__.get_fn(name, fn_name); },
 			record_call:       function(fn_name, args){ __internal__.record_call(name, fn_name, args); },

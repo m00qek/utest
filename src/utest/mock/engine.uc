@@ -117,10 +117,18 @@ function _channel_all_keys(name, channel) {
 	return keys(keys_map);
 }
 
+function _channel_has(name, channel, key) {
+	const reg = get_registry(name);
+	for (let i = length(reg.layers) - 1; i >= 0; i--)
+		if (reg.layers[i][channel] && exists(reg.layers[i][channel], key)) return true;
+	return !!(reg.global[channel] && exists(reg.global[channel], key));
+}
+
 const internal_obj = {
 	get_channel:          _channel_get,
 	set_channel:          _channel_set,
 	get_all_channel_keys: _channel_all_keys,
+	has_channel:          _channel_has,
 
 	get_fn: function(name, fn_name) {
 		const reg = get_registry(name);
