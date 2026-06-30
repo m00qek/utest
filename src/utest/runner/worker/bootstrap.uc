@@ -26,7 +26,9 @@ global.require = function(name) {
 	let proxy = reg && reg.global.proxy;
 	if (proxy) return proxy;
 	if (_mocked[name]) {
-		try { return _real_require('real_' + name); } catch(e) {}
+		try { return _real_require('real_' + name); } catch(e) {
+			warn(sprintf("[utest] warning: mock configured for '%s' but no shim found (real_%s.uc missing from search path); falling back to real module\n", name, name));
+		}
 	}
 	return _real_require(name);
 };
