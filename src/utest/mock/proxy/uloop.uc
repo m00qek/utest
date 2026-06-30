@@ -14,12 +14,8 @@ return {
 			ctx.record_call('timer', [ms, cb]);
 			let f = ctx.get_behavior('timer');
 			if (f) return f(ms, cb);
-			let pending = ctx.get_data('__pending__');
-			if (type(pending) !== 'array') {
-				pending = [];
-				ctx.set_data('__pending__', pending);
-			}
-			push(pending, { ms, cb });
+			const pending = ctx.get_data('__pending__');
+			ctx.set_data('__pending__', [...(type(pending) === 'array' ? pending : []), { ms, cb }]);
 		};
 
 		proxy.run = function() {

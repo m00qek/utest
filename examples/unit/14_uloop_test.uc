@@ -72,4 +72,16 @@ describe('uloop Mocking', () => {
 		assert.match(truthy(), fired, 'shim transparently intercepts');
 		mock.global.unpatch('uloop');
 	});
+
+	it('timers registered inside an inner inject() do not leak into the outer scope', () => {
+		const fired = [];
+		mock.inject('uloop', {}, (outer) => {
+			outer.timer(100, () => push(fired, 'outer'));
+			mock.inject('uloop', {}, (inner) => {
+				inner.timer(50, () => push(fired, 'inner'));
+			});
+			outer.run();
+		});
+		assert.match(['outer'], fired, 'inner timer must not appear in outer pending queue');
+	});
 });
