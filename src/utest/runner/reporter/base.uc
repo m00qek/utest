@@ -110,7 +110,9 @@ export const ReporterBase = {
 		push(this.results, msg);
 		this.stats.fatals++;
 
-		if (msg.bundle && this._bundle_stats[msg.bundle]) {
+		if (msg.bundle) {
+			if (!this._bundle_stats[msg.bundle])
+				this._bundle_stats[msg.bundle] = empty_stats();
 			this._bundle_stats[msg.bundle].fatals++;
 		}
 		if (this.render_fatal) this.render_fatal(msg);

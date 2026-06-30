@@ -53,16 +53,18 @@ export function create(use_color) {
 		render_summary: function(ctx) {
 			let stats = ctx.stats;
 			print("\n" + color(t.HEADER, "Summary:") + "\n");
-			print("  Suites: " + stats.suites + "\n");
-			print("  Total:  " + stats.total + "\n");
+			print("  Suites:  " + stats.suites + "\n");
+			print("  Total:   " + stats.total + "\n");
 
-			print("  Passed: " + color(t.PASS, stats.passed) + "\n");
-			print("  Failed: " + color(t.FAIL, stats.failed) + "\n");
-			print("  Errors: " + color(t.BOLD + t.ERROR, stats.errors) + "\n");
-			if (stats.fatals) print("  Fatals: " + color(t.BOLD + t.ERROR, stats.fatals) + "\n");
+			print("  Passed:  " + color(t.PASS, stats.passed) + "\n");
+			print("  Failed:  " + color(t.FAIL, stats.failed) + "\n");
+			print("  Errors:  " + color(t.BOLD + t.ERROR, stats.errors) + "\n");
+			if (stats.fatals)  print("  Fatals:  " + color(t.BOLD + t.ERROR, stats.fatals) + "\n");
+			if (stats.skipped) print("  Skipped: " + color(t.SKIP, stats.skipped) + "\n");
+			if (stats.ignored) print("  Ignored: " + color(t.IGNORE, stats.ignored) + "\n");
 
-			print("  Time:   " + color(t.TIME, ctx.duration_ms + " ms") + "\n");
-			print("  Seed:   " + ctx.seed + "\n");
+			print("  Time:    " + color(t.TIME, ctx.duration_ms + " ms") + "\n");
+			print("  Seed:    " + ctx.seed + "\n");
 		}
 	}, ReporterBase);
 };
