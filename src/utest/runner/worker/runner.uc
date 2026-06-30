@@ -53,57 +53,74 @@ export function run_tests(reporter, filter, seed) {
 	if (setup_ok) {
 		root.is_running = true;
 		const mock = global.__utest_mock_instance;
-		const mock_snap = mock ? mock.snapshot() : null;
+		let mock_snap = null;
+		let snap_ok = true;
+		try {
+			mock_snap = mock ? mock.snapshot() : null;
+		} catch (e) {
+			reporter.fatal("Mock snapshot failed: " + util.parse_thrown(e).message);
+			snap_ok = false;
+		}
 
-		for (let test in atomic_tests) {
-			if (filter_re && !match(test.path_str, filter_re)) {
-				reporter.test_result(null, test.path, "IGNORE", test.index);
-				continue;
-			}
+		if (snap_ok) {
+			for (let test in atomic_tests) {
+				if (filter_re && !match(test.path_str, filter_re)) {
+					reporter.test_result(null, test.path, "IGNORE", test.index);
+					continue;
+				}
 
-			if (test.skipped) {
-				reporter.test_result(null, test.path, "SKIP", test.index);
-				continue;
-			}
+				if (test.skipped) {
+					reporter.test_result(null, test.path, "SKIP", test.index);
+					continue;
+				}
 
-			let error = null;
+				let error = null;
 
-			try {
-				for (let hook in test.beforeEach) hook();
-			} catch (e) {
-				error = e;
-			}
+				for (let hook in test.beforeEach) {
+					try { hook(); } catch (e) {
+						if (error === null) error = e;
+					}
+				}
 
-			// Snapshot after beforeEach (even when it threw) so a patch() applied in
-			// beforeEach — whether or not it was followed by unpatch() — cannot leak
-			// into afterEach regardless of which hook failed.
-			let pre_body_snap = mock_snap !== null ? mock.snapshot() : null;
-
-			if (error === null) {
-				try { test.fn(); } catch (e) { error = e; }
-			}
-
-			try {
-				if (pre_body_snap !== null) mock.restore(pre_body_snap);
-			} catch (e) {
-				if (error === null) error = e;
-			}
-
-			for (let hook in test.afterEach) {
-				try { hook(); } catch (e) {
+				// Snapshot after beforeEach (even when it threw) so a patch() applied in
+				// beforeEach — whether or not it was followed by unpatch() — cannot leak
+				// into afterEach regardless of which hook failed.
+				let pre_body_snap = null;
+				try {
+					pre_body_snap = mock_snap !== null ? mock.snapshot() : null;
+				} catch (e) {
 					if (error === null) error = e;
 				}
-			}
 
-			if (error !== null) {
-				reporter.test_result(error, test.path, null, test.index);
-			} else {
-				reporter.test_result(null, test.path, "PASS", test.index);
-			}
+				if (error === null) {
+					try { test.fn(); } catch (e) { error = e; }
+				}
 
-			try {
-				if (mock_snap !== null) mock.restore(mock_snap);
-			} catch (_) {}
+				try {
+					if (pre_body_snap !== null) mock.restore(pre_body_snap);
+				} catch (e) {
+					if (error === null) error = e;
+				}
+
+				for (let hook in test.afterEach) {
+					try { hook(); } catch (e) {
+						if (error === null) error = e;
+					}
+				}
+
+				if (error !== null) {
+					reporter.test_result(error, test.path, null, test.index);
+				} else {
+					reporter.test_result(null, test.path, "PASS", test.index);
+				}
+
+				try {
+					if (mock_snap !== null) mock.restore(mock_snap);
+				} catch (e) {
+					reporter.fatal("Mock state reset failed: " + util.parse_thrown(e).message);
+					break;
+				}
+			}
 		}
 
 		root.is_running = false;
