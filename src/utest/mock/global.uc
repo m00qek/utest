@@ -92,11 +92,14 @@ export function patch(name, state) {
 		calls:  {},
 		proxy:  null
 	};
+	// patch() installs a complete new state: every channel starts empty so a
+	// re-patch cannot leak data from a previous patch through a channel the new
+	// state omits.  A channel explicitly present but null is also treated as
+	// empty, matching to_layer()'s handling for mock.inject().
 	for (let ch in reg.channels)
-		new_global[ch] = prev_global[ch] ?? {};
+		new_global[ch] = {};
 	for (let ch in channels)
-		if (exists(state, ch))
-			new_global[ch] = engine.deep_clone(state[ch]);
+		new_global[ch] = (exists(state, ch) && state[ch] !== null) ? engine.deep_clone(state[ch]) : {};
 	reg.global = new_global;
 	let err, had_err = false;
 	let proxy;

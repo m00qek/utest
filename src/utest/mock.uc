@@ -88,9 +88,14 @@ export function restore(snap) {
 	}
 	for (let name in engine.registries) {
 		if (!exists(snap, name)) {
+			// Module registered after the snapshot was taken: clear its state but
+			// keep its channel list intact.  Hardcoding ['data'] would drop extra
+			// channels (e.g. fs's 'commands'), so a later snapshot() would capture
+			// an incomplete manifest and restore would silently lose that state.
 			const reg = engine.registries[name];
-			reg.channels = ['data'];
-			reg.global = { fns: {}, strict: false, proxy: null, calls: {}, data: {} };
+			let new_global = { fns: {}, strict: false, proxy: null, calls: {} };
+			for (let ch in reg.channels) new_global[ch] = {};
+			reg.global = new_global;
 		}
 	}
 };
