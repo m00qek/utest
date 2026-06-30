@@ -18,6 +18,27 @@ export function create() {
 
 			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
 
+			// Drain all complete newline-terminated JSON lines from fh into reporter,
+			// updating worker state.  Returns true if SUITE_END was seen.
+			function drain(worker, fh) {
+				let line;
+				while ((line = fh.read("line")) !== null) {
+					if (ord(line, length(line) - 1) !== 10) break;
+					let msg;
+					try { msg = json(line); } catch (e) {
+						// Non-JSON lines are diagnostic output (e.g. warn() calls
+						// from engine.uc). Pass them through to stderr unchanged.
+						warn(rtrim(line) + "\n");
+						worker.offset += length(line);
+						continue;
+					}
+					if (msg.event === "SUITE_END") worker.suite_ended = true;
+					dispatch(msg, reporter);
+					worker.offset += length(line);
+					worker.received_any = true;
+				}
+			}
+
 			while (finished_count < length(shuffled_files)) {
 				while (length(active_workers) < jobs && length(queue) > 0) {
 					let file = shift(queue);
@@ -40,7 +61,8 @@ export function create() {
 						pid_file: pid_file,
 						start_time: clock(),
 						offset: 0,
-						received_any: false
+						received_any: false,
+						suite_ended: false
 					});
 				}
 
@@ -63,21 +85,7 @@ export function create() {
 					let fh = fs.open(worker.out_file, "r");
 					if (fh) {
 						fh.seek(worker.offset, 0);
-						let line;
-						while ((line = fh.read("line")) !== null) {
-							if (ord(line, length(line) - 1) !== 10) break;
-							let msg;
-							try { msg = json(line); } catch (e) {
-								// Non-JSON lines are diagnostic output (e.g. warn() calls
-								// from engine.uc). Pass them through to stderr unchanged.
-								warn(rtrim(line) + "\n");
-								worker.offset += length(line);
-								continue;
-							}
-							dispatch(msg, reporter);
-							worker.offset += length(line);
-							worker.received_any = true;
-						}
+						drain(worker, fh);
 						fh.close();
 					}
 
@@ -87,19 +95,7 @@ export function create() {
 						let fh2 = fs.open(worker.out_file, "r");
 						if (fh2) {
 							fh2.seek(worker.offset, 0);
-							let line;
-							while ((line = fh2.read("line")) !== null) {
-								if (ord(line, length(line) - 1) !== 10) break;
-								let msg;
-								try { msg = json(line); } catch (e) {
-									warn(rtrim(line) + "\n");
-									worker.offset += length(line);
-									continue;
-								}
-								dispatch(msg, reporter);
-								worker.offset += length(line);
-								worker.received_any = true;
-							}
+							drain(worker, fh2);
 							fh2.close();
 						}
 						if (!worker.received_any) {
@@ -108,6 +104,9 @@ export function create() {
 								? "worker produced no test output. Captured:\n" + captured
 								: "worker produced no output (possible spawn failure)";
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: err });
+						} else if (!worker.suite_ended) {
+							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
+								error: "worker terminated before completing (partial results above)" });
 						}
 						finished_count++;
 						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
