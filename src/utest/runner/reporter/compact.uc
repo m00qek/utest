@@ -127,6 +127,7 @@ export function create(use_color) {
 		},
 
 		render_fatal: function(msg) {
+			if (!msg.bundle) return;
 			print_dot(msg.bundle, "!", t.BOLD + t.ERROR);
 			let b = get_bundle(msg.bundle);
 			if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
