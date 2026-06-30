@@ -110,6 +110,10 @@ export const ReporterBase = {
 		push(this.results, msg);
 		this.stats.fatals++;
 
+		if (msg.suite && !this._suite_stats[msg.suite]) {
+			this.stats.suites++;
+			this._suite_stats[msg.suite] = { passed: 0, failed: 0, errors: 0, skipped: 0, ignored: 0, total: 0 };
+		}
 		if (msg.bundle) {
 			if (!this._bundle_stats[msg.bundle])
 				this._bundle_stats[msg.bundle] = empty_stats();
