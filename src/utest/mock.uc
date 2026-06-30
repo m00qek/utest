@@ -124,6 +124,8 @@ export function restore(snap) {
  * assert.match('enabled=1', content);
  */
 export function inject(name, state, cb) {
+	if (type(state) !== 'object' || state === null)
+		die(sprintf("mock.inject: state for '%s' must be a non-null object", name));
 	const proxy_channels = engine.get_proxy_channels(name);
 	const real = engine.get_real(name);
 	engine.guard_mock_target('mock.inject', name, proxy_channels, real);

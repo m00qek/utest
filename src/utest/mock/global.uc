@@ -138,7 +138,8 @@ export function unpatch(name) {
  * @param {any} fn - Replacement installed in `global[name]` until unpatch_builtin.
  */
 export function patch_builtin(name, fn) {
-	engine.builtin_overrides[name] = global[name];
+	if (!exists(engine.builtin_overrides, name))
+		engine.builtin_overrides[name] = global[name];
 	global[name] = fn;
 };
 

@@ -21,11 +21,14 @@ export function create(suite, bundle) {
 		},
 
 		fatal: function(msg) {
+			const text = (type(msg) === 'object' && msg !== null)
+				? parse_thrown(msg).message
+				: sprintf('%s', msg);
 			print(sprintf('%J', {
 				event: "FATAL",
 				suite: suite,
 				bundle: bundle,
-				error: sprintf('%s', msg)
+				error: text
 			}) + "\n");
 		},
 

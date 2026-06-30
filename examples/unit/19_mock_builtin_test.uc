@@ -72,4 +72,12 @@ describe('Mock built-ins', () => {
 		mock.global.unpatch_builtin('warn');
 		assert.match(orig, global.warn);
 	});
+
+	it('global.patch_builtin() called twice restores to original, not to first patch', () => {
+		const orig = global.warn;
+		mock.global.patch_builtin('warn', () => 'first');
+		mock.global.patch_builtin('warn', () => 'second');
+		mock.global.unpatch_builtin('warn');
+		assert.match(orig, global.warn, 'must restore original, not first patch');
+	});
 });
