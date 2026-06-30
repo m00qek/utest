@@ -63,6 +63,7 @@ return {
 						s['.name'] = sec_name;
 						cb(s);
 					}
+					return true;
 				},
 
 				set: function(pkg, sec, opt, val) {

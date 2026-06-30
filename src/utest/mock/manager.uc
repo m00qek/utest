@@ -62,7 +62,8 @@ function setup_shim(name, shim_dir) {
 		return;
 	}
 	generate_standard_shim(name, shim_dir);
-	let ext = match(real_path, /\.[^.]+$/)[0];
+	let ext_m = match(real_path, /\.[^.]+$/);
+	let ext = ext_m ? ext_m[0] : '';
 	if (!fs.symlink(real_path, shim_dir + "/real_" + name + ext))
 		die(sprintf("[utest] error: could not link real module for '%s'\n", name));
 }
