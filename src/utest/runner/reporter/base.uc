@@ -50,7 +50,7 @@ export const ReporterBase = {
 		let file = msg.suite;
 		if (!this._suite_stats[file]) {
 			this.stats.suites++;
-			this._suite_stats[file] = { passed: 0, failed: 0, errors: 0, skipped: 0, ignored: 0, total: 0 };
+			this._suite_stats[file] = empty_stats();
 		}
 		if (this.render_suite_start) this.render_suite_start(msg);
 	},
@@ -68,7 +68,7 @@ export const ReporterBase = {
 
 		this.stats.total++;
 		if (!this._suite_stats[file]) {
-			this._suite_stats[file] = { passed: 0, failed: 0, errors: 0, skipped: 0, ignored: 0, total: 0 };
+			this._suite_stats[file] = empty_stats();
 		}
 		this._suite_stats[file].total++;
 
@@ -112,7 +112,7 @@ export const ReporterBase = {
 
 		if (msg.suite && !this._suite_stats[msg.suite]) {
 			this.stats.suites++;
-			this._suite_stats[msg.suite] = { passed: 0, failed: 0, errors: 0, skipped: 0, ignored: 0, total: 0 };
+			this._suite_stats[msg.suite] = empty_stats();
 		}
 		if (msg.bundle) {
 			if (!this._bundle_stats[msg.bundle])

@@ -31,8 +31,13 @@ export function throws(fn, pattern, msg) {
 	} catch (e) {
 		if (pattern !== null) {
 			const emsg = unwrap_error_msg(e);
-			const combinator = is_combinator(pattern) ? pattern :
-				(type(pattern) === 'regexp' ? _regex(pattern) : contains(pattern));
+			let combinator;
+			if (is_combinator(pattern))             combinator = pattern;
+			else if (type(pattern) === 'regexp')    combinator = _regex(pattern);
+			else if (type(pattern) === 'string')    combinator = contains(pattern);
+			// Reject other types (bool, int, array, object) with a clear message instead
+			// of either dying inside contains() or trivially passing on an empty array/object.
+			else fail(sprintf("assert.throws: pattern must be a string, regex, or combinator, got %s", type(pattern)));
 			if (!combinator.match(emsg).ok)
 				fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pattern));
 		}
