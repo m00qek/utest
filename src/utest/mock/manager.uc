@@ -58,6 +58,8 @@ function setup_shim(name, shim_dir) {
 				));
 			}
 			fs.writefile(shim_dir + "/" + name + ".uc", join("\n", lines) + "\n");
+		} else {
+			warn(sprintf("[utest] warning: no shim created for '%s': module not found on disk and no proxy api list — mock will have no effect\n", name));
 		}
 		return;
 	}
@@ -88,7 +90,7 @@ export const setup = function(config) {
 		if (ppath) {
 			let abs = fs.realpath(ppath) || ppath;
 			if (!fs.symlink(abs, proxy_subdir + "/" + name + ".uc"))
-				print(sprintf("[utest] warning: could not install proxy for '%s'\n", name));
+				die(sprintf("[utest] error: could not install proxy for '%s': symlink '%s' -> '%s' failed\n", name, abs, proxy_subdir + "/" + name + ".uc"));
 		}
 
 		setup_shim(name, shim_dir);
