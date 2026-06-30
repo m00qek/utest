@@ -360,7 +360,11 @@ export function forall(generator, prop_fn, opts) {
 		}
 	}
 
-	for (let i = 0; i < runs; i++) {
+	for (let i = 0, successes = 0; successes < runs; i++) {
+		// Guard against a filter so restrictive that the loop never terminates.
+		// Allow up to 10× runs total attempts before declaring exhaustion.
+		if (stats.discards > runs * 10) break;
+
 		const seed = base_seed + i;
 		const s = record_source(seed);
 		let value;
@@ -388,7 +392,7 @@ export function forall(generator, prop_fn, opts) {
 				});
 			}
 			report_failure({
-				cases_tried: i + 1,
+				cases_tried: successes + 1,
 				seed,
 				original_value: value,
 				shrunk_value,
@@ -399,12 +403,13 @@ export function forall(generator, prop_fn, opts) {
 				persist_path: saved_path
 			}, runs);
 		}
+		successes++;
 	}
 
-	if (stats.discards >= runs)
+	if (stats.discards > 0 && stats.discards >= runs)
 		die(sprintf('%J', { __utest__: { kind: 'fail', message: sprintf(
-			"Property exhausted: all %d run(s) were discarded — gen.filter predicate is too restrictive or increase `runs`",
-			runs) } }));
+			"Property exhausted: %d discard(s) for %d requested run(s) — gen.filter predicate is too restrictive or increase `runs`",
+			stats.discards, runs) } }));
 };
 
 
