@@ -95,7 +95,8 @@ export function patch(name, state) {
 	for (let ch in reg.channels)
 		new_global[ch] = prev_global[ch] ?? {};
 	for (let ch in channels)
-		new_global[ch] = state[ch] ? engine.deep_clone(state[ch]) : {};
+		if (exists(state, ch))
+			new_global[ch] = engine.deep_clone(state[ch]);
 	reg.global = new_global;
 	let err, had_err = false;
 	let proxy;
