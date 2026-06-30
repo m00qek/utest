@@ -73,7 +73,7 @@ export function to_layer(state, channels) {
 		calls:  {}
 	};
 	for (let ch in channels)
-		layer[ch] = exists(state, ch) ? deep_clone(state[ch]) : {};
+		layer[ch] = (exists(state, ch) && state[ch] !== null) ? deep_clone(state[ch]) : {};
 	return layer;
 };
 
