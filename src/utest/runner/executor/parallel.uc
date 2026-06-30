@@ -19,7 +19,7 @@ export function create() {
 			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
 
 			// Drain all complete newline-terminated JSON lines from fh into reporter,
-			// updating worker state.  Returns true if SUITE_END was seen.
+			// updating worker state (suite_ended / fatal_received / received_any).
 			function drain(worker, fh) {
 				let line;
 				while ((line = fh.read("line")) !== null) {
@@ -33,6 +33,7 @@ export function create() {
 						continue;
 					}
 					if (msg.event === "SUITE_END") worker.suite_ended = true;
+					if (msg.event === "FATAL") worker.fatal_received = true;
 					dispatch(msg, reporter);
 					worker.offset += length(line);
 					worker.received_any = true;
@@ -62,7 +63,8 @@ export function create() {
 						start_time: clock(),
 						offset: 0,
 						received_any: false,
-						suite_ended: false
+						suite_ended: false,
+						fatal_received: false
 					});
 				}
 
@@ -83,8 +85,12 @@ export function create() {
 							drain(worker, fh_t);
 							fh_t.close();
 						}
-						reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
-							error: sprintf("worker timed out after %ds", int(WORKER_TIMEOUT_MS / 1000)) });
+						// Suppress the timeout fatal if the drain just revealed the worker
+						// had actually completed (SUITE_END) or already reported its own
+						// fatal right before the deadline — otherwise we double-report.
+						if (!worker.suite_ended && !worker.fatal_received)
+							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
+								error: sprintf("worker timed out after %ds", int(WORKER_TIMEOUT_MS / 1000)) });
 						finished_count++;
 						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
 						continue;
@@ -112,7 +118,9 @@ export function create() {
 								? "worker produced no test output. Captured:\n" + captured
 								: "worker produced no output (possible spawn failure)";
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: err });
-						} else if (!worker.suite_ended) {
+						} else if (!worker.suite_ended && !worker.fatal_received) {
+							// The worker already emitted its own FATAL — don't pile a second
+							// one on top.  Only flag an unexplained early exit here.
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
 								error: "worker terminated before completing (partial results above)" });
 						}

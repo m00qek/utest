@@ -9,11 +9,14 @@ export function create() {
 			for (let file in shuffled_files) {
 				let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed, prop_seed: prop_seed, mocks: mocks || [] });
 				// Run worker under a shell watchdog: background it, start a sleep-kill
-				// timer, then wait for whichever finishes first.  No `timeout` binary is
-				// required (not available on all OpenWrt targets).  If the watchdog fires,
-				// the worker is SIGTERMed and `wait` exits with 143 (128 + 15).
+				// timer, then wait for the worker.  No `timeout` binary is required (not
+				// available on all OpenWrt targets).  If the watchdog fires, the worker is
+				// SIGTERMed and `wait` exits 143 (128 + 15).  We capture the worker's exit
+				// code, then kill the sleep timer so it does not linger as an orphaned
+				// process (a PID-table leak when many fast tests run in sequence), and
+				// finally re-exit with the worker's code so timeout detection still works.
 				let cmd = sprintf(
-					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & wait $_P",
+					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(worker_arg), timeout);
 				let proc = fs.popen(cmd, "r");
 
@@ -25,6 +28,7 @@ export function create() {
 				let line;
 				let received_any = false;
 				let suite_ended = false;
+				let fatal_received = false;
 				let captured = [];
 				while ((line = proc.read("line")) !== null) {
 					let msg;
@@ -34,21 +38,25 @@ export function create() {
 						continue;
 					}
 					if (msg.event === "SUITE_END") suite_ended = true;
+					if (msg.event === "FATAL") fatal_received = true;
 					dispatch(msg, reporter);
 					received_any = true;
 				}
 				let exit_code = proc.close();
+				// 143 = 128 + SIGTERM(15), the exact signal our watchdog sends.  Matching
+				// it exactly (rather than >= 128) avoids mislabelling a crashed worker —
+				// SIGSEGV(139), SIGABRT(134), SIGKILL/OOM(137) — as a timeout.
+				let timed_out = (exit_code === 143);
 
 				if (!received_any) {
-					let timed_out = (type(exit_code) === 'int' && exit_code >= 128);
 					let err = timed_out
 						? sprintf("worker timed out after %ds", timeout)
 						: length(captured) > 0
 							? "worker produced no test output. Captured:\n" + join("\n", captured)
 							: "worker produced no output (possible spawn failure)";
 					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name, error: err });
-				} else if (!suite_ended) {
-					let timed_out = (type(exit_code) === 'int' && exit_code >= 128);
+				} else if (!suite_ended && !fatal_received) {
+					// The worker already emitted its own FATAL — don't double-report.
 					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name,
 						error: timed_out
 							? sprintf("worker timed out after %ds (partial results above)", timeout)
