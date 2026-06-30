@@ -360,10 +360,11 @@ export function forall(generator, prop_fn, opts) {
 		}
 	}
 
+	let exhausted = false;
 	for (let i = 0, successes = 0; successes < runs; i++) {
 		// Guard against a filter so restrictive that the loop never terminates.
 		// Allow up to 10× runs total attempts before declaring exhaustion.
-		if (stats.discards > runs * 10) break;
+		if (stats.discards > runs * 10) { exhausted = true; break; }
 
 		const seed = base_seed + i;
 		const s = record_source(seed);
@@ -406,7 +407,7 @@ export function forall(generator, prop_fn, opts) {
 		successes++;
 	}
 
-	if (stats.discards > 0 && stats.discards >= runs)
+	if (exhausted)
 		die(sprintf('%J', { __utest__: { kind: 'fail', message: sprintf(
 			"Property exhausted: %d discard(s) for %d requested run(s) — gen.filter predicate is too restrictive or increase `runs`",
 			stats.discards, runs) } }));
