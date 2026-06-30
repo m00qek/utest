@@ -75,6 +75,14 @@ export function create() {
 					if (elapsed_ms > WORKER_TIMEOUT_MS) {
 						let pid_raw = fs.readfile(worker.pid_file);
 						if (pid_raw) system("kill -9 " + replace(pid_raw, /\s+/, "") + " 2>/dev/null");
+						// Drain any output the worker wrote before being killed so partial
+						// results are not silently discarded.
+						let fh_t = fs.open(worker.out_file, "r");
+						if (fh_t) {
+							fh_t.seek(worker.offset, 0);
+							drain(worker, fh_t);
+							fh_t.close();
+						}
 						reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name,
 							error: sprintf("worker timed out after %ds", int(WORKER_TIMEOUT_MS / 1000)) });
 						finished_count++;
