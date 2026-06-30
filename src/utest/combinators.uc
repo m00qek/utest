@@ -113,6 +113,8 @@ function contains_object(expected) {
 			if (type(actual) !== 'object')
 				return { ok: false, message: sprintf("Expected an object, got %s", type(actual)) };
 			for (let k in keys(matchers)) {
+				if (!exists(actual, k))
+					return { ok: false, message: sprintf("Missing key '%s'", k) };
 				const r = matchers[k].match(actual[k]);
 				if (!r.ok) return { ok: false, message: r.message };
 			}
