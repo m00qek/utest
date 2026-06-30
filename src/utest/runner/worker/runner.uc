@@ -45,7 +45,7 @@ export function run_tests(reporter, filter, seed) {
 		try {
 			root.setup();
 		} catch (e) {
-			reporter.fatal("Module setup failed: " + e);
+			reporter.fatal("Module setup failed: " + util.parse_thrown(e).message);
 			setup_ok = false;
 		}
 	}
@@ -113,7 +113,7 @@ export function run_tests(reporter, filter, seed) {
 		try {
 			root.teardown();
 		} catch (e) {
-			reporter.fatal("Module teardown failed: " + e);
+			reporter.fatal("Module teardown failed: " + util.parse_thrown(e).message);
 		}
 	}
 
