@@ -202,6 +202,19 @@ describe('FS Mocking', () => {
 		});
 	});
 
+	it('glob() **/ matches zero intermediate path components', () => {
+		mock.inject('fs', { strict: true, data: {
+			'/cfg/foo.conf': 'top-level',
+			'/cfg/sub/bar.conf': 'nested',
+			'/cfg/sub/baz.log': 'wrong-ext'
+		}}, (m_fs) => {
+			const files = m_fs.glob('/cfg/**/*.conf');
+			sort(files);
+			assert.match(['/cfg/foo.conf', '/cfg/sub/bar.conf'], files,
+				'**/ must match zero or more path components');
+		});
+	});
+
 	it('open() in read mode returns a handle that reads the virtual file', () => {
 		mock.inject('fs', { data: { '/tmp/hello.txt': 'line1\nline2\n' } }, (m_fs) => {
 			const f = m_fs.open('/tmp/hello.txt', 'r');

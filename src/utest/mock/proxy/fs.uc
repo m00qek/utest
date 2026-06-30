@@ -61,13 +61,17 @@ return {
 			if (f) return f(cmd, mode);
 
 			mode ??= 'r';
-			let existing = ctx.get('commands', cmd);
 
 			if (substr(mode, 0, 1) === 'r') {
-				if (existing !== null) return make_handle(existing, null);
+				if (ctx.has('commands', cmd)) {
+					let existing = ctx.get('commands', cmd);
+					return existing !== null ? make_handle(existing, null) : null;
+				}
 				if (ctx.is_strict()) die("strict mock: 'fs.popen' called with unmocked command: " + cmd);
 				return real ? real.popen(cmd, mode) : null;
 			}
+
+			let existing = ctx.get('commands', cmd);
 
 			if (ctx.is_active())
 				return make_handle('', (data) => ctx.set('commands', cmd, data));
@@ -134,9 +138,9 @@ return {
 			ctx.record_call('rename', [old_path, new_path]);
 			let f = ctx.get_behavior('rename');
 			if (f) return f(old_path, new_path);
-			let v = ctx.get_data(old_path);
-			if (v !== null) {
-				ctx.set_data(new_path, v);
+			if (ctx.has_data(old_path)) {
+				if (ctx.get_data(old_path) === null) return false;  // deleted in mock
+				ctx.set_data(new_path, ctx.get_data(old_path));
 				ctx.set_data(old_path, null);
 				return true;
 			}
@@ -232,10 +236,12 @@ return {
 			p = replace(p, /\)/g,  "\\)");
 			p = replace(p, /\|/g,  "\\|");
 			p = replace(p, /\./g,  "\\.");
+			p = replace(p, /\/\*\*\//g, "\x02");  // /**/ → zero-or-more path components
 			p = replace(p, /\*\*/g, "\x01");
 			p = replace(p, /\*/g,  "[^/]*");
 			p = replace(p, /\?/g,  "[^/]");
 			p = replace(p, /\x01/g, ".*");
+			p = replace(p, /\x02/g, "(/.*)?/");
 			let re_pattern = "^" + p + "$";
 			let re = regexp(re_pattern);
 			for (let vp in virtual_paths) {
