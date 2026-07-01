@@ -51,6 +51,7 @@ function main() {
     // 1. Execute Framework
     let cmd = sprintf("utest -r json %s %s", extra_flags, example_file);
     let proc = popen(cmd);
+    if (proc === null) die(sprintf("Could not run: %s", cmd));
     let actual_raw = proc.read("all");
     let raw_status = proc.close();
 
