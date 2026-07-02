@@ -3,21 +3,36 @@ import * as fs from 'fs';
 
 export const q = (s) => "'" + replace(s, "'", "'\\''") + "'";
 
-// Parse a caught exception and return { is_assertion, message }.
-// is_assertion is true only for values thrown by assert.fail() (utest-controlled
-// failures); everything else is an ERROR (runtime crash or unexpected die).
+// Serialize a utest-controlled failure into the die() envelope that
+// parse_thrown() below recognizes. Used by assert.fail() and the property
+// engine so the wire shape lives in exactly one place.
+export const fail_envelope = function(message) {
+	return sprintf('%J', { __utest__: { kind: 'fail', message } });
+};
+
+// Parse a caught exception into { kind, message }.
+//   kind    - the utest envelope kind ('fail' for assertion failures,
+//             'property_overrun' / 'property_discard' for the property engine's
+//             control-flow sentinels), or null for any non-utest throw (a
+//             runtime crash or a plain die()).
+//   message - the envelope's own message for a 'fail' kind; otherwise the raw
+//             exception text.
+// Only die()n values carry a utest envelope, and ucode tags those with
+// type "Error", so the envelope is read only from that type; anything else is
+// reported verbatim.  Callers classify: FAIL iff kind === 'fail', ERROR otherwise.
 export const parse_thrown = function(e) {
-	if (type(e) === 'object' && e.type) {
-		if (e.type === "Error") {
-			let parsed = null;
-			try { parsed = json(e.message); } catch(_) {}
-			if (type(parsed) === 'object' && parsed.__utest__ && parsed.__utest__.kind === 'fail')
-				return { is_assertion: true, message: parsed.__utest__.message };
-			return { is_assertion: false, message: e.message };
+	if (type(e) === 'object' && e.type === "Error") {
+		let parsed = null;
+		try { parsed = json(e.message); } catch(_) {}
+		if (type(parsed) === 'object' && parsed.__utest__) {
+			const kind = parsed.__utest__.kind;
+			return { kind, message: kind === 'fail' ? parsed.__utest__.message : e.message };
 		}
-		return { is_assertion: false, message: e.message };
+		return { kind: null, message: e.message };
 	}
-	return { is_assertion: false, message: sprintf('%s', e) };
+	if (type(e) === 'object' && e.type)
+		return { kind: null, message: e.message };
+	return { kind: null, message: sprintf('%s', e) };
 };
 
 export const format_path = function(path) {

@@ -4,11 +4,11 @@
  * @module utest.assert
  */
 
-import { parse_thrown } from 'utest.util';
+import { parse_thrown, fail_envelope } from 'utest.util';
 import { is_combinator, equals, regex as _regex, contains } from 'utest.combinators';
 
 function fail(msg) {
-	die(sprintf('%J', { __utest__: { kind: 'fail', message: msg } }));
+	die(fail_envelope(msg));
 }
 
 function unwrap_error_msg(e) {

@@ -37,7 +37,7 @@ export function create(suite, bundle) {
 
 			if (error !== null) {
 				const p = parse_thrown(error);
-				status = p.is_assertion ? "FAIL" : "ERROR";
+				status = (p.kind === 'fail') ? "FAIL" : "ERROR";
 				msg = p.message;
 			} else {
 				status = forced_status || "PASS";

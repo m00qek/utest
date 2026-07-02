@@ -1,7 +1,7 @@
 import * as math from 'math';
 import * as fs from 'fs';
 import * as dsl from 'utest.dsl';
-import { parse_thrown, mkdir_p, format_path } from 'utest.util';
+import { parse_thrown, fail_envelope, mkdir_p, format_path } from 'utest.util';
 import { root, stack } from 'utest.runner.worker.registry';
 
 const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
@@ -44,18 +44,6 @@ function replay_source(choices) {
 	};
 }
 
-function caught_msg(e) {
-	return (type(e) === 'object' && e.message) ? e.message : sprintf('%s', e);
-}
-
-function utest_kind(e) {
-	const m = caught_msg(e);
-	let parsed = null;
-	try { parsed = json(m); } catch (_) {}
-	if (type(parsed) === 'object' && parsed.__utest__) return parsed.__utest__.kind;
-	return null;
-}
-
 function is_property_sentinel(kind) {
 	return kind === 'property_overrun' || kind === 'property_discard';
 }
@@ -68,12 +56,12 @@ function try_choices(g, prop_fn, choices) {
 	let value;
 	try { value = g.generate(s); }
 	catch (e) {
-		if (is_property_sentinel(utest_kind(e))) return { kind: 'invalid' };
+		if (is_property_sentinel(parse_thrown(e).kind)) return { kind: 'invalid' };
 		die(e);
 	}
 	try { prop_fn(value, NOOP_CTX); return { kind: 'pass' }; }
 	catch (e) {
-		if (is_property_sentinel(utest_kind(e))) return { kind: 'invalid' };
+		if (is_property_sentinel(parse_thrown(e).kind)) return { kind: 'invalid' };
 		return { kind: 'fail', value, error: e };
 	}
 }
@@ -300,7 +288,7 @@ function report_failure(info, runs) {
 		const s = fmt_stats(info.stats, runs);
 		if (length(s) > 0) push(lines, s);
 	}
-	die(sprintf('%J', { __utest__: { kind: 'fail', message: join("\n", lines) } }));
+	die(fail_envelope(join("\n", lines)));
 }
 
 /**
@@ -377,12 +365,12 @@ export function forall(generator, prop_fn, opts) {
 		let value;
 		try { value = generator.generate(s); }
 		catch (e) {
-			if (utest_kind(e) === 'property_discard') { stats.discards++; continue; }
+			if (parse_thrown(e).kind === 'property_discard') { stats.discards++; continue; }
 			die(e);
 		}
 		try { prop_fn(value, ctx); }
 		catch (e) {
-			if (is_property_sentinel(utest_kind(e))) { stats.discards++; continue; }
+			if (is_property_sentinel(parse_thrown(e).kind)) { stats.discards++; continue; }
 			const shrunk = shrink(generator, prop_fn, s.choices, shrink_max);
 			const replay = try_choices(generator, prop_fn, shrunk.choices);
 			const shrunk_value = (replay.kind === 'fail') ? replay.value : '<unreproducible>';
@@ -414,9 +402,9 @@ export function forall(generator, prop_fn, opts) {
 	}
 
 	if (exhausted)
-		die(sprintf('%J', { __utest__: { kind: 'fail', message: sprintf(
+		die(fail_envelope(sprintf(
 			"Property exhausted: %d discard(s) for %d requested run(s) — gen.filter predicate is too restrictive or increase `runs`",
-			stats.discards, runs) } }));
+			stats.discards, runs)));
 };
 
 
