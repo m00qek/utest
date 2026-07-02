@@ -11,8 +11,10 @@ file against a stored baseline. A mismatch means a behaviour changed.
 make meta-test
 ```
 
-The script runs inside the official OpenWrt 24.10 Docker image so results reflect
-the target environment. It finds every `*_test.uc` file under `examples/`,
+The script runs inside the official OpenWrt Docker image (`openwrt/rootfs`,
+pinned via `ROOTFS_VERSION` in the script — a build that ships ucode with the
+uloop module, which the parallel executor requires) so results reflect the
+target environment. It finds every `*_test.uc` file under `examples/`,
 resolves the matching baseline under `test/json/`, and reports pass or fail. Any
 example without a baseline is printed as `[SKIP]` and does not cause failure.
 

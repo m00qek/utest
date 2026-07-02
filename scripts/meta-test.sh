@@ -3,22 +3,30 @@
 # Find the absolute path of the project root
 PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
-SDK_VERSION=${SDK_VERSION:-24.10.6}
+# Test rootfs image must include ucode with the uloop module (the parallel
+# executor requires it; there is no polling fallback). Newer rootfs tags use the
+# full version and drop the '-openwrt-' infix.
 SDK_ARCH=${SDK_ARCH:-x86-64}
-OPENWRT_VERSION=$(echo "$SDK_VERSION" | sed 's/\.[^.]*$//')
+ROOTFS_VERSION=${ROOTFS_VERSION:-25.12.4}
+IMAGE_OPENWRT=${IMAGE_OPENWRT:-openwrt/rootfs:${SDK_ARCH}-${ROOTFS_VERSION}}
 
 # Execute the verification harness inside the Docker environment
 run_verify() {
     example=$1
     expected=$2
     extra_flags=${3:-""}
+    # Map the host uid/gid so any files the run touches under the bind-mounted
+    # repo are host-owned, not root. --tmpfs gives a writable /tmp for utest.sh's
+    # mktemp run dir (newer rootfs images ship /tmp as 0755 root-owned).
     docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
         -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
         -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
         -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
         -v "$PROJECT_ROOT:/app" \
         -w /app \
-        openwrt/rootfs:${SDK_ARCH}-openwrt-${OPENWRT_VERSION} \
+        "$IMAGE_OPENWRT" \
         ucode test/verify.uc "$example" "$expected" "$extra_flags"
 }
 
