@@ -127,8 +127,20 @@ document is NOT done.** Remaining work, by section:
   read has correctness subtleties; belongs with the §4 uloop rework, where it is
   the real fix) and **3.3b** (cache the built proxy per name/real — needs
   nested-layer scrutiny). All non-blocking.
-- **§4 uloop migration:** NOT done — deliberately deferred; only the minimal
-  1.6 hardening and 1.13 monotonic-clock fix were taken from it.
+- **§4 uloop migration:** IN PROGRESS. Decision: **uloop-only, no polling
+  fallback** — the parallel executor will require uloop. Spikes confirmed uloop
+  is present in `openwrt/rootfs:x86-64-25.12.4` (absent from the old 24.10 image),
+  the full suite passes there, and the viable design is `fs.popen` +
+  `uloop.handle(proc, cb, ULOOP_READ)` (EOF = exit, `proc.close()` = exit code) +
+  one `uloop.timer` per worker + a pidfile for kill-on-timeout — `uloop.process`
+  can't capture stdout (child inherits stdio). **Phase 1 DONE** (commit: bump the
+  test image to 25.12.4, `--tmpfs /tmp:mode=1777` for the run dir, host-uid
+  mapping in meta-test). **Phase 2** (rewrite the parallel executor on uloop,
+  reusing `make_stream` and the JSON protocol; folds in 3.1's latency/churn win)
+  and **Phase 3** (drop the old polling `parallel.uc`) pending. Note the
+  pre-existing `utest`-CLI-vs-`verify.uc` shim discrepancy surfaced during Phase 1
+  (the global.patch interception test passes under the meta-test harness but not
+  the shipped CLI, on 24.10 too) — logged, out of scope for §4.
 - **§5 test gaps:** partly done — added 5.2 (hostile output), 5.3 (strict
   layering), 5.5 (RNG distribution), and part of 5.1 (uci/uclient fidelity; no
   ubus). **5.7 is done** — `make test` now defaults to `examples/unit` instead
