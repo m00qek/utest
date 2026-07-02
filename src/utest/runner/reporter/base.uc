@@ -2,6 +2,11 @@ function empty_stats() {
 	return { total: 0, passed: 0, failed: 0, errors: 0, fatals: 0, skipped: 0, ignored: 0 };
 }
 
+// Test status -> the stats counter it increments; FAIL/ERROR also go on the
+// failures list. Drives test_result so adding a status is a one-line change.
+const STATUS_KEY = { PASS: "passed", FAIL: "failed", ERROR: "errors", SKIP: "skipped", IGNORE: "ignored" };
+const IS_FAILURE = { FAIL: true, ERROR: true };
+
 export const ReporterBase = {
 	stats: null,
 	failures: null,
@@ -17,9 +22,7 @@ export const ReporterBase = {
 		this.use_color = use_color;
 		this.files = files;
 		this.seed = seed;
-		this.stats = {
-			total: 0, passed: 0, failed: 0, errors: 0, fatals: 0, skipped: 0, ignored: 0, suites: 0
-		};
+		this.stats = { ...empty_stats(), suites: 0 };
 		this.failures = [];
 		this.results = [];
 		this._start_time = clock();
@@ -66,42 +69,18 @@ export const ReporterBase = {
 
 		push(this.results, msg);
 
-		this.stats.total++;
-		if (!this._suite_stats[file]) {
-			this._suite_stats[file] = empty_stats();
-		}
-		this._suite_stats[file].total++;
+		if (!this._suite_stats[file]) this._suite_stats[file] = empty_stats();
+		if (bundle && !this._bundle_stats[bundle]) this._bundle_stats[bundle] = empty_stats();
 
-		if (bundle) {
-			if (!this._bundle_stats[bundle]) {
-				this._bundle_stats[bundle] = empty_stats();
-			}
-			this._bundle_stats[bundle].total++;
+		let key = STATUS_KEY[msg.status];
+		let targets = [ this.stats, this._suite_stats[file] ];
+		if (bundle) push(targets, this._bundle_stats[bundle]);
+		for (let s in targets) {
+			s.total++;
+			if (key) s[key]++;
 		}
+		if (IS_FAILURE[msg.status]) push(this.failures, msg);
 
-		if (msg.status === "PASS") {
-			this.stats.passed++;
-			this._suite_stats[file].passed++;
-			if (bundle) this._bundle_stats[bundle].passed++;
-		} else if (msg.status === "FAIL") {
-			this.stats.failed++;
-			this._suite_stats[file].failed++;
-			if (bundle) this._bundle_stats[bundle].failed++;
-			push(this.failures, msg);
-		} else if (msg.status === "ERROR") {
-			this.stats.errors++;
-			this._suite_stats[file].errors++;
-			if (bundle) this._bundle_stats[bundle].errors++;
-			push(this.failures, msg);
-		} else if (msg.status === "SKIP") {
-			this.stats.skipped++;
-			this._suite_stats[file].skipped++;
-			if (bundle) this._bundle_stats[bundle].skipped++;
-		} else if (msg.status === "IGNORE") {
-			this.stats.ignored++;
-			this._suite_stats[file].ignored++;
-			if (bundle) this._bundle_stats[bundle].ignored++;
-		}
 		if (this.render_test_result) this.render_test_result(msg);
 	},
 
@@ -130,6 +109,7 @@ export const ReporterBase = {
 			stats: this.stats,
 			failures: this.failures,
 			results: this.results,
+			bundles: this._bundle_stats,
 			files: this.files,
 			duration_ms: int(duration_ms),
 			seed: this.seed

@@ -19,3 +19,10 @@ export const THEME = {
 	TIME: C_BOLD,
 	BOLD: C_BOLD
 };
+
+const NO_COLOR = {
+	PASS: "", FAIL: "", ERROR: "", SKIP: "", IGNORE: "", HEADER: "", TIME: "", BOLD: ""
+};
+
+// Select the active theme; NO_COLOR blanks every key so color() emits no escapes.
+export const theme = (use_color) => use_color ? THEME : NO_COLOR;

@@ -1,10 +1,8 @@
-import { THEME, color } from 'utest.runner.reporter.colors';
+import { theme, color } from 'utest.runner.reporter.colors';
 import { ReporterBase } from 'utest.runner.reporter.base';
 
 export function create(use_color) {
-	const t = use_color ? THEME : {
-		PASS: "", FAIL: "", ERROR: "", SKIP: "", IGNORE: "", HEADER: "", TIME: "", BOLD: ""
-	};
+	const t = theme(use_color);
 
 	let bundle_data = {}; // name -> { dots_on_line, file_failures }
 	let orphan_fatals = []; // fatals with no bundle context — surfaced in the summary

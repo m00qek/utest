@@ -1,10 +1,8 @@
-import { THEME, color } from 'utest.runner.reporter.colors';
+import { theme, color } from 'utest.runner.reporter.colors';
 import { ReporterBase } from 'utest.runner.reporter.base';
 
 export function create(use_color, parallel) {
-	const t = use_color ? THEME : {
-		PASS: "", FAIL: "", ERROR: "", SKIP: "", IGNORE: "", HEADER: "", TIME: "", BOLD: ""
-	};
+	const t = theme(use_color);
 
 	let reported_suites = {};
 	// Parallel only: collect each suite's rendered lines and print the whole
