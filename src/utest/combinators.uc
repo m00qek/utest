@@ -11,19 +11,24 @@ export function is_combinator(v) {
 	return type(v) === 'object' && v.__utest__ && v.__utest__.kind === 'combinator';
 };
 
+// Wraps a match function `(actual) -> { ok, message? }` as a combinator by
+// attaching the shared Combinator prototype.  Every combinator below is built
+// through this factory so the prototype wiring lives in exactly one place.
+function comb(match) {
+	return proto({ match }, Combinator);
+}
+
 // ─── equals ──────────────────────────────────────────────────────────────────
 
 // Forward declaration: equals_object/equals_array reference this before it is assigned.
 let _normalize_equals;
 
 function equals_scalar(expected) {
-	return proto({
-		match: function(actual) {
-			if (actual === expected)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected %J\n  got %J", expected, actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (actual === expected)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected %J\n  got %J", expected, actual) };
+	});
 }
 
 function equals_object(expected) {
@@ -33,23 +38,21 @@ function equals_object(expected) {
 		matchers[k] = is_combinator(v) ? v : _normalize_equals(v);
 	}
 
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'object')
-				return { ok: false, message: sprintf("Expected an object, got %s", type(actual)) };
-			const exp_keys = keys(matchers);
-			const act_keys = keys(actual);
-			if (length(exp_keys) !== length(act_keys))
-				return { ok: false, message: sprintf("Expected keys %J\n  got keys %J", exp_keys, act_keys) };
-			for (let k in exp_keys) {
-				if (!exists(actual, k))
-					return { ok: false, message: sprintf("Missing key '%s'", k) };
-				const r = matchers[k].match(actual[k]);
-				if (!r.ok) return { ok: false, message: r.message };
-			}
-			return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'object')
+			return { ok: false, message: sprintf("Expected an object, got %s", type(actual)) };
+		const exp_keys = keys(matchers);
+		const act_keys = keys(actual);
+		if (length(exp_keys) !== length(act_keys))
+			return { ok: false, message: sprintf("Expected keys %J\n  got keys %J", exp_keys, act_keys) };
+		for (let k in exp_keys) {
+			if (!exists(actual, k))
+				return { ok: false, message: sprintf("Missing key '%s'", k) };
+			const r = matchers[k].match(actual[k]);
+			if (!r.ok) return { ok: false, message: r.message };
 		}
-	}, Combinator);
+		return { ok: true };
+	});
 }
 
 function equals_array(expected) {
@@ -57,19 +60,17 @@ function equals_array(expected) {
 	for (let el in expected)
 		push(matchers, is_combinator(el) ? el : _normalize_equals(el));
 
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'array')
-				return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
-			if (length(actual) !== length(matchers))
-				return { ok: false, message: sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
-			for (let i = 0; i < length(matchers); i++) {
-				const r = matchers[i].match(actual[i]);
-				if (!r.ok) return { ok: false, message: r.message };
-			}
-			return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'array')
+			return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
+		if (length(actual) !== length(matchers))
+			return { ok: false, message: sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
+		for (let i = 0; i < length(matchers); i++) {
+			const r = matchers[i].match(actual[i]);
+			if (!r.ok) return { ok: false, message: r.message };
 		}
-	}, Combinator);
+		return { ok: true };
+	});
 }
 
 _normalize_equals = function(expected) {
@@ -108,31 +109,27 @@ function contains_object(expected) {
 			matchers[k] = equals(v);
 	}
 
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'object')
-				return { ok: false, message: sprintf("Expected an object, got %s", type(actual)) };
-			for (let k in keys(matchers)) {
-				if (!exists(actual, k))
-					return { ok: false, message: sprintf("Missing key '%s'", k) };
-				const r = matchers[k].match(actual[k]);
-				if (!r.ok) return { ok: false, message: r.message };
-			}
-			return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'object')
+			return { ok: false, message: sprintf("Expected an object, got %s", type(actual)) };
+		for (let k in keys(matchers)) {
+			if (!exists(actual, k))
+				return { ok: false, message: sprintf("Missing key '%s'", k) };
+			const r = matchers[k].match(actual[k]);
+			if (!r.ok) return { ok: false, message: r.message };
 		}
-	}, Combinator);
+		return { ok: true };
+	});
 }
 
 function contains_string(expected) {
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'string')
-				return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
-			if (index(actual, expected) >= 0)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected %J to contain %J", actual, expected) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (type(actual) !== 'string')
+			return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
+		if (index(actual, expected) >= 0)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected %J to contain %J", actual, expected) };
+	});
 }
 
 function contains_array(expected) {
@@ -144,29 +141,27 @@ function contains_array(expected) {
 		else                           push(matchers, equals(el));
 	}
 
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'array')
-				return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
+	return comb(function(actual) {
+		if (type(actual) !== 'array')
+			return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
 
-			// Ordered-subsequence search with backtracking.
-			// Finds strictly-increasing positions i_0 < i_1 < … where
-			// matchers[k].match(actual[i_k]).ok for every k.
-			// Backtracking prevents a wildcard (any(), pred(), regex()) from
-			// greedily consuming a slot that a later specific matcher needs.
-			let bt;
-			bt = function(mi, ai) {
-				if (mi === length(matchers)) return true;
-				for (let j = ai; j < length(actual); j++)
-					if (matchers[mi].match(actual[j]).ok && bt(mi + 1, j + 1)) return true;
-				return false;
-			};
+		// Ordered-subsequence search with backtracking.
+		// Finds strictly-increasing positions i_0 < i_1 < … where
+		// matchers[k].match(actual[i_k]).ok for every k.
+		// Backtracking prevents a wildcard (any(), pred(), regex()) from
+		// greedily consuming a slot that a later specific matcher needs.
+		let bt;
+		bt = function(mi, ai) {
+			if (mi === length(matchers)) return true;
+			for (let j = ai; j < length(actual); j++)
+				if (matchers[mi].match(actual[j]).ok && bt(mi + 1, j + 1)) return true;
+			return false;
+		};
 
-			if (!bt(0, 0))
-				return { ok: false, message: sprintf("Expected %J to contain %J as a subsequence", actual, expected) };
-			return { ok: true };
-		}
-	}, Combinator);
+		if (!bt(0, 0))
+			return { ok: false, message: sprintf("Expected %J to contain %J as a subsequence", actual, expected) };
+		return { ok: true };
+	});
 }
 
 /**
@@ -196,34 +191,30 @@ export function contains(expected) {
 // ─── starts_with / ends_with ─────────────────────────────────────────────────
 
 function starts_with_string(expected) {
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'string')
-				return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
-			if (substr(actual, 0, length(expected)) === expected)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected %J to start with %J", actual, expected) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (type(actual) !== 'string')
+			return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
+		if (substr(actual, 0, length(expected)) === expected)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected %J to start with %J", actual, expected) };
+	});
 }
 
 function starts_with_array(expected) {
 	const matchers = [];
 	for (let el in expected)
 		push(matchers, is_combinator(el) ? el : equals(el));
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'array')
-				return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
-			if (length(actual) < length(matchers))
-				return { ok: false, message: sprintf("Expected at least %d elements, got %d", length(matchers), length(actual)) };
-			for (let i = 0; i < length(matchers); i++) {
-				const r = matchers[i].match(actual[i]);
-				if (!r.ok) return { ok: false, message: r.message };
-			}
-			return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'array')
+			return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
+		if (length(actual) < length(matchers))
+			return { ok: false, message: sprintf("Expected at least %d elements, got %d", length(matchers), length(actual)) };
+		for (let i = 0; i < length(matchers); i++) {
+			const r = matchers[i].match(actual[i]);
+			if (!r.ok) return { ok: false, message: r.message };
 		}
-	}, Combinator);
+		return { ok: true };
+	});
 }
 
 /**
@@ -244,37 +235,33 @@ export function starts_with(expected) {
 };
 
 function ends_with_string(expected) {
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'string')
-				return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
-			if (length(expected) > length(actual))
-				return { ok: false, message: sprintf("Expected %J to end with %J", actual, expected) };
-			if (substr(actual, length(actual) - length(expected)) === expected)
-				return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'string')
+			return { ok: false, message: sprintf("Expected a string, got %s", type(actual)) };
+		if (length(expected) > length(actual))
 			return { ok: false, message: sprintf("Expected %J to end with %J", actual, expected) };
-		}
-	}, Combinator);
+		if (substr(actual, length(actual) - length(expected)) === expected)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected %J to end with %J", actual, expected) };
+	});
 }
 
 function ends_with_array(expected) {
 	const matchers = [];
 	for (let el in expected)
 		push(matchers, is_combinator(el) ? el : equals(el));
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'array')
-				return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
-			if (length(actual) < length(matchers))
-				return { ok: false, message: sprintf("Expected at least %d elements, got %d", length(matchers), length(actual)) };
-			const offset = length(actual) - length(matchers);
-			for (let i = 0; i < length(matchers); i++) {
-				const r = matchers[i].match(actual[offset + i]);
-				if (!r.ok) return { ok: false, message: r.message };
-			}
-			return { ok: true };
+	return comb(function(actual) {
+		if (type(actual) !== 'array')
+			return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
+		if (length(actual) < length(matchers))
+			return { ok: false, message: sprintf("Expected at least %d elements, got %d", length(matchers), length(actual)) };
+		const offset = length(actual) - length(matchers);
+		for (let i = 0; i < length(matchers); i++) {
+			const r = matchers[i].match(actual[offset + i]);
+			if (!r.ok) return { ok: false, message: r.message };
 		}
-	}, Combinator);
+		return { ok: true };
+	});
 }
 
 /**
@@ -302,13 +289,11 @@ export function ends_with(expected) {
  * @returns {Combinator<any>} The configured combinator.
  */
 export function truthy() {
-	return proto({
-		match: function(actual) {
-			if (actual)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected truthy value, got %J", actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (actual)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected truthy value, got %J", actual) };
+	});
 };
 
 /**
@@ -317,13 +302,11 @@ export function truthy() {
  * @returns {Combinator<any>} The configured combinator.
  */
 export function falsy() {
-	return proto({
-		match: function(actual) {
-			if (!actual)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected falsy value, got %J", actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (!actual)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected falsy value, got %J", actual) };
+	});
 };
 
 /**
@@ -340,13 +323,11 @@ export function falsy() {
 export function not(combinator) {
 	if (!is_combinator(combinator))
 		die(sprintf("not(): expected a combinator; got %s", type(combinator)));
-	return proto({
-		match: function(actual) {
-			if (!combinator.match(actual).ok)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected value not to match, but got %J", actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (!combinator.match(actual).ok)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected value not to match, but got %J", actual) };
+	});
 };
 
 /**
@@ -362,13 +343,11 @@ export function not(combinator) {
  * @returns {Combinator<T>} The configured combinator.
  */
 export function pred(fn) {
-	return proto({
-		match: function(actual) {
-			if (fn(actual))
-				return { ok: true };
-			return { ok: false, message: sprintf("Predicate failed for %J", actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (fn(actual))
+			return { ok: true };
+		return { ok: false, message: sprintf("Predicate failed for %J", actual) };
+	});
 };
 
 /**
@@ -382,13 +361,11 @@ export function pred(fn) {
  * @returns {Combinator<string>} The configured combinator.
  */
 export function regex(expected) {
-	return proto({
-		match: function(actual) {
-			if (type(actual) === 'string' && match(actual, expected))
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected '%s' to match %s", actual, expected) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (type(actual) === 'string' && match(actual, expected))
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected '%s' to match %s", actual, expected) };
+	});
 };
 
 /**
@@ -397,9 +374,7 @@ export function regex(expected) {
  * @returns {Combinator<any>} The configured combinator.
  */
 export function any() {
-	return proto({
-		match: function(_actual) { return { ok: true }; }
-	}, Combinator);
+	return comb(function(_actual) { return { ok: true }; });
 };
 
 /**
@@ -419,37 +394,35 @@ export function any_order(expected) {
 	for (let m in expected)
 		push(matchers, is_combinator(m) ? m : equals(m));
 
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'array')
-				return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
-			if (length(actual) !== length(matchers))
-				return { ok: false, message: sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
+	return comb(function(actual) {
+		if (type(actual) !== 'array')
+			return { ok: false, message: sprintf("Expected an array, got %s", type(actual)) };
+		if (length(actual) !== length(matchers))
+			return { ok: false, message: sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
 
-			// Backtracking search avoids the greedy false-negative when a wildcard
-			// (e.g. any()) claims an element that a later specific matcher needs.
-			const used = [];
-			for (let i = 0; i < length(actual); i++)
-				push(used, false);
+		// Backtracking search avoids the greedy false-negative when a wildcard
+		// (e.g. any()) claims an element that a later specific matcher needs.
+		const used = [];
+		for (let i = 0; i < length(actual); i++)
+			push(used, false);
 
-			let bt;
-			bt = function(i) {
-				if (i === length(matchers)) return true;
-				for (let j = 0; j < length(actual); j++) {
-					if (!used[j] && matchers[i].match(actual[j]).ok) {
-						used[j] = true;
-						if (bt(i + 1)) return true;
-						used[j] = false;
-					}
+		let bt;
+		bt = function(i) {
+			if (i === length(matchers)) return true;
+			for (let j = 0; j < length(actual); j++) {
+				if (!used[j] && matchers[i].match(actual[j]).ok) {
+					used[j] = true;
+					if (bt(i + 1)) return true;
+					used[j] = false;
 				}
-				return false;
-			};
+			}
+			return false;
+		};
 
-			if (!bt(0))
-				return { ok: false, message: "No valid permutation found" };
-			return { ok: true };
-		}
-	}, Combinator);
+		if (!bt(0))
+			return { ok: false, message: "No valid permutation found" };
+		return { ok: true };
+	});
 };
 
 /**
@@ -459,17 +432,15 @@ export function any_order(expected) {
  * @returns {Combinator<string|any[]|dict<any>>} The configured combinator.
  */
 export function has_length(n) {
-	return proto({
-		match: function(actual) {
-			const t = type(actual);
-			if (t !== 'string' && t !== 'array' && t !== 'object')
-				return { ok: false, message: sprintf("Expected a string, array, or object, got %s", t) };
-			const l = length(actual);
-			if (l === n)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected length %d, got %d", n, l) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		const t = type(actual);
+		if (t !== 'string' && t !== 'array' && t !== 'object')
+			return { ok: false, message: sprintf("Expected a string, array, or object, got %s", t) };
+		const l = length(actual);
+		if (l === n)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected length %d, got %d", n, l) };
+	});
 };
 
 /**
@@ -480,15 +451,13 @@ export function has_length(n) {
  * @returns {Combinator<int|float>} The configured combinator.
  */
 export function between(min, max) {
-	return proto({
-		match: function(actual) {
-			if (type(actual) !== 'int' && type(actual) !== 'double')
-				return { ok: false, message: sprintf("Expected a number, got %s", type(actual)) };
-			if (actual >= min && actual <= max)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected value between %s and %s, got %s", min, max, actual) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		if (type(actual) !== 'int' && type(actual) !== 'double')
+			return { ok: false, message: sprintf("Expected a number, got %s", type(actual)) };
+		if (actual >= min && actual <= max)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected value between %s and %s, got %s", min, max, actual) };
+	});
 };
 
 /**
@@ -498,13 +467,11 @@ export function between(min, max) {
  * @returns {Combinator<any>} The configured combinator.
  */
 export function is_type(expected) {
-	return proto({
-		match: function(actual) {
-			const t = type(actual);
-			if (t === expected)
-				return { ok: true };
-			return { ok: false, message: sprintf("Expected type '%s', got '%s'", expected, t) };
-		}
-	}, Combinator);
+	return comb(function(actual) {
+		const t = type(actual);
+		if (t === expected)
+			return { ok: true };
+		return { ok: false, message: sprintf("Expected type '%s', got '%s'", expected, t) };
+	});
 };
 
