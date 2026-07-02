@@ -18,9 +18,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "mock.inject_all()" },
-        { "id": 2, "name": "injects two proxies and exposes them as named deps" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "mock.inject_all()"
+        },
+        {
+          "id": 2,
+          "name": "injects two proxies and exposes them as named deps"
+        }
       ],
       "index": 1
     },
@@ -31,9 +40,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "mock.inject_all()" },
-        { "id": 3, "name": "injects three proxies at once" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "mock.inject_all()"
+        },
+        {
+          "id": 3,
+          "name": "injects three proxies at once"
+        }
       ],
       "index": 2
     },
@@ -44,9 +62,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "mock.inject_all()" },
-        { "id": 4, "name": "cleans up all proxy layers after the callback" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "mock.inject_all()"
+        },
+        {
+          "id": 4,
+          "name": "cleans up all proxy layers after the callback"
+        }
       ],
       "index": 3
     },
@@ -57,9 +84,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "mock.inject_all()" },
-        { "id": 5, "name": "cleans up all layers even when the callback throws" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "mock.inject_all()"
+        },
+        {
+          "id": 5,
+          "name": "cleans up all layers even when the callback throws"
+        }
       ],
       "index": 4
     },
@@ -70,9 +106,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "mock.inject_all()" },
-        { "id": 6, "name": "dies immediately when a proxy name is not configured" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "mock.inject_all()"
+        },
+        {
+          "id": 6,
+          "name": "dies immediately when a proxy name is not configured"
+        }
       ],
       "index": 5
     },
@@ -83,9 +128,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 7, "name": "mock.inject() unknown proxy" },
-        { "id": 8, "name": "inject() with an unknown proxy name dies with a clear error" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 7,
+          "name": "mock.inject() unknown proxy"
+        },
+        {
+          "id": 8,
+          "name": "inject() with an unknown proxy name dies with a clear error"
+        }
       ],
       "index": 6
     }

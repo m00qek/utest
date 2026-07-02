@@ -31,9 +31,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "Fatal teardown demo" },
-        { "id": 2, "name": "runs before teardown() throws" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Fatal teardown demo"
+        },
+        {
+          "id": 2,
+          "name": "runs before teardown() throws"
+        }
       ],
       "index": 1
     }

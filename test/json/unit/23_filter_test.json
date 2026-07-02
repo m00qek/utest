@@ -18,9 +18,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "Filter demo" },
-        { "id": 2, "name": "matches the filter" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Filter demo"
+        },
+        {
+          "id": 2,
+          "name": "matches the filter"
+        }
       ],
       "index": 1
     },
@@ -31,9 +40,18 @@
       "status": "IGNORE",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "Filter demo" },
-        { "id": 3, "name": "does not match and is ignored" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Filter demo"
+        },
+        {
+          "id": 3,
+          "name": "does not match and is ignored"
+        }
       ],
       "index": 2
     }

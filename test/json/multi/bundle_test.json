@@ -18,9 +18,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "Bundle A" },
-        { "id": 2, "name": "passes in bundle A" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Bundle A"
+        },
+        {
+          "id": 2,
+          "name": "passes in bundle A"
+        }
       ],
       "index": 1
     },
@@ -31,9 +40,18 @@
       "status": "PASS",
       "error": null,
       "path": [
-        { "id": 0, "name": "root" },
-        { "id": 1, "name": "Bundle B" },
-        { "id": 2, "name": "passes in bundle B" }
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Bundle B"
+        },
+        {
+          "id": 2,
+          "name": "passes in bundle B"
+        }
       ],
       "index": 1
     }

@@ -1,1 +1,207 @@
-{ "stats": { "total": 8, "passed": 8, "failed": 0, "errors": 0, "fatals": 0, "skipped": 0, "ignored": 0, "suites": 1 }, "failures": [ ], "results": [ { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 5, "name": "end() is a no-op and can be called freely from inside callbacks" } ], "index": 4 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 6, "name": "models the io.sleep() pattern without blocking" } ], "index": 5 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 2, "name": "run() fires registered timer callbacks synchronously" } ], "index": 1 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 7, "name": "supports behavior override for run()" } ], "index": 6 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 3, "name": "run() fires multiple timers in registration order" } ], "index": 2 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 4, "name": "run() clears the queue so a second run() does nothing" } ], "index": 3 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 9, "name": "timers registered inside an inner inject() do not leak into the outer scope" } ], "index": 8 }, { "event": "TEST_RESULT", "suite": "examples/unit/14_uloop_test.uc", "bundle": "examples/unit/14_uloop_test.uc", "status": "PASS", "error": null, "path": [ { "id": 0, "name": "root" }, { "id": 1, "name": "uloop Mocking" }, { "id": 8, "name": "patches global state via mock.global.patch()" } ], "index": 7 } ], "files": [ "examples/unit/14_uloop_test.uc" ], "duration_ms": 10, "seed": 450778410, "bundles": { "examples/unit/14_uloop_test.uc": { "total": 8, "passed": 8, "failed": 0, "errors": 0, "fatals": 0, "skipped": 0, "ignored": 0 } } }
+{
+  "stats": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 5,
+          "name": "end() is a no-op and can be called freely from inside callbacks"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 6,
+          "name": "models the io.sleep() pattern without blocking"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 2,
+          "name": "run() fires registered timer callbacks synchronously"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 7,
+          "name": "supports behavior override for run()"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 3,
+          "name": "run() fires multiple timers in registration order"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 4,
+          "name": "run() clears the queue so a second run() does nothing"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 9,
+          "name": "timers registered inside an inner inject() do not leak into the outer scope"
+        }
+      ],
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 8,
+          "name": "patches global state via mock.global.patch()"
+        }
+      ],
+      "index": 7
+    }
+  ],
+  "files": [
+    "examples/unit/14_uloop_test.uc"
+  ],
+  "duration_ms": 10,
+  "seed": 450778410,
+  "bundles": {
+    "examples/unit/14_uloop_test.uc": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}
