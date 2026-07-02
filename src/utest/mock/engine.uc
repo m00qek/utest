@@ -42,14 +42,21 @@ export function guard_mock_target(op, name, proxy_channels, real) {
 		die(sprintf("[utest] %s: '%s' is not a configured proxy — no proxy module found at utest.mock.proxy.%s", op, name, name));
 };
 
+// A pristine global-state record for a module: no behavior, non-strict, no
+// recorded calls, no proxy, and every declared channel reset to empty.  The
+// single source of truth for the "blank global" shape — used by get_registry(),
+// mock.global.patch()/unpatch(), and mock.restore() so the shape cannot drift.
+export function blank_global(reg) {
+	let g = { fns: {}, strict: false, calls: {}, proxy: null };
+	for (let ch in reg.channels) g[ch] = {};
+	return g;
+};
+
 export function get_registry(name) {
 	if (!registries[name]) {
-		registries[name] = {
-			name: name,
-			channels: ['data'],
-			layers: [],
-			global: { data: {}, fns: {}, strict: false, proxy: null, calls: {} }
-		};
+		let reg = { name: name, channels: ['data'], layers: [] };
+		reg.global = blank_global(reg);
+		registries[name] = reg;
 	}
 	return registries[name];
 };

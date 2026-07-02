@@ -6,15 +6,8 @@
 
 import * as engine from 'utest.mock.engine';
 
-// A pristine global state record for a module: no behavior, non-strict, no
-// recorded calls, no proxy, and every declared channel reset to empty.  Used by
-// patch() (as the base it overrides) and unpatch() so the "blank global" shape
-// is defined in exactly one place.
-function blank_global(reg) {
-	let g = { fns: {}, strict: false, calls: {}, proxy: null };
-	for (let ch in reg.channels) g[ch] = {};
-	return g;
-}
+// The pristine "blank global" shape lives in the engine (engine.blank_global) so
+// every site that needs it shares one definition; patch()/unpatch() call it below.
 
 /**
  * Replaces a built-in global (such as `warn`, `system`, or `print`) for the
@@ -100,7 +93,7 @@ export function patch(name, state) {
 	// empty so a re-patch cannot leak data from a previous patch through a channel
 	// the new state omits.  A channel explicitly present but null is also treated
 	// as empty below, matching to_layer()'s handling for mock.inject().
-	let new_global = blank_global(reg);
+	let new_global = engine.blank_global(reg);
 	if (state.behavior) new_global.fns = { ...state.behavior };
 	if (state.strict)   new_global.strict = true;
 	for (let ch in channels)
@@ -129,7 +122,7 @@ export function patch(name, state) {
  */
 export function unpatch(name) {
 	const reg = engine.get_registry(name);
-	reg.global = blank_global(reg);
+	reg.global = engine.blank_global(reg);
 };
 
 /**
