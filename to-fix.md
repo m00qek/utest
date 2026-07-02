@@ -83,20 +83,23 @@ hardened (1.6), or reverted as a false positive (1.14). **The rest of this
 document is NOT done.** Remaining work, by section:
 
 - **§2 cleanup (2.1–2.8):** the mechanical / clear-path items are **DONE**:
-  **2.3** (13 positional args → single run-context object built once in
-  runner.uc, defaults applied at construction), **2.4** (compact reporter
-  renders fatals as first-class `FATAL` and surfaces bundle-less fatals in the
-  summary), **2.5** (dedup reporter stats via `STATUS_KEY` map + loop, shared
-  `theme()`, json summary reuses base context), and the clean parts of **2.8**
-  (`dir_prefix()` helper dedups three fs-proxy copies; `resolve_rel()` hoisted
-  and reused in cli.uc; dead `all_keys` accessor removed).
+  **2.2** (single `blank_global()` in the engine, called from get_registry,
+  patch/unpatch, and restore's post-snapshot reset — kills the drift that
+  shipped bug b01a71d), **2.3** (13 positional args → single run-context object
+  built once in runner.uc, defaults applied at construction), **2.4** (compact
+  reporter renders fatals as first-class `FATAL` and surfaces bundle-less fatals
+  in the summary), **2.5** (dedup reporter stats via `STATUS_KEY` map + loop,
+  shared `theme()`, json summary reuses base context), and the clean parts of
+  **2.8** (`dir_prefix()` helper dedups three fs-proxy copies; `resolve_rel()`
+  hoisted and reused in cli.uc; dead `all_keys` accessor removed; combinators now
+  built through a `comb()` factory instead of 20 copies of the `proto({ match },
+  Combinator)` boilerplate).
   Still OPEN (deliberately, not mechanical): **2.1** (worker-stream decoder
-  dedup — needs a capture-policy decision), **2.2** (blank module-state shape —
-  a `blank_global` wrinkle), **2.6** (property/worker decoupling — API design),
-  **2.7** (failure-envelope reconciliation — own task, behavior risk), and three
-  sub-items of 2.8 (combinator `comb()` factory — a 20-function reindent, not a
-  crisp substitution; `format_path` reuse — not actually clean; fs-preamble
-  wrapper — partly-intentional divergence).
+  dedup — needs a capture-policy decision; options A/B/C scoped, awaiting
+  choice), **2.6** (property/worker decoupling — API design), **2.7**
+  (failure-envelope reconciliation — own task, behavior risk), and two sub-items
+  of 2.8 (`format_path` reuse — not actually clean; fs-preamble wrapper —
+  partly-intentional divergence).
 - **§3 performance (1–6):** all OPEN (non-blocking).
 - **§4 uloop migration:** NOT done — deliberately deferred; only the minimal
   1.6 hardening and 1.13 monotonic-clock fix were taken from it.
