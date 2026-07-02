@@ -89,15 +89,19 @@ document is NOT done.** Remaining work, by section:
   built once in runner.uc, defaults applied at construction), **2.4** (compact
   reporter renders fatals as first-class `FATAL` and surfaces bundle-less fatals
   in the summary), **2.5** (dedup reporter stats via `STATUS_KEY` map + loop,
-  shared `theme()`, json summary reuses base context), and the clean parts of
+  shared `theme()`, json summary reuses base context), **2.7** (single
+  `fail_envelope()` builder + a `parse_thrown()` returning `{ kind, message }`, so
+  assert and the property engine share one build and one parse; `caught_msg`/
+  `utest_kind` removed — the `type === 'Error'` gate was **kept**, since every
+  utest envelope is thrown via `die(<string>)`, making this behavior-preserving
+  rather than the gate-drop originally feared), and the clean parts of
   **2.8** (`dir_prefix()` helper dedups three fs-proxy copies; `resolve_rel()`
   hoisted and reused in cli.uc; dead `all_keys` accessor removed; combinators now
   built through a `comb()` factory instead of 20 copies of the `proto({ match },
   Combinator)` boilerplate).
   Still OPEN (deliberately, not mechanical): **2.1** (worker-stream decoder
   dedup — needs a capture-policy decision; options A/B/C scoped, awaiting
-  choice), **2.6** (property/worker decoupling — API design), **2.7**
-  (failure-envelope reconciliation — own task, behavior risk), and two sub-items
+  choice), **2.6** (property/worker decoupling — API design), and two sub-items
   of 2.8 (`format_path` reuse — not actually clean; fs-preamble wrapper —
   partly-intentional divergence).
 - **§3 performance (1–6):** all OPEN (non-blocking).
