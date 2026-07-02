@@ -134,8 +134,21 @@ document is NOT done.** Remaining work, by section:
   snapshot — the biggest steady win since most tests have no `beforeEach`).
   **3.1** (worker-read latency/churn) is now **subsumed by §4** — the uloop
   rewrite removed the poll loop entirely, so the persistent-fh half-measure is
-  moot. Still OPEN (deliberately): **3.3b** (cache the built proxy per name/real —
-  needs nested-layer scrutiny). All non-blocking.
+  moot. Still OPEN (deliberately): **3.3b** (cache the built proxy per name/real).
+  Scrutinized and left open: a naive `memoize(build_proxy)` is **incorrect** —
+  the proxy closures are safe to reuse (they read all state live via
+  `__internal__`, keyed by `name`, against the current top layer), but
+  `build_proxy` also carries a *per-inject* side effect: it pre-seeds the calls
+  map (`engine.uc:243-246`, generic path `proxy_base.uc:47`) so `spy(proxy).calls.X`
+  is `[]` not `undefined` before the first call, and `get_calls(name)` targets the
+  *current top layer* (`engine.uc:196-200`), which is only pushed at inject time.
+  A cache hit that skips the pre-seed reintroduces the `calls.X === undefined`
+  bug under repeated/nested injects of the same module. A correct fix must split
+  the reusable closure-bundle (cacheable per name/real) from the per-inject
+  pre-seed (must run every call) — and the win is only a handful of closure
+  allocations per `mock.inject` (coarse-grained: once per mock call, not per body
+  invocation), so it is low value / higher risk than the rest of the batch. All
+  non-blocking.
 - **§4 uloop migration:** IN PROGRESS. Decision: **uloop-only, no polling
   fallback** — the parallel executor will require uloop. Spikes confirmed uloop
   is present in `openwrt/rootfs:x86-64-25.12.4` (absent from the old 24.10 image),
