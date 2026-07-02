@@ -84,4 +84,19 @@ describe('uloop Mocking', () => {
 		});
 		assert.match(['outer'], fired, 'inner timer must not appear in outer pending queue');
 	});
+
+	it('running timers inside an inject does not re-fire an outer-scope timer', () => {
+		// A timer registered at the global scope, then run() inside an inject,
+		// used to fire and then be "cleared" only in the inject layer — leaving
+		// the global queue intact so a later run() fired it a second time.
+		let count = 0;
+		mock.global.patch('uloop', {});
+		uloop.timer(100, () => count++);
+		mock.inject('uloop', {}, (inner) => {
+			inner.run();
+		});
+		uloop.run();
+		mock.global.unpatch('uloop');
+		assert.match(1, count, 'global timer must fire exactly once');
+	});
 });

@@ -52,8 +52,21 @@ filenames are unique run-wide and the collision class is structurally
 impossible — correct even if a cleanup ever fails. Not a confirmed active bug;
 no permanent meta-test (triggering it is timing-dependent).
 
-**Still open — need a design decision, not fixed (2):** 1.10, 1.12.
-See section notes; these are directions with an unresolved semantics/UX choice.
+**1.10 (uloop timers re-firing across layers) — fixed with Option 1.**
+Root cause was a channel asymmetry: `_channel_get` falls through all layers to
+global, but `_channel_set` writes only the current scope. The uloop proxy's
+read-modify-write on `__pending__` therefore consumed an outer/global timer
+while clearing only its own layer, re-firing it after the layer popped
+(reproduced deterministically: 2 fires vs 1). Added a non-fall-through
+`get_local_channel` primitive (symmetric with `set_channel`) exposed as
+`ctx.get_local_data`; uloop's timer/run now read the current scope only, so the
+queue is strictly layer-scoped — matching the already-tested contract that inner
+timers don't leak outward (`14_uloop_test.uc:76`). New regression test added;
+confirmed to fail (2 vs 1) without the fix. All existing uloop tests stay green.
+
+**Still open — need a design decision, not fixed (1):** 1.12.
+See section notes; a UX choice (buffer-and-flush vs re-print headers vs force
+compact reporter under -j).
 
 **Regression tests added (verified to fail without their fix):**
 `25_scalar_output_test` (1.1), `26_sibling_require_test` (1.4),

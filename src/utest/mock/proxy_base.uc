@@ -18,11 +18,15 @@ return {
 		return {
 			// Generic channel API — preferred for proxies with multiple namespaces
 			get:      function(channel, key)      { return __internal__.get_channel(name, channel, key); },
+			// Read only the current scope (no fall-through), symmetric with set().
+			// Use for transient per-scope state a proxy consumes in place.
+			get_local: function(channel, key)     { return __internal__.get_local_channel(name, channel, key); },
 			set:      function(channel, key, val) { __internal__.set_channel(name, channel, key, val); },
 			all_keys: function(channel)           { return __internal__.get_all_channel_keys(name, channel); },
 
 			// Shorthands for the 'data' channel — kept for backward compatibility
 			get_data:          function(key)      { return __internal__.get_channel(name, 'data', key); },
+			get_local_data:    function(key)      { return __internal__.get_local_channel(name, 'data', key); },
 			set_data:          function(key, val) { __internal__.set_channel(name, 'data', key, val); },
 			get_all_data_keys: function()         { return __internal__.get_all_channel_keys(name, 'data'); },
 			has_data:          function(key)      { return __internal__.has_channel(name, 'data', key); },

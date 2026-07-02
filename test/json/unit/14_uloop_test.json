@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 8,
-    "passed": 8,
+    "total": 9,
+    "passed": 9,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -27,11 +27,11 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 5,
-          "name": "end() is a no-op and can be called freely from inside callbacks"
+          "id": 8,
+          "name": "patches global state via mock.global.patch()"
         }
       ],
-      "index": 4
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -54,6 +54,28 @@
         }
       ],
       "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 4,
+          "name": "run() clears the queue so a second run() does nothing"
+        }
+      ],
+      "index": 3
     },
     {
       "event": "TEST_RESULT",
@@ -115,11 +137,11 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 3,
-          "name": "run() fires multiple timers in registration order"
+          "id": 5,
+          "name": "end() is a no-op and can be called freely from inside callbacks"
         }
       ],
-      "index": 2
+      "index": 4
     },
     {
       "event": "TEST_RESULT",
@@ -137,11 +159,11 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 4,
-          "name": "run() clears the queue so a second run() does nothing"
+          "id": 3,
+          "name": "run() fires multiple timers in registration order"
         }
       ],
-      "index": 3
+      "index": 2
     },
     {
       "event": "TEST_RESULT",
@@ -181,22 +203,22 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 8,
-          "name": "patches global state via mock.global.patch()"
+          "id": 10,
+          "name": "running timers inside an inject does not re-fire an outer-scope timer"
         }
       ],
-      "index": 7
+      "index": 9
     }
   ],
   "files": [
     "examples/unit/14_uloop_test.uc"
   ],
-  "duration_ms": 10,
-  "seed": 450778410,
+  "duration_ms": 11,
+  "seed": 860354322,
   "bundles": {
     "examples/unit/14_uloop_test.uc": {
-      "total": 8,
-      "passed": 8,
+      "total": 9,
+      "passed": 9,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

@@ -110,6 +110,19 @@ function _channel_set(name, channel, key, val) {
 	target[channel][key] = val;
 }
 
+// Read only the current scope (top layer, or global when none) with no
+// fall-through — the exact location _channel_set writes to. A proxy holding
+// transient per-scope state (e.g. uloop's timer queue) must read and write the
+// same scope; a falling-through get would let it consume an outer scope's value
+// while set could only clear its own, re-firing the outer value after a pop.
+function _channel_get_local(name, channel, key) {
+	const reg = get_registry(name);
+	const scope = length(reg.layers) > 0 ? reg.layers[length(reg.layers) - 1] : reg.global;
+	if (scope[channel] && exists(scope[channel], key))
+		return scope[channel][key];
+	return null;
+}
+
 function _channel_all_keys(name, channel) {
 	const reg = get_registry(name);
 	let keys_map = {};
@@ -130,6 +143,7 @@ function _channel_has(name, channel, key) {
 
 const internal_obj = {
 	get_channel:          _channel_get,
+	get_local_channel:    _channel_get_local,
 	set_channel:          _channel_set,
 	get_all_channel_keys: _channel_all_keys,
 	has_channel:          _channel_has,
