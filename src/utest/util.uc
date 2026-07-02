@@ -47,8 +47,15 @@ export const shuffle = function(arr, seed) {
 export function mkdir_p(path) {
 	let parts = split(path, "/");
 	let cur = "";
-	for (let part in parts) {
-		if (!length(part)) { cur = "/"; continue; }
+	for (let i = 0; i < length(parts); i++) {
+		let part = parts[i];
+		if (!length(part)) {
+			// A leading empty component means an absolute path ("/a"); any other
+			// empty component is a redundant slash ("a//b") and must be skipped —
+			// resetting to root here would send the rest of the path to "/".
+			if (i === 0) cur = "/";
+			continue;
+		}
 		cur = (cur === "" ? "" : (cur === "/" ? "/" : cur + "/")) + part;
 		if (!fs.access(cur, "r") && !fs.mkdir(cur, 493))
 			return false;

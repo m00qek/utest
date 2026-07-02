@@ -55,14 +55,20 @@ function main() {
     let actual_raw = proc.read("all");
     let raw_status = proc.close();
 
-    let actual_json = json(actual_raw);
+    // json() dies (rather than returning null) on unparseable input, so guard it
+    // — otherwise malformed/empty utest output crashes the harness with a raw
+    // stack trace instead of a [FAIL] diagnostic.
+    let actual_json;
+    try { actual_json = json(actual_raw); } catch (e) { actual_json = null; }
     if (!actual_json) {
         print(sprintf("  [FAIL] %s (Could not parse JSON output)\n", example_file));
         exit(1);
     }
 
     // 2. Load Expected Baseline
-    let expected_json = json(readfile(expected_file));
+    let expected_raw = readfile(expected_file);
+    let expected_json;
+    try { expected_json = expected_raw !== null ? json(expected_raw) : null; } catch (e) { expected_json = null; }
     if (!expected_json) {
         print(sprintf("  [FAIL] %s (Could not load baseline JSON)\n", expected_file));
         exit(1);

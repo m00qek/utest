@@ -31,8 +31,9 @@ return {
 					}
 					let s = p[sec];
 					if (type(s) !== 'object') return null;
-					let v = s[opt];
-					return (v !== null) ? v : null;
+					// 2-arg get(pkg, sec): real uci returns the section type.
+					if (opt === null) return s['.type'];
+					return s[opt];
 				},
 
 				get_all: function(pkg, sec) {
@@ -59,7 +60,9 @@ return {
 					}
 					let matched = false;
 					for (let sec_name, sec in p) {
-						if (type(sec) !== 'object' || sec['.type'] !== type_name) continue;
+						// Real uci visits every section when type_name is null; only
+						// filter by type when a type was actually requested.
+						if (type(sec) !== 'object' || (type_name !== null && sec['.type'] !== type_name)) continue;
 						let s = { ...sec };
 						s['.name'] = sec_name;
 						cb(s);

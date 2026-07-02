@@ -32,6 +32,14 @@ export function create() {
 						worker.offset += length(line);
 						continue;
 					}
+					// Valid JSON but not an event object (e.g. a test printed a bare
+					// number, string, or array): treat as diagnostic output, not a
+					// protocol message — dereferencing .event on it would crash the runner.
+					if (type(msg) !== "object") {
+						warn(rtrim(line) + "\n");
+						worker.offset += length(line);
+						continue;
+					}
 					if (msg.event === "SUITE_END") worker.suite_ended = true;
 					if (msg.event === "FATAL") worker.fatal_received = true;
 					dispatch(msg, reporter);
@@ -60,7 +68,7 @@ export function create() {
 						out_file: out_file,
 						done_file: done_file,
 						pid_file: pid_file,
-						start_time: clock(),
+						start_time: clock(true),
 						offset: 0,
 						received_any: false,
 						suite_ended: false,
@@ -70,7 +78,7 @@ export function create() {
 
 				let still_active = [];
 				for (let worker in active_workers) {
-					let now = clock();
+					let now = clock(true);
 					let elapsed_ms = (now[0] - worker.start_time[0]) * 1000 +
 					                 int((now[1] - worker.start_time[1]) / 1000000);
 
@@ -132,7 +140,7 @@ export function create() {
 				if (finished_count < length(shuffled_files)) {
 					// Sleep at most 50 ms, but wake sooner if a worker is about to time out.
 					let wait_ms = 50;
-					let now = clock();
+					let now = clock(true);
 					for (let w in active_workers) {
 						let elapsed = (now[0] - w.start_time[0]) * 1000 +
 						              int((now[1] - w.start_time[1]) / 1000000);

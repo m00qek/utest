@@ -1,10 +1,31 @@
 import * as fs from 'fs';
 import { mkdir_p } from 'utest.util';
 
+// ucode's require maps dotted module names to path separators
+// (require('a.b') resolves a/b.uc), so any module name that becomes a
+// filesystem path must have its dots translated to '/' and its parent
+// directories created — otherwise the shim/symlink is written to a flat
+// 'a.b.uc' that require() never looks for.
+function module_path(name) {
+	return replace(name, ".", "/");
+}
+
+// Create the parent directory of a module file so writefile/symlink succeed
+// for namespaced (dotted) module names.
+function ensure_parent(path) {
+	let dir = replace(path, /\/[^\/]+$/, "");
+	if (dir !== path && !mkdir_p(dir))
+		die("[utest] error: could not create module directory: " + dir);
+}
+
 function find_real_module(name) {
+	let rel = module_path(name);
 	for (let pattern in REQUIRE_SEARCH_PATH) {
-		let path = replace(pattern, /\*/, name);
-		if (fs.access(path, "r")) return path;
+		let path = replace(pattern, /\*/, rel);
+		// Return an absolute path: the result becomes a symlink target, and a
+		// relative one (e.g. "./mylib/thing.uc" from the "./*.uc" search entry)
+		// would resolve against the link's own nested directory, not the cwd.
+		if (fs.access(path, "r")) return fs.realpath(path) || path;
 	}
 	return null;
 }
@@ -35,7 +56,9 @@ function generate_standard_shim(name, shim_dir) {
 			push(lines, sprintf("export const %s = _real.%s;", fn_name, fn_name));
 		}
 	}
-	fs.writefile(shim_dir + "/" + name + ".uc", join("\n", lines) + "\n");
+	let shim_path = shim_dir + "/" + module_path(name) + ".uc";
+	ensure_parent(shim_path);
+	fs.writefile(shim_path, join("\n", lines) + "\n");
 }
 
 // Install a shim for one module.
@@ -57,7 +80,9 @@ function setup_shim(name, shim_dir) {
 					fn_name, name, fn_name
 				));
 			}
-			fs.writefile(shim_dir + "/" + name + ".uc", join("\n", lines) + "\n");
+			let stub_path = shim_dir + "/" + module_path(name) + ".uc";
+			ensure_parent(stub_path);
+			fs.writefile(stub_path, join("\n", lines) + "\n");
 		} else {
 			warn(sprintf("[utest] warning: no shim created for '%s': module not found on disk and no proxy api list — mock will have no effect\n", name));
 		}
@@ -66,7 +91,11 @@ function setup_shim(name, shim_dir) {
 	generate_standard_shim(name, shim_dir);
 	let ext_m = match(real_path, /\.[^.]+$/);
 	let ext = ext_m ? ext_m[0] : '';
-	if (!fs.symlink(real_path, shim_dir + "/real_" + name + ext))
+	// The shim imports 'real_<name>'; require resolves that with dots→'/', so the
+	// symlink must live at module_path("real_" + name) + ext to be found.
+	let real_link = shim_dir + "/" + module_path("real_" + name) + ext;
+	ensure_parent(real_link);
+	if (!fs.symlink(real_path, real_link))
 		die(sprintf("[utest] error: could not link real module for '%s'\n", name));
 }
 
@@ -89,8 +118,10 @@ export const setup = function(config) {
 		// Install user proxy: symlinked so require('utest.mock.proxy.<name>') finds it.
 		if (ppath) {
 			let abs = fs.realpath(ppath) || ppath;
-			if (!fs.symlink(abs, proxy_subdir + "/" + name + ".uc"))
-				die(sprintf("[utest] error: could not install proxy for '%s': symlink '%s' -> '%s' failed\n", name, abs, proxy_subdir + "/" + name + ".uc"));
+			let proxy_link = proxy_subdir + "/" + module_path(name) + ".uc";
+			ensure_parent(proxy_link);
+			if (!fs.symlink(abs, proxy_link))
+				die(sprintf("[utest] error: could not install proxy for '%s': symlink '%s' -> '%s' failed\n", name, abs, proxy_link));
 		}
 
 		setup_shim(name, shim_dir);

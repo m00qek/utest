@@ -37,6 +37,14 @@ export function create() {
 						push(captured, rtrim(line));
 						continue;
 					}
+					// Valid JSON but not an event object (e.g. a test printed a bare
+					// number, string, or array): treat as diagnostic output, not a
+					// protocol message — dereferencing .event on it would crash the runner.
+					if (type(msg) !== "object") {
+						warn(rtrim(line) + "\n");
+						push(captured, rtrim(line));
+						continue;
+					}
 					if (msg.event === "SUITE_END") suite_ended = true;
 					if (msg.event === "FATAL") fatal_received = true;
 					dispatch(msg, reporter);

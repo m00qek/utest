@@ -37,7 +37,11 @@ try {
 	let test_dir = replace(test_file, /\/[^\/]+$/, "");
 	if (test_dir !== test_file) {
 		let real_dir = fs.realpath(test_dir) || test_dir;
-		unshift(REQUIRE_SEARCH_PATH, real_dir);
+		// REQUIRE_SEARCH_PATH entries are glob templates (the '*' is replaced
+		// with the module name); a bare directory never matches, so a test could
+		// not require() a helper sitting next to it. Prepend proper templates.
+		unshift(REQUIRE_SEARCH_PATH, real_dir + "/*.so");
+		unshift(REQUIRE_SEARCH_PATH, real_dir + "/*.uc");
 	}
 
 	let test_fn = loadfile(test_file);

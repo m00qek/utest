@@ -371,7 +371,13 @@ export function elements(...arr) {
  */
 export function frequency(...pairs) {
 	let total = 0;
-	for (let p in pairs) total += p[0];
+	for (let p in pairs) {
+		// A negative weight is silently unreachable and corrupts the selection
+		// walk (pick -= weight skews later alternatives), so reject it outright.
+		if (type(p[0]) !== 'int' || p[0] < 0)
+			die(sprintf("gen.frequency: each weight must be a non-negative integer, got %J", p[0]));
+		total += p[0];
+	}
 	if (total <= 0) die("gen.frequency: weights must sum to a positive value");
 	return gen_from(function(source) {
 		let pick = source.draw(total);

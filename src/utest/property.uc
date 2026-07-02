@@ -18,8 +18,14 @@ function record_source(seed) {
 		choices,
 		draw: function(bound) {
 			if (bound <= 1) { push(choices, 0); return 0; }
-			const r = int(math.rand());
-			const v = (r % BIAS_DENOM === 0) ? 0 : (r % bound);
+			// Draw the 0-bias decision from its own rand() so it doesn't correlate
+			// with the value: sharing a single draw made every nonzero multiple of
+			// BIAS_DENOM unreachable whenever BIAS_DENOM divided the bound.
+			const biased = (int(math.rand()) % BIAS_DENOM === 0);
+			// math.rand() yields 31 bits ([0, 2^31-1]); combine two draws into 62
+			// bits so generator spans wider than 2^31 aren't silently truncated.
+			const bits = (int(math.rand()) << 31) | int(math.rand());
+			const v = biased ? 0 : (bits % bound);
 			push(choices, v);
 			return v;
 		}

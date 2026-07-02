@@ -68,6 +68,11 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.string({ max_len: -1 }), /max_len \(-1\) must be >= 0/);
 	});
 
+	it("gen.frequency rejects a negative weight", () => {
+		assert.throws(() => gen.frequency([2, gen.int(0, 1)], [-1, gen.int(2, 3)]),
+		              /weight must be a non-negative integer/);
+	});
+
 	it("forall fails when all runs are discarded", () => {
 		assert.throws(
 			() => forall(gen.filter(gen.int(0, 0), (n) => n > 0), () => null,
@@ -204,6 +209,25 @@ describe("Regression tests", () => {
 		assert.match(false, !!fs.access("/.utest/mkdir_regression_test", "r"),
 		             "directory must NOT exist under the root filesystem");
 		fs.rmdir(dir);
+	});
+
+	it("gen.int reaches nonzero multiples of the 0-bias denominator", () => {
+		// Before the fix, the 1-in-8 zero-bias decision and the value were drawn
+		// from the same rand(), so nonzero multiples of 8 were unreachable when 8
+		// divided the range: gen.int(0, 15) could never produce 8.
+		let saw_8 = false;
+		forall(gen.int(0, 15), (n) => { if (n === 8) saw_8 = true; },
+		       { seed: 1, runs: 200, persist: false });
+		assert.match(true, saw_8, "gen.int(0, 15) must be able to produce 8");
+	});
+
+	it("gen.int produces values above 2^31 for wide ranges", () => {
+		// Before the fix, draws were math.rand() % bound with rand() capped at
+		// 2^31-1, silently truncating any span wider than 2^31.
+		let saw_large = false;
+		forall(gen.int(0, 1099511627776), (n) => { if (n > 2147483647) saw_large = true; },
+		       { seed: 1, runs: 100, persist: false });
+		assert.match(true, saw_large, "gen.int over a 2^40 range must exceed 2^31");
 	});
 });
 

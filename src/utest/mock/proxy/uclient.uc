@@ -41,12 +41,18 @@ return {
 				let f = ctx.get_behavior('request');
 				if (f) return f(method, opts);
 
-				let response = ctx.get_data(url);
-				if (response === null) {
+				// Use has_data so a URL explicitly mocked to null is treated as a
+				// real (unreachable) response, not as "unmocked" — otherwise it
+				// would trip strict mode instead of returning false.
+				if (!ctx.has_data(url)) {
 					if (ctx.is_strict())
 						die(sprintf("strict mock: uclient.request('%s') is not mocked", url));
 					return false;
 				}
+
+				let response = ctx.get_data(url);
+				if (response === null)
+					return false;
 
 				if (response.error !== null) {
 					if (callbacks && callbacks.error)
