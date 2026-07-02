@@ -114,7 +114,19 @@ document is NOT done.** Remaining work, by section:
   Still OPEN (deliberately, not mechanical): two sub-items
   of 2.8 (`format_path` reuse — not actually clean; fs-preamble wrapper —
   partly-intentional divergence).
-- **§3 performance (1–6):** all OPEN (non-blocking).
+- **§3 performance (1–6):** the low/medium-risk batch is **DONE** — **3.2**
+  (`fs.unlink` ×3 instead of `system("rm -f")` per parallel worker), **3.3a**
+  (memoized `proxy_module()` lookup incl. null miss, shared by
+  `get_proxy_channels`/`build_proxy` — kills the per-inject disk scan for
+  proxy-less modules), **3.4** (`gen.string` builds via array+`join`, charset
+  length hoisted — the O(n²) hot path; the non-hot indent-pad in property.uc left
+  as-is), **3.5** (filter verdict computed once, stashed on `test.included`), and
+  **3.6** (hook-less tests reuse `mock_snap` instead of a fresh full-state
+  snapshot — the biggest steady win since most tests have no `beforeEach`).
+  Still OPEN (deliberately): **3.1** (persistent fh per worker — the growing-file
+  read has correctness subtleties; belongs with the §4 uloop rework, where it is
+  the real fix) and **3.3b** (cache the built proxy per name/real — needs
+  nested-layer scrutiny). All non-blocking.
 - **§4 uloop migration:** NOT done — deliberately deferred; only the minimal
   1.6 hardening and 1.13 monotonic-clock fix were taken from it.
 - **§5 test gaps:** partly done — added 5.2 (hostile output), 5.3 (strict
