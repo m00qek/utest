@@ -268,12 +268,13 @@ export function string(opts) {
 	const sz = size_from_opts(opts, "gen.string");
 	const charset = ((opts.charset ?? null) !== null) ? opts.charset : STRING_CHARS;
 	if (length(charset) === 0) die("gen.string: charset must be non-empty");
+	const clen = length(charset);
 	return gen_from(function(source) {
 		const n = sz.min_len + source.draw(sz.max_len - sz.min_len + 1);
-		let out = "";
+		const chars = [];
 		for (let i = 0; i < n; i++)
-			out += substr(charset, source.draw(length(charset)), 1);
-		return out;
+			push(chars, substr(charset, source.draw(clen), 1));
+		return join("", chars);
 	});
 };
 
