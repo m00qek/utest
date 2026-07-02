@@ -94,6 +94,18 @@ else
     failed_tests="$failed_tests parallel_test"
 fi
 
+# Timeout under parallel + multi-bundle: one bundle's worker hangs forever and is
+# killed by the configured timeout (2s, via the companion config), reported as a
+# FATAL, while a sibling bundle's worker passes. Exercises the uloop executor's
+# per-worker timeout path and deterministic "worker timed out after Ns" message.
+# The two files have no individual baselines so the main loop skips them.
+timeout_arg="Pass:examples/timeout/01_pass_test.uc Hang:examples/timeout/02_hang_test.uc"
+if run_verify "$timeout_arg" "test/json/timeout/timeout_test.json" "-j 2 -c examples/timeout/timeout.config.uc"; then
+    :
+else
+    failed_tests="$failed_tests timeout_test"
+fi
+
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
     exit 0
