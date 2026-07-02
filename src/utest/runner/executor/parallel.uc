@@ -11,9 +11,11 @@ let worker_id_counter = 0;
 
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks, prop_seed) {
-			const WORKER_TIMEOUT_MS = (timeout || 60) * 1000;
-			const pipes_dir = run_dir + "/pipes";
+		run: function(ctx) {
+			let reporter = ctx.reporter, bundle_name = ctx.bundle, jobs = ctx.jobs;
+			let shuffled_files = ctx.files;
+			const WORKER_TIMEOUT_MS = ctx.timeout * 1000;
+			const pipes_dir = ctx.run_dir + "/pipes";
 
 			if (!mkdir_p(pipes_dir))
 				die("[utest] error: could not create pipes directory: " + pipes_dir);
@@ -22,7 +24,7 @@ export function create() {
 			let active_workers = [];
 			let finished_count = 0;
 
-			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
+			let lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
 
 			// Drain all complete newline-terminated JSON lines from fh into reporter,
 			// updating worker state (suite_ended / fatal_received / received_any).
@@ -62,7 +64,7 @@ export function create() {
 					let done_file = pipes_dir + "/done." + id;
 					let pid_file = pipes_dir + "/pid." + id;
 
-					let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed, prop_seed: prop_seed, mocks: mocks || [] });
+					let worker_arg = sprintf('%J', { file: file, filter: ctx.filter || null, bundle: bundle_name, seed: ctx.seed, prop_seed: ctx.prop_seed, mocks: ctx.mocks });
 					// Launch ucode in background inside the subshell so pid_file holds the
 					// ucode PID directly — killing it on timeout hits the right process.
 					let cmd = sprintf("( ucode %s %s %s > %s 2>&1 & echo $! > %s; wait; touch %s ) &",

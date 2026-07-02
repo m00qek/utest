@@ -23,16 +23,17 @@ export const build_l_flags = function(src_dir, shim_paths, lib_paths) {
 };
 
 export const ExecutorBase = {
-	execute: function(files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks, prop_seed) {
+	execute: function(ctx) {
 		// Generate the seed here so the same value drives both file-order shuffle
 		// and each worker's test-order shuffle.  util.shuffle generates its own
 		// seed internally when passed null but never surfaces it, so a null seed
 		// forwarded to workers makes every run unreproducible.
+		let seed = ctx.seed;
 		if (seed === null) {
 			let t = clock();
 			seed = t[0] * 1000000000 + t[1];
 		}
-		return this.run(util.shuffle(files, seed), reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths || [], seed, timeout || 60, lib_paths || [], mocks || [], prop_seed);
+		return this.run({ ...ctx, seed, files: util.shuffle(ctx.files, seed) });
 	},
 
 	// Given the terminal state of a finished or killed worker, return the FATAL

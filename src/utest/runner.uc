@@ -34,11 +34,27 @@ export function run(options) {
 
 	let reporter = create_reporter(reporter_type, color, all_files, options.seed, jobs > 1);
 
+	// Run-wide context threaded to the executor. Defaults are applied once here so
+	// the executor layers can read the fields directly without re-defaulting.
+	let run_ctx = {
+		reporter:   reporter,
+		jobs:       jobs,
+		filter:     test_filter,
+		run_dir:    options.run_dir,
+		src_dir:    options.src_dir,
+		shim_paths: options.shim_paths || [],
+		seed:       options.seed,
+		timeout:    options.timeout || 60,
+		lib_paths:  options.lib_paths || [],
+		mocks:      keys(options.mocks || {}),
+		prop_seed:  options.prop_seed
+	};
+
 	// 2. Execution Loop
 	for (let i = 0; i < length(bundle_work); i++) {
 		let b = bundle_work[i];
 		reporter.bundle_start(b.name);
-		execute_suites(b.files, reporter, jobs, test_filter, b.name, options.run_dir, options.src_dir, options.shim_paths || [], options.seed, options.timeout || 60, options.lib_paths || [], keys(options.mocks || {}), options.prop_seed);
+		execute_suites({ ...run_ctx, files: b.files, bundle: b.name });
 		reporter.bundle_end(b.name);
 	}
 

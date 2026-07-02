@@ -3,11 +3,12 @@ import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.
 
 export function create() {
 	return proto({
-		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks, prop_seed) {
-			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
+		run: function(ctx) {
+			let reporter = ctx.reporter, bundle_name = ctx.bundle, timeout = ctx.timeout;
+			let lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
 
-			for (let file in shuffled_files) {
-				let worker_arg = sprintf('%J', { file: file, filter: filter || null, bundle: bundle_name, seed: seed, prop_seed: prop_seed, mocks: mocks || [] });
+			for (let file in ctx.files) {
+				let worker_arg = sprintf('%J', { file: file, filter: ctx.filter || null, bundle: bundle_name, seed: ctx.seed, prop_seed: ctx.prop_seed, mocks: ctx.mocks });
 				// Run worker under a shell watchdog: background it, start a sleep-kill
 				// timer, then wait for the worker.  No `timeout` binary is required (not
 				// available on all OpenWrt targets).  If the watchdog fires, the worker is
