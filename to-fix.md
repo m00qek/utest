@@ -41,7 +41,18 @@ search entry) produced broken symlinks once the real-module symlink moved into
 a nested `real_<ns>/` directory. Latent bug for any relative-path mocked module,
 exposed by the dotted-name test.
 
-**Still open — need a design decision, not fixed (3):** 1.6, 1.10, 1.12.
+**1.6 (parallel done-file race) — downgraded to latent, hardened anyway.**
+Direct end-to-end testing could NOT reproduce the false FATAL: with `run_dir`
+pinned and a worker forced to time out, the cleanup `rm` reliably beats the
+killed wrapper's `touch`, so no stale done-file survives into the next bundle
+(the finder's "188/200" was an isolated microbenchmark of the kill-then-rm
+pattern, not utest's actual timing). Fixed defensively regardless: the
+per-worker id counter is now module-level (monotonic across bundles) so pipe
+filenames are unique run-wide and the collision class is structurally
+impossible — correct even if a cleanup ever fails. Not a confirmed active bug;
+no permanent meta-test (triggering it is timing-dependent).
+
+**Still open — need a design decision, not fixed (2):** 1.10, 1.12.
 See section notes; these are directions with an unresolved semantics/UX choice.
 
 **Regression tests added (verified to fail without their fix):**

@@ -2,6 +2,13 @@ import * as fs from 'fs';
 import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.base';
 import { mkdir_p } from 'utest.util';
 
+// Monotonic across the whole run. Every bundle shares one run_dir/pipes dir, so
+// resetting per bundle reused pipe filenames (out.1/done.1/…) between bundles.
+// In practice the timeout cleanup's `rm` beats the killed wrapper's `touch`, so
+// no stale done-file survives — but a unique id per worker removes the collision
+// class entirely, staying correct even if that cleanup ever fails to complete.
+let worker_id_counter = 0;
+
 export function create() {
 	return proto({
 		run: function(shuffled_files, reporter, jobs, filter, bundle_name, run_dir, src_dir, shim_paths, seed, timeout, lib_paths, mocks, prop_seed) {
@@ -14,7 +21,6 @@ export function create() {
 			let queue = [ ...shuffled_files ];
 			let active_workers = [];
 			let finished_count = 0;
-			let worker_id_counter = 0;
 
 			let lf = build_l_flags(src_dir, shim_paths, lib_paths);
 
