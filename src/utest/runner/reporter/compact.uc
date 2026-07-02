@@ -7,6 +7,7 @@ export function create(use_color) {
 	};
 
 	let bundle_data = {}; // name -> { dots_on_line, file_failures }
+	let orphan_fatals = []; // fatals with no bundle context — surfaced in the summary
 
 	function get_bundle(name) {
 		if (!bundle_data[name]) {
@@ -48,8 +49,10 @@ export function create(use_color) {
 			}
 		}
 
-		let symbol = (f.status === "FAIL" ? "■" : "▲");
-		let status_color = (f.status === "FAIL" ? t.FAIL : t.ERROR);
+		let symbol, status_color;
+		if (f.status === "FAIL")       { symbol = "■"; status_color = t.FAIL; }
+		else if (f.status === "FATAL") { symbol = "✖"; status_color = t.BOLD + t.ERROR; }
+		else                           { symbol = "▲"; status_color = t.ERROR; }
 
 		print(sprintf("    %s %s%s\n", color(status_color, symbol), path_str, name));
 
@@ -127,18 +130,26 @@ export function create(use_color) {
 		},
 
 		render_fatal: function(msg) {
-			if (!msg.bundle) return;
-			print_dot(msg.bundle, "!", t.BOLD + t.ERROR);
-			let b = get_bundle(msg.bundle);
-			if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
-			push(b.file_failures[msg.suite], {
-				status: "ERROR",
-				error: msg.error,
-				path: [{ name: "Fatal Error" }]
-			});
+			// FATAL is a first-class status (distinct symbol/label), not a fake
+			// ERROR record. A fatal with no bundle (e.g. arriving before
+			// bundle_start) has nowhere to attach in the per-bundle failure list,
+			// so surface it in the summary rather than dropping it silently.
+			let rec = { status: "FATAL", error: msg.error, path: [{ name: msg.suite || "Fatal error" }] };
+			if (msg.bundle) {
+				print_dot(msg.bundle, "!", t.BOLD + t.ERROR);
+				let b = get_bundle(msg.bundle);
+				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
+				push(b.file_failures[msg.suite], rec);
+			} else {
+				push(orphan_fatals, rec);
+			}
 		},
 
 		render_summary: function(ctx) {
+			if (length(orphan_fatals) > 0) {
+				print("\n" + color(t.HEADER, "Fatals (no bundle):") + "\n");
+				for (let f in orphan_fatals) print_failure_details(f);
+			}
 			print("\n" + color(t.HEADER, "Summary:") + "\n\n");
 			print_summary_line(ctx.stats, ctx.duration_ms, "  ");
 			print("  Seed:   " + ctx.seed + "\n");

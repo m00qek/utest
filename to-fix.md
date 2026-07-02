@@ -19,7 +19,8 @@ test quality B-, performance B-.
 verified with dedicated end-to-end runs; 1.7/1.8 verified to reach
 previously-blind values. The `99_property_test.json` baseline was regenerated
 for the two shrinking-demo properties whose RNG-dependent output changed (stats
-unchanged; only those 2 of 33 results differ).
+otherwise unchanged); three regression tests were later added to that suite,
+bringing it to 36 tests.
 
 **1.2 (strict mode across layers) — fixed with Option B (three-state strict).**
 `to_layer` now stores `strict` as true / false / null(=inherit) instead of
@@ -77,8 +78,27 @@ Verified manually (grouped under `-j2`, unchanged under `-j1`); the detailed
 reporter has no golden-baseline coverage (baselines use `-r json`), and its
 interleaved layout is timing-dependent, so no deterministic meta-test was added.
 
-**Nothing left open.** All review findings are resolved (fixed, hardened, or —
-for 1.14 — reverted as a false positive).
+**§1 correctness is fully resolved** — every bug in section 1 is fixed,
+hardened (1.6), or reverted as a false positive (1.14). **The rest of this
+document is NOT done.** Remaining work, by section:
+
+- **§2 cleanup (2.1–2.8):** mostly OPEN. Exception: **2.4 is done** — the
+  compact reporter now renders fatals as a first-class `FATAL` (distinct
+  symbol/label, not a fake ERROR) and surfaces bundle-less fatals in the summary
+  instead of dropping them. 2.1/2.2/2.3/2.5/2.6/2.7/2.8 are untouched.
+- **§3 performance (1–6):** all OPEN (non-blocking).
+- **§4 uloop migration:** NOT done — deliberately deferred; only the minimal
+  1.6 hardening and 1.13 monotonic-clock fix were taken from it.
+- **§5 test gaps:** partly done — added 5.2 (hostile output), 5.3 (strict
+  layering), 5.5 (RNG distribution), and part of 5.1 (uci/uclient fidelity; no
+  ubus). **5.7 is done** — `make test` now defaults to `examples/unit` instead
+  of the nonexistent `test/unit/*_test.uc`. Still open: 5.1 (ubus fidelity),
+  5.4 (dotted-mock meta-test — see note below), 5.6 (a timeout+multibundle test
+  for 1.6).
+
+Note: the per-bug write-ups in §1 below are the ORIGINAL findings (their "Fix:"
+lines are proposals, not status); the STATUS block above is authoritative for
+what shipped.
 
 **Regression tests added (verified to fail without their fix):**
 `25_scalar_output_test` (1.1), `26_sibling_require_test` (1.4),
