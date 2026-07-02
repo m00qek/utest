@@ -123,24 +123,32 @@ document is NOT done.** Remaining work, by section:
   as-is), **3.5** (filter verdict computed once, stashed on `test.included`), and
   **3.6** (hook-less tests reuse `mock_snap` instead of a fresh full-state
   snapshot — the biggest steady win since most tests have no `beforeEach`).
-  Still OPEN (deliberately): **3.1** (persistent fh per worker — the growing-file
-  read has correctness subtleties; belongs with the §4 uloop rework, where it is
-  the real fix) and **3.3b** (cache the built proxy per name/real — needs
-  nested-layer scrutiny). All non-blocking.
+  **3.1** (worker-read latency/churn) is now **subsumed by §4** — the uloop
+  rewrite removed the poll loop entirely, so the persistent-fh half-measure is
+  moot. Still OPEN (deliberately): **3.3b** (cache the built proxy per name/real —
+  needs nested-layer scrutiny). All non-blocking.
 - **§4 uloop migration:** IN PROGRESS. Decision: **uloop-only, no polling
   fallback** — the parallel executor will require uloop. Spikes confirmed uloop
   is present in `openwrt/rootfs:x86-64-25.12.4` (absent from the old 24.10 image),
-  the full suite passes there, and the viable design is `fs.popen` +
-  `uloop.handle(proc, cb, ULOOP_READ)` (EOF = exit, `proc.close()` = exit code) +
-  one `uloop.timer` per worker + a pidfile for kill-on-timeout — `uloop.process`
-  can't capture stdout (child inherits stdio). **Phase 1 DONE** (commit: bump the
-  test image to 25.12.4, `--tmpfs /tmp:mode=1777` for the run dir, host-uid
-  mapping in meta-test). **Phase 2** (rewrite the parallel executor on uloop,
-  reusing `make_stream` and the JSON protocol; folds in 3.1's latency/churn win)
-  and **Phase 3** (drop the old polling `parallel.uc`) pending. Note the
-  pre-existing `utest`-CLI-vs-`verify.uc` shim discrepancy surfaced during Phase 1
-  (the global.patch interception test passes under the meta-test harness but not
-  the shipped CLI, on 24.10 too) — logged, out of scope for §4.
+  the full suite passes there. **Phase 1 DONE** (bump the test image to 25.12.4,
+  `--tmpfs /tmp:mode=1777` for the run dir, host-uid mapping in meta-test).
+  **Phase 2 DONE** (commit: event-driven parallel executor on uloop). The
+  implemented design differs from the original sketch: `uloop.process` gives the
+  pid + real exit code but **cannot** capture stdout (child inherits stdio), and
+  reading a pipe via `uloop.handle` fights ucode's stdio buffering — so each
+  worker redirects to a **regular file** read once, whole, in its exit callback
+  (per-worker results at completion; fine, and it removes cross-worker
+  interleaving), with a `uloop.timer` + `system("kill")` for timeout. This
+  removed the poll quantum, the file churn, the done-file (so **1.6** is
+  structurally impossible — no done file), the pid-file, the clock math
+  (**1.13**), and added crash-vs-timeout distinction. uloop-only, no fallback:
+  `require('uloop')` is lazy in `run()`, so sequential (-j1) still needs no uloop;
+  -jN without it dies with an actionable message. Phase 3 (drop old polling) is
+  subsumed — the rewrite replaced it. Verified end to end: full meta-test (incl.
+  -j2), timeout kill, crash/no-output capture, multi-bundle, queue draining.
+  Note the pre-existing `utest`-CLI-vs-`verify.uc` shim discrepancy surfaced
+  during Phase 1 (the global.patch interception test passes under the meta-test
+  harness but not the shipped CLI, on 24.10 too) — logged, out of scope for §4.
 - **§5 test gaps:** partly done — added 5.2 (hostile output), 5.3 (strict
   layering), 5.5 (RNG distribution), and part of 5.1 (uci/uclient fidelity; no
   ubus). **5.7 is done** — `make test` now defaults to `examples/unit` instead
