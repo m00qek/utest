@@ -83,6 +83,11 @@ hardened (1.6), or reverted as a false positive (1.14). **The rest of this
 document is NOT done.** Remaining work, by section:
 
 - **§2 cleanup (2.1–2.8):** the mechanical / clear-path items are **DONE**:
+  **2.1** (worker-stream decoder unified into `make_stream(reporter)` in
+  executor/base.uc, fed by both executors; `worker_arg()` sprintf shared too —
+  option A: capture policy unified, with parallel's `capture_tail()` folding in a
+  crashed worker's unterminated tail so its FATAL diagnostic matches `-j1`
+  byte-for-byte; verified end-to-end under both `-j1` and `-j2`),
   **2.2** (single `blank_global()` in the engine, called from get_registry,
   patch/unpatch, and restore's post-snapshot reset — kills the drift that
   shipped bug b01a71d), **2.3** (13 positional args → single run-context object
@@ -99,9 +104,8 @@ document is NOT done.** Remaining work, by section:
   hoisted and reused in cli.uc; dead `all_keys` accessor removed; combinators now
   built through a `comb()` factory instead of 20 copies of the `proto({ match },
   Combinator)` boilerplate).
-  Still OPEN (deliberately, not mechanical): **2.1** (worker-stream decoder
-  dedup — needs a capture-policy decision; options A/B/C scoped, awaiting
-  choice), **2.6** (property/worker decoupling — API design), and two sub-items
+  Still OPEN (deliberately, not mechanical): **2.6** (property/worker
+  decoupling — API design), and two sub-items
   of 2.8 (`format_path` reuse — not actually clean; fs-preamble wrapper —
   partly-intentional divergence).
 - **§3 performance (1–6):** all OPEN (non-blocking).
