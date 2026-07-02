@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.base';
+import { ExecutorBase, q, build_l_flags, make_stream, worker_arg } from 'utest.runner.executor.base';
 
 export function create() {
 	return proto({
@@ -8,7 +8,7 @@ export function create() {
 			let lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
 
 			for (let file in ctx.files) {
-				let worker_arg = sprintf('%J', { file: file, filter: ctx.filter || null, bundle: bundle_name, seed: ctx.seed, prop_seed: ctx.prop_seed, mocks: ctx.mocks });
+				let warg = worker_arg(file, ctx);
 				// Run worker under a shell watchdog: background it, start a sleep-kill
 				// timer, then wait for the worker.  No `timeout` binary is required (not
 				// available on all OpenWrt targets).  If the watchdog fires, the worker is
@@ -18,7 +18,7 @@ export function create() {
 				// finally re-exit with the worker's code so timeout detection still works.
 				let cmd = sprintf(
 					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
-					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(worker_arg), timeout);
+					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), timeout);
 				let proc = fs.popen(cmd, "r");
 
 				if (!proc) {
@@ -26,31 +26,12 @@ export function create() {
 					continue;
 				}
 
+				let stream = make_stream(reporter);
 				let line;
-				let received_any = false;
-				let suite_ended = false;
-				let fatal_received = false;
-				let captured = [];
-				while ((line = proc.read("line")) !== null) {
-					let msg;
-					try { msg = json(line); } catch (e) {
-						warn(rtrim(line) + "\n");
-						push(captured, rtrim(line));
-						continue;
-					}
-					// Valid JSON but not an event object (e.g. a test printed a bare
-					// number, string, or array): treat as diagnostic output, not a
-					// protocol message — dereferencing .event on it would crash the runner.
-					if (type(msg) !== "object") {
-						warn(rtrim(line) + "\n");
-						push(captured, rtrim(line));
-						continue;
-					}
-					if (msg.event === "SUITE_END") suite_ended = true;
-					if (msg.event === "FATAL") fatal_received = true;
-					dispatch(msg, reporter);
-					received_any = true;
-				}
+				// A blocking pipe read yields whole lines, and the final unterminated
+				// line at EOF, so every byte reaches the decoder — no separate tail read.
+				while ((line = proc.read("line")) !== null)
+					stream.feed(line);
 				let exit_code = proc.close();
 				// 143 = 128 + SIGTERM(15), the exact signal our watchdog sends.  Matching
 				// it exactly (rather than >= 128) avoids mislabelling a crashed worker —
@@ -58,9 +39,7 @@ export function create() {
 				let timed_out = (exit_code === 143);
 
 				// The worker already emitted its own FATAL — don't double-report.
-				let smsg = this.terminal_fatal({ received_any: received_any, suite_ended: suite_ended,
-					fatal_received: fatal_received, timed_out: timed_out, timeout: timeout,
-					captured: join("\n", captured) });
+				let smsg = this.terminal_fatal(stream.terminal(timed_out, timeout));
 				if (smsg !== null)
 					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name, error: smsg });
 			}

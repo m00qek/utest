@@ -10,6 +10,64 @@ export const dispatch = function(msg, reporter) {
 	else if (msg.event === "FATAL")       reporter.fatal(msg);
 };
 
+// Per-worker decoder for the newline-delimited JSON event stream a worker emits.
+// feed() classifies one complete line: protocol events (SUITE_START/TEST_RESULT/
+// SUITE_END/FATAL) are dispatched to the reporter and update the flags; anything
+// else — non-JSON diagnostics, or valid JSON that is not an event object (e.g. a
+// test that printed a bare number/string/array, whose .event access would crash
+// the runner) — is echoed to stderr and captured for the terminal FATAL message.
+// capture_raw() records unparsed trailing output (a partial, non-newline-
+// terminated line left behind by a crash) as diagnostics without ever treating
+// it as a protocol event.  Both executors decode through one instance so the
+// classification and capture policy cannot drift.
+export const make_stream = function(reporter) {
+	return {
+		received_any: false,
+		suite_ended: false,
+		fatal_received: false,
+		captured: [],
+		feed: function(line) {
+			let msg;
+			try { msg = json(line); } catch (e) {
+				warn(rtrim(line) + "\n");
+				push(this.captured, rtrim(line));
+				return;
+			}
+			if (type(msg) !== "object") {
+				warn(rtrim(line) + "\n");
+				push(this.captured, rtrim(line));
+				return;
+			}
+			if (msg.event === "SUITE_END") this.suite_ended = true;
+			if (msg.event === "FATAL") this.fatal_received = true;
+			dispatch(msg, reporter);
+			this.received_any = true;
+		},
+		capture_raw: function(text) {
+			let t = rtrim(text);
+			if (length(t)) push(this.captured, t);
+		},
+		// Merge the protocol flags and capture buffer with the caller's timeout
+		// info into the shape terminal_fatal() expects.
+		terminal: function(timed_out, timeout) {
+			return {
+				received_any: this.received_any,
+				suite_ended: this.suite_ended,
+				fatal_received: this.fatal_received,
+				timed_out, timeout,
+				captured: join("\n", this.captured)
+			};
+		}
+	};
+};
+
+// The worker CLI argument: the per-suite job description a worker reads from its
+// ARGV.  Built identically by both executors.
+export const worker_arg = function(file, ctx) {
+	return sprintf('%J', { file, filter: ctx.filter || null, bundle: ctx.bundle,
+		seed: ctx.seed, prop_seed: ctx.prop_seed, mocks: ctx.mocks });
+};
+
 // Returns { flags, worker_path } for spawning a worker process.
 // shim_paths are prepended so they shadow the base paths in ucode's search order.
 // lib_paths are appended to extend the search without shadowing framework modules.

@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { ExecutorBase, q, dispatch, build_l_flags } from 'utest.runner.executor.base';
+import { ExecutorBase, q, build_l_flags, make_stream, worker_arg } from 'utest.runner.executor.base';
 import { mkdir_p } from 'utest.util';
 
 // Monotonic across the whole run. Every bundle shares one run_dir/pipes dir, so
@@ -26,34 +26,28 @@ export function create() {
 
 			let lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
 
-			// Drain all complete newline-terminated JSON lines from fh into reporter,
-			// updating worker state (suite_ended / fatal_received / received_any).
+			// Feed every complete newline-terminated line from fh into the worker's
+			// decoder, advancing its byte offset.  A trailing partial line (no
+			// newline yet) is left for the next poll — more bytes may still arrive.
 			function drain(worker, fh) {
 				let line;
 				while ((line = fh.read("line")) !== null) {
 					if (ord(line, length(line) - 1) !== 10) break;
-					let msg;
-					try { msg = json(line); } catch (e) {
-						// Non-JSON lines are diagnostic output (e.g. warn() calls
-						// from engine.uc). Pass them through to stderr unchanged.
-						warn(rtrim(line) + "\n");
-						worker.offset += length(line);
-						continue;
-					}
-					// Valid JSON but not an event object (e.g. a test printed a bare
-					// number, string, or array): treat as diagnostic output, not a
-					// protocol message — dereferencing .event on it would crash the runner.
-					if (type(msg) !== "object") {
-						warn(rtrim(line) + "\n");
-						worker.offset += length(line);
-						continue;
-					}
-					if (msg.event === "SUITE_END") worker.suite_ended = true;
-					if (msg.event === "FATAL") worker.fatal_received = true;
-					dispatch(msg, reporter);
+					worker.stream.feed(line);
 					worker.offset += length(line);
-					worker.received_any = true;
 				}
+			}
+
+			// At terminal time, capture any bytes past the drained offset — a final
+			// unterminated line a crashed worker never newline-flushed — so the
+			// FATAL diagnostic sees everything the worker wrote, matching the -j1
+			// path (whose blocking pipe read surrenders that tail at EOF).
+			function capture_tail(worker) {
+				let fh = fs.open(worker.out_file, "r");
+				if (!fh) return;
+				fh.seek(worker.offset, 0);
+				worker.stream.capture_raw(fh.read("all") || "");
+				fh.close();
 			}
 
 			while (finished_count < length(shuffled_files)) {
@@ -64,11 +58,11 @@ export function create() {
 					let done_file = pipes_dir + "/done." + id;
 					let pid_file = pipes_dir + "/pid." + id;
 
-					let worker_arg = sprintf('%J', { file: file, filter: ctx.filter || null, bundle: bundle_name, seed: ctx.seed, prop_seed: ctx.prop_seed, mocks: ctx.mocks });
+					let warg = worker_arg(file, ctx);
 					// Launch ucode in background inside the subshell so pid_file holds the
 					// ucode PID directly — killing it on timeout hits the right process.
 					let cmd = sprintf("( ucode %s %s %s > %s 2>&1 & echo $! > %s; wait; touch %s ) &",
-						lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(worker_arg), q(out_file), q(pid_file), q(done_file));
+						lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), q(out_file), q(pid_file), q(done_file));
 
 					system(cmd);
 					push(active_workers, {
@@ -78,9 +72,7 @@ export function create() {
 						pid_file: pid_file,
 						start_time: clock(true),
 						offset: 0,
-						received_any: false,
-						suite_ended: false,
-						fatal_received: false
+						stream: make_stream(reporter)
 					});
 				}
 
@@ -104,9 +96,7 @@ export function create() {
 						// Suppress the timeout fatal if the drain just revealed the worker
 						// had actually completed (SUITE_END) or already reported its own
 						// fatal right before the deadline — otherwise we double-report.
-						let tmsg = this.terminal_fatal({ received_any: worker.received_any,
-							suite_ended: worker.suite_ended, fatal_received: worker.fatal_received,
-							timed_out: true, timeout: int(WORKER_TIMEOUT_MS / 1000), captured: "" });
+						let tmsg = this.terminal_fatal(worker.stream.terminal(true, int(WORKER_TIMEOUT_MS / 1000)));
 						if (tmsg !== null)
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: tmsg });
 						finished_count++;
@@ -132,10 +122,11 @@ export function create() {
 						}
 						// The worker already emitted its own FATAL — don't pile a second one
 						// on top.  Only flag missing output or an unexplained early exit.
-						let captured = !worker.received_any ? rtrim(fs.readfile(worker.out_file) || "") : "";
-						let dmsg = this.terminal_fatal({ received_any: worker.received_any,
-							suite_ended: worker.suite_ended, fatal_received: worker.fatal_received,
-							timed_out: false, timeout: 0, captured: captured });
+						// When no protocol output arrived, fold in the unterminated tail so
+						// the "produced no test output" diagnostic shows what the worker did
+						// write (terminal_fatal ignores `captured` on the other branches).
+						if (!worker.stream.received_any) capture_tail(worker);
+						let dmsg = this.terminal_fatal(worker.stream.terminal(false, 0));
 						if (dmsg !== null)
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: dmsg });
 						finished_count++;
