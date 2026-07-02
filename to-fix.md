@@ -64,9 +64,21 @@ queue is strictly layer-scoped — matching the already-tested contract that inn
 timers don't leak outward (`14_uloop_test.uc:76`). New regression test added;
 confirmed to fail (2 vs 1) without the fix. All existing uloop tests stay green.
 
-**Still open — need a design decision, not fixed (1):** 1.12.
-See section notes; a UX choice (buffer-and-flush vs re-print headers vs force
-compact reporter under -j).
+**1.12 (detailed reporter interleaving under -j) — fixed with Option A.**
+Under `-j>1` the parallel executor dispatches events from concurrent suites
+interleaved, and the detailed reporter's global header-dedup printed a suite's
+results under whichever header was emitted last (reproduced: "A" tests shown
+under the "B" header). Fix: the detailed reporter now buffers each suite's
+rendered lines and flushes the whole block on `SUITE_END` (and any un-ended
+suites — timeouts/fatals — at summary), gated on a `parallel` flag threaded
+through `create_reporter`. `-j1` keeps live line-by-line streaming (byte
+identical output); `-j>1` prints clean, correctly-attributed per-suite blocks.
+Verified manually (grouped under `-j2`, unchanged under `-j1`); the detailed
+reporter has no golden-baseline coverage (baselines use `-r json`), and its
+interleaved layout is timing-dependent, so no deterministic meta-test was added.
+
+**Nothing left open.** All review findings are resolved (fixed, hardened, or —
+for 1.14 — reverted as a false positive).
 
 **Regression tests added (verified to fail without their fix):**
 `25_scalar_output_test` (1.1), `26_sibling_require_test` (1.4),
