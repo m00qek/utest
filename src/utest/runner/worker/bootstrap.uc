@@ -1,12 +1,17 @@
 import * as worker_runner from 'utest.runner.worker.runner';
 import * as worker_reporter from 'utest.runner.worker.reporter';
-import { root } from 'utest.runner.worker.registry';
+import * as property from 'utest.property';
 import * as fs from 'fs';
 
 const args = json(ARGV[0]);
 const test_file = args.file;
-root.test_file = fs.realpath(test_file) || test_file;
-root.prop_seed  = args.prop_seed ?? null;
+// Hand the property engine its run-scoped config explicitly rather than letting
+// it read worker globals; must run before test files load (prop() derives its
+// persist_id at declaration time).
+property.configure({
+	test_file: fs.realpath(test_file) || test_file,
+	prop_seed: args.prop_seed ?? null
+});
 const test_filter = args.filter;
 const test_seed = args.seed;
 const bundle_name = args.bundle || "Default";

@@ -2,7 +2,31 @@ import * as math from 'math';
 import * as fs from 'fs';
 import * as dsl from 'utest.dsl';
 import { parse_thrown, fail_envelope, mkdir_p, format_path } from 'utest.util';
-import { root, stack } from 'utest.runner.worker.registry';
+import { stack } from 'utest.runner.worker.registry';
+
+// Host configuration, supplied by the worker via configure() at startup so the
+// property engine doesn't reach into runner internals for run-scoped values.
+//   test_file - absolute path of the file under test; roots the counterexample
+//               persistence dir. null (standalone/unconfigured) → persist under
+//               ./.utest/property in the current working directory.
+//   prop_seed - run-wide base seed for reproducible property runs. null
+//               (standalone/unconfigured) → seed from wall-clock (not reproducible
+//               unless a per-property opts.seed is given).
+// Held on `global` (as the DSL registry and mock engine are) because the worker
+// loads this module more than once — bootstrap configures one instance while
+// the test file, importing via the `utest` umbrella, reads another; a shared
+// global record keeps them in sync.
+if (!global.__utest_property_host)
+	global.__utest_property_host = { test_file: null, prop_seed: null };
+const _host = global.__utest_property_host;
+
+// Called once by the worker bootstrap before test files load. Merges the given
+// keys into the host config; omitted keys keep their current value.
+export function configure(cfg) {
+	cfg ??= {};
+	if (exists(cfg, 'test_file')) _host.test_file = cfg.test_file;
+	if (exists(cfg, 'prop_seed')) _host.prop_seed = cfg.prop_seed;
+};
 
 const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
 
@@ -183,7 +207,7 @@ function shrink(g, prop_fn, failing, max_evals) {
 }
 
 function persist_dir() {
-	const base = replace(root.test_file || "", /\/[^\/]+$/, "") || ".";
+	const base = replace(_host.test_file || "", /\/[^\/]+$/, "") || ".";
 	return base + "/.utest/property";
 }
 
@@ -328,7 +352,7 @@ export function forall(generator, prop_fn, opts) {
 	const id_hash    = (persist_id !== null) ? str_hash(persist_id) : 0;
 	const base_seed  = (opts.seed !== null)
 	                 ? opts.seed
-	                 : (root.prop_seed !== null ? (root.prop_seed ^ id_hash) : (t[0] * 1000000000 + t[1]));
+	                 : (_host.prop_seed !== null ? (_host.prop_seed ^ id_hash) : (t[0] * 1000000000 + t[1]));
 	const stats = { classifications: {}, discards: 0 };
 	const ctx = make_ctx(stats);
 
@@ -427,7 +451,7 @@ export function prop(name, generator, prop_fn, opts) {
 	opts ??= {};
 	const effective = { ...opts };
 	if (!exists(opts, 'persist_id')) {
-		const file = root.test_file || "";
+		const file = _host.test_file || "";
 		const path = format_path(stack);
 		const prefix = (file !== "" ? file + " :: " : "")
 		             + (path !== "" ? path + " > " : "");
