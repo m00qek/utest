@@ -22,7 +22,6 @@ return {
 			// Use for transient per-scope state a proxy consumes in place.
 			get_local: function(channel, key)     { return __internal__.get_local_channel(name, channel, key); },
 			set:      function(channel, key, val) { __internal__.set_channel(name, channel, key, val); },
-			all_keys: function(channel)           { return __internal__.get_all_channel_keys(name, channel); },
 
 			// Shorthands for the 'data' channel — kept for backward compatibility
 			get_data:          function(key)      { return __internal__.get_channel(name, 'data', key); },

@@ -63,13 +63,15 @@ function main() {
 
 	let lib_paths = opts.lib_paths || [];
 	const config_dir = file_config.path ? replace(file_config.path, /\/[^\/]+$/, "") : null;
-	for (let p in (file_config.data.lib_paths || []))
-		push(lib_paths, (config_dir && !match(p, /^\//)) ? (fs.realpath(config_dir + "/" + p) || config_dir + "/" + p) : p);
 
+	// Resolve a config-relative path against the config file's directory.
 	function resolve_rel(p) {
 		if (!config_dir || !p || match(p, /^\//)) return p;
 		return fs.realpath(config_dir + "/" + p) || config_dir + "/" + p;
 	}
+
+	for (let p in (file_config.data.lib_paths || []))
+		push(lib_paths, resolve_rel(p));
 
 	let raw_mocks = file_config.data.mocks || {};
 	let mocks = {};

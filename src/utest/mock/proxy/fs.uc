@@ -1,4 +1,11 @@
 // Loaded via require() in ucode program mode — see proxy_base.uc for why `return` is used here.
+
+// A path's directory prefix, with a trailing slash (except root), so a substring
+// match selects only descendants and not siblings that share the name prefix.
+function dir_prefix(path) {
+	return (path !== "/" && substr(path, length(path) - 1) !== "/") ? path + "/" : path;
+}
+
 return {
 	channels: ['commands'],
 	create: function(name, real, ctx) {
@@ -105,7 +112,7 @@ return {
 			let f = ctx.get_behavior('access');
 			if (f) return f(path, mode);
 			if (ctx.has_data(path)) return ctx.get_data(path) !== null;
-			let prefix = (path !== "/" && substr(path, length(path) - 1) !== "/") ? path + "/" : path;
+			let prefix = dir_prefix(path);
 			for (let vp in ctx.get_all_data_keys()) {
 				if (ctx.get_data(vp) !== null && substr(vp, 0, length(prefix)) === prefix) return true;
 			}
@@ -124,7 +131,7 @@ return {
 				let size = (type(v) === 'string') ? length(v) : 0;
 				return { size, mtime: 0, type: 'regular' };
 			}
-			let prefix = (path !== "/" && substr(path, length(path) - 1) !== "/") ? path + "/" : path;
+			let prefix = dir_prefix(path);
 			for (let vp in ctx.get_all_data_keys()) {
 				if (ctx.get_data(vp) !== null && substr(vp, 0, length(prefix)) === prefix)
 					return { size: 0, mtime: 0, type: 'directory' };
@@ -196,8 +203,7 @@ return {
 			if (type(real_entries) === "array") {
 				for (let e in real_entries) entries[e] = true;
 			}
-			let prefix = path;
-			if (path !== "/" && substr(prefix, length(prefix) - 1) !== "/") prefix += "/";
+			let prefix = dir_prefix(path);
 			for (let vp in virtual_paths) {
 				if (substr(vp, 0, length(prefix)) !== prefix) continue;
 				let relative = substr(vp, length(prefix));
