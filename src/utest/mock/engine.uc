@@ -25,9 +25,22 @@ export function deep_clone(obj) {
 // Returns the channel list declared by the proxy for `name`, or null if no
 // proxy module exists.  Always includes 'data'; extra channels come from the
 // proxy factory's `channels` array.
-export function get_proxy_channels(name) {
+// Require the module-specific proxy factory for `name`, or null if none exists.
+// Memoized including the null miss: proxy modules are static package files that
+// never appear mid-run, and ucode does not cache failed requires (each miss is a
+// full REQUIRE_SEARCH_PATH disk scan), so caching avoids repeating that probe on
+// every inject()/patch() — twice per call, from here and build_proxy().
+const _proxy_module_cache = {};
+function proxy_module(name) {
+	if (exists(_proxy_module_cache, name)) return _proxy_module_cache[name];
 	let m = null;
 	try { m = require('utest.mock.proxy.' + name); } catch(e) {}
+	_proxy_module_cache[name] = m;
+	return m;
+}
+
+export function get_proxy_channels(name) {
+	const m = proxy_module(name);
 	if (!m) return null;
 	const channels = ['data'];
 	if (type(m.channels) === 'array') {
@@ -219,15 +232,10 @@ export function build_proxy(name, real) {
 	const proxy_base = require('utest.mock.proxy_base');
 	const ctx = proxy_base.context(name, real);
 
-	// Module-specific proxy factory (e.g. utest/mock/proxy/fs.uc)
-	let factory;
-	let m = null;
-	try {
-		m = require('utest.mock.proxy.' + name);
-		factory = m ? m.create : null;
-	} catch(e) {
-		factory = null;
-	}
+	// Module-specific proxy factory (e.g. utest/mock/proxy/fs.uc), via the same
+	// memoized lookup get_proxy_channels() uses.
+	const m = proxy_module(name);
+	const factory = m ? m.create : null;
 	if (factory) {
 		const proxy = factory(name, real, ctx);
 		// Pre-initialize calls for declared API methods so spy(proxy).calls.X is
