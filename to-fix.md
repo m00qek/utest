@@ -52,6 +52,9 @@ per-worker id counter is now module-level (monotonic across bundles) so pipe
 filenames are unique run-wide and the collision class is structurally
 impossible — correct even if a cleanup ever fails. Not a confirmed active bug;
 no permanent meta-test (triggering it is timing-dependent).
+**Now moot after §4:** the uloop rewrite removed the done-file mechanism
+entirely (workers redirect to a regular file read at exit), so there is no
+done-file to go stale — the bug class is structurally gone, not just hardened.
 
 **1.10 (uloop timers re-firing across layers) — fixed with Option 1.**
 Root cause was a channel asymmetry: `_channel_get` falls through all layers to
@@ -77,6 +80,12 @@ identical output); `-j>1` prints clean, correctly-attributed per-suite blocks.
 Verified manually (grouped under `-j2`, unchanged under `-j1`); the detailed
 reporter has no golden-baseline coverage (baselines use `-r json`), and its
 interleaved layout is timing-dependent, so no deterministic meta-test was added.
+**Superseded by §4 — buffering since removed.** The uloop executor feeds each
+worker's *entire* output in one exit callback, so a suite's events always reach
+the reporter contiguously and can never interleave in the first place. The
+`parallel` flag, per-suite buffers, and the `SUITE_END` flush were therefore
+dropped; the detailed reporter is back to pure live streaming (correct under
+`-j>1` structurally, not by buffering). Re-verified grouped under `-j2`.
 
 **§1 correctness is fully resolved** — every bug in section 1 is fixed,
 hardened (1.6), or reverted as a false positive (1.14). **The rest of this
@@ -152,9 +161,14 @@ document is NOT done.** Remaining work, by section:
 - **§5 test gaps:** partly done — added 5.2 (hostile output), 5.3 (strict
   layering), 5.5 (RNG distribution), and part of 5.1 (uci/uclient fidelity; no
   ubus). **5.7 is done** — `make test` now defaults to `examples/unit` instead
-  of the nonexistent `test/unit/*_test.uc`. Still open: 5.1 (ubus fidelity),
-  5.4 (dotted-mock meta-test — see note below), 5.6 (a timeout+multibundle test
-  for 1.6).
+  of the nonexistent `test/unit/*_test.uc`. **5.6 is done** — a parallel +
+  multi-bundle worker-timeout regression (`examples/timeout/`, baseline
+  `test/json/timeout/timeout_test.json`, wired into meta-test.sh): one bundle's
+  worker hangs forever and is killed by the 2s companion-config timeout,
+  reported as a deterministic `worker timed out after 2s (partial results
+  above)` FATAL while a sibling bundle passes — exercising the uloop executor's
+  per-worker timeout end-to-end. Still open: 5.1 (ubus fidelity), 5.4
+  (dotted-mock meta-test — see note below).
 
 Note: the per-bug write-ups in §1 below are the ORIGINAL findings (their "Fix:"
 lines are proposals, not status); the STATUS block above is authoritative for
