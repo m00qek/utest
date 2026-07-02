@@ -87,12 +87,18 @@ export function run_tests(reporter, filter, seed) {
 
 				// Snapshot after beforeEach (even when it threw) so a patch() applied in
 				// beforeEach — whether or not it was followed by unpatch() — cannot leak
-				// into afterEach regardless of which hook failed.
-				let pre_body_snap = null;
-				try {
-					pre_body_snap = mock_snap !== null ? mock.snapshot() : null;
-				} catch (e) {
-					if (error === null) error = e;
+				// into afterEach regardless of which hook failed.  A hook-less test ran
+				// nothing since mock_snap was taken, so its state still equals mock_snap;
+				// reuse it (restore() deep-clones on read, so sharing it is safe) instead
+				// of taking a fresh full-state snapshot per test.
+				let pre_body_snap = mock_snap;
+				if (mock_snap !== null && length(test.beforeEach)) {
+					pre_body_snap = null;
+					try {
+						pre_body_snap = mock.snapshot();
+					} catch (e) {
+						if (error === null) error = e;
+					}
 				}
 
 				if (error === null) {
