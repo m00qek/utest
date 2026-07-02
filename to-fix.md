@@ -180,8 +180,13 @@ document is NOT done.** Remaining work, by section:
   worker hangs forever and is killed by the 2s companion-config timeout,
   reported as a deterministic `worker timed out after 2s (partial results
   above)` FATAL while a sibling bundle passes — exercising the uloop executor's
-  per-worker timeout end-to-end. Still open: 5.1 (ubus fidelity), 5.4
-  (dotted-mock meta-test — see note below).
+  per-worker timeout end-to-end. **5.1 is done** — the ubus fidelity half landed
+  in `27_mock_fidelity_test.uc` (ubus added to its mocks config): three cases
+  locking the proxy's `has_data`/precedence contract against real ubus — a
+  method mocked to null is a real null reply (not "unmocked", no strict trip),
+  an explicit-null method mock overrides a present object-level mock while other
+  methods still fall back, and a `obj:method` key beats a bare `obj` key. Baseline
+  regenerated (7 tests). Still open: 5.4 (dotted-mock meta-test — see note below).
 
 Note: the per-bug write-ups in §1 below are the ORIGINAL findings (their "Fix:"
 lines are proposals, not status); the STATUS block above is authoritative for

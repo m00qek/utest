@@ -1,6 +1,7 @@
 return {
 	mocks: {
 		uci: null,
-		uclient: null
+		uclient: null,
+		ubus: null
 	}
 };

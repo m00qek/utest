@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 4,
-    "passed": 4,
+    "total": 7,
+    "passed": 7,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -23,37 +23,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "uci mock fidelity"
+          "id": 7,
+          "name": "ubus mock fidelity"
         },
         {
-          "id": 2,
-          "name": "foreach() with a null type visits every section (like real uci)"
+          "id": 10,
+          "name": "a method-level mock takes precedence over an object-level mock"
         }
       ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/27_mock_fidelity_test.uc",
-      "bundle": "examples/unit/27_mock_fidelity_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci mock fidelity"
-        },
-        {
-          "id": 4,
-          "name": "2-arg get(pkg, sec) returns the section type (like real uci)"
-        }
-      ],
-      "index": 3
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -89,6 +67,94 @@
           "name": "root"
         },
         {
+          "id": 7,
+          "name": "ubus mock fidelity"
+        },
+        {
+          "id": 8,
+          "name": "a method mocked to null returns null instead of tripping strict mode"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci mock fidelity"
+        },
+        {
+          "id": 2,
+          "name": "foreach() with a null type visits every section (like real uci)"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 7,
+          "name": "ubus mock fidelity"
+        },
+        {
+          "id": 9,
+          "name": "an explicit-null method mock overrides a present object-level mock"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci mock fidelity"
+        },
+        {
+          "id": 4,
+          "name": "2-arg get(pkg, sec) returns the section type (like real uci)"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
           "id": 1,
           "name": "uci mock fidelity"
         },
@@ -103,12 +169,10 @@
   "files": [
     "examples/unit/27_mock_fidelity_test.uc"
   ],
-  "duration_ms": 10,
-  "seed": 719889346,
   "bundles": {
     "examples/unit/27_mock_fidelity_test.uc": {
-      "total": 4,
-      "passed": 4,
+      "total": 7,
+      "passed": 7,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
