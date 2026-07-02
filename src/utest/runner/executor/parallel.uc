@@ -50,6 +50,14 @@ export function create() {
 				fh.close();
 			}
 
+			// Remove a finished worker's three temp files directly — one syscall
+			// each — rather than forking /bin/sh for `rm -f` per test file.
+			function cleanup_files(worker) {
+				fs.unlink(worker.out_file);
+				fs.unlink(worker.done_file);
+				fs.unlink(worker.pid_file);
+			}
+
 			while (finished_count < length(shuffled_files)) {
 				while (length(active_workers) < jobs && length(queue) > 0) {
 					let file = shift(queue);
@@ -100,7 +108,7 @@ export function create() {
 						if (tmsg !== null)
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: tmsg });
 						finished_count++;
-						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
+						cleanup_files(worker);
 						continue;
 					}
 
@@ -130,7 +138,7 @@ export function create() {
 						if (dmsg !== null)
 							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: dmsg });
 						finished_count++;
-						system("rm -f " + q(worker.out_file) + " " + q(worker.done_file) + " " + q(worker.pid_file));
+						cleanup_files(worker);
 					} else {
 						push(still_active, worker);
 					}
