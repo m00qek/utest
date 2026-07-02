@@ -2,7 +2,7 @@ import * as detailed from 'utest.runner.reporter.detailed';
 import * as compact from 'utest.runner.reporter.compact';
 import * as json_repo from 'utest.runner.reporter.json';
 
-export function create_reporter(type, use_color, files, seed, parallel) {
+export function create_reporter(type, use_color, files, seed) {
 	let reporter;
 
 	if (type === "compact") {
@@ -10,9 +10,7 @@ export function create_reporter(type, use_color, files, seed, parallel) {
 	} else if (type === "json") {
 		reporter = json_repo.create();
 	} else {
-		// The detailed reporter streams per-suite; under parallel execution
-		// results from concurrent suites interleave, so it buffers per suite.
-		reporter = detailed.create(use_color, parallel);
+		reporter = detailed.create(use_color);
 	}
 
 	reporter.init(use_color, files, seed);

@@ -32,7 +32,7 @@ export function run(options) {
 	// Set up shims for modules listed in config.mocks.
 	options = MockManager.setup(options);
 
-	let reporter = create_reporter(reporter_type, color, all_files, options.seed, jobs > 1);
+	let reporter = create_reporter(reporter_type, color, all_files, options.seed);
 
 	// Run-wide context threaded to the executor. Defaults are applied once here so
 	// the executor layers can read the fields directly without re-defaulting.

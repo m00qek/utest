@@ -1,45 +1,23 @@
 import { theme, color } from 'utest.runner.reporter.colors';
 import { ReporterBase } from 'utest.runner.reporter.base';
 
-export function create(use_color, parallel) {
+export function create(use_color) {
 	const t = theme(use_color);
 
 	let reported_suites = {};
-	// Parallel only: collect each suite's rendered lines and print the whole
-	// block when the suite ends, so results from concurrently-executing suites
-	// don't interleave under the wrong header.
-	let buffers = {};
-	let flushed_any = false;
 
-	// Print directly for -j1 (live streaming, unchanged); accumulate per suite
-	// under parallel execution.
-	function emit(suite, text) {
-		if (parallel) {
-			if (!buffers[suite]) buffers[suite] = [];
-			push(buffers[suite], text);
-		} else {
-			print(text);
-		}
-	}
-
-	function flush(suite) {
-		if (!parallel || !buffers[suite]) return;
-		if (flushed_any) print("\n");
-		for (let line in buffers[suite]) print(line);
-		flushed_any = true;
-		delete buffers[suite];
-	}
-
+	// Results stream live, printed as events arrive. This is safe under parallel
+	// execution because the uloop executor feeds each worker's entire output in a
+	// single callback, so one suite's events always arrive contiguously — concurrent
+	// suites never interleave.
 	return proto({
 		render_suite_start: function(msg) {
 			if (reported_suites[msg.suite]) return;
-			// -j1 separates suites with a blank line here; under parallel the
-			// separator is emitted by flush() between completed blocks instead.
-			if (!parallel && length(keys(reported_suites)) > 0) print("\n");
+			if (length(keys(reported_suites)) > 0) print("\n");
 			reported_suites[msg.suite] = true;
 
 			let header = color(t.HEADER, "[" + (msg.bundle || "Default") + "] " + msg.suite);
-			emit(msg.suite, header + (msg.count !== null ? " (" + msg.count + " tests)\n" : "\n"));
+			print(header + (msg.count !== null ? " (" + msg.count + " tests)\n" : "\n"));
 		},
 
 		render_test_result: function(msg) {
@@ -62,22 +40,15 @@ export function create(use_color, parallel) {
 				text = "  [" + color(t.BOLD + t.ERROR, "ERR!") + "] " + name + "\n" +
 				       "         " + color(t.ERROR, replace(msg.error || "", "\n", "\n         ")) + "\n";
 			}
-			emit(msg.suite, text);
-		},
-
-		render_suite_end: function(msg) {
-			flush(msg.suite);
+			print(text);
 		},
 
 		render_fatal: function(msg) {
 			this.render_suite_start(msg);
-			emit(msg.suite, "  [" + color(t.BOLD + t.ERROR, "FATAL") + "] " + (msg.error || "") + "\n");
+			print("  [" + color(t.BOLD + t.ERROR, "FATAL") + "] " + (msg.error || "") + "\n");
 		},
 
 		render_summary: function(ctx) {
-			// Flush any suites that never emitted SUITE_END (timeouts / fatals).
-			if (parallel) for (let s in keys(buffers)) flush(s);
-
 			let stats = ctx.stats;
 			print("\n" + color(t.HEADER, "Summary:") + "\n");
 			print("  Suites:  " + stats.suites + "\n");
