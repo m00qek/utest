@@ -103,9 +103,15 @@ document is NOT done.** Remaining work, by section:
   **2.8** (`dir_prefix()` helper dedups three fs-proxy copies; `resolve_rel()`
   hoisted and reused in cli.uc; dead `all_keys` accessor removed; combinators now
   built through a `comb()` factory instead of 20 copies of the `proto({ match },
-  Combinator)` boilerplate).
-  Still OPEN (deliberately, not mechanical): **2.6** (property/worker
-  decoupling — API design), and two sub-items
+  Combinator)` boilerplate), and **2.6** (property engine given an explicit
+  `property.configure({ test_file, prop_seed })` seam called by the worker
+  bootstrap, replacing its reads off the runner's shared `root` object; the
+  config record is held on `global.__utest_property_host` because the worker
+  loads the module twice — the improvement is ownership, not eliminating global
+  state: property no longer depends on `runner.worker.registry` for its config.
+  Only the legit `stack` (DSL group tree) import remains; standalone defaults are
+  now documented; persistence path/hash + replay verified identical to before).
+  Still OPEN (deliberately, not mechanical): two sub-items
   of 2.8 (`format_path` reuse — not actually clean; fs-preamble wrapper —
   partly-intentional divergence).
 - **§3 performance (1–6):** all OPEN (non-blocking).
