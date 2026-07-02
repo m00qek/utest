@@ -186,7 +186,12 @@ document is NOT done.** Remaining work, by section:
   method mocked to null is a real null reply (not "unmocked", no strict trip),
   an explicit-null method mock overrides a present object-level mock while other
   methods still fall back, and a `obj:method` key beats a bare `obj` key. Baseline
-  regenerated (7 tests). Still open: 5.4 (dotted-mock meta-test — see note below).
+  regenerated (7 tests). **5.4** (dotted-mock meta-test) is **closed as
+  not-constructible** — re-confirmed empirically that no CLI-expressible dotted
+  mock can both intercept and run through the shim-path-dependent `import` path
+  (require-consumption is path-independent via the registry override; user `.uc`
+  modules can't be cleanly shimmed — see the "No permanent test for 1.3" note
+  below). Verified by ad-hoc e2e instead. **§5 has no remaining actionable gaps.**
 
 Note: the per-bug write-ups in §1 below are the ORIGINAL findings (their "Fix:"
 lines are proposals, not status); the STATUS block above is authoritative for
@@ -199,12 +204,33 @@ what shipped.
 regressions (1.7/1.8). Each was confirmed to fail against the stashed pre-fix
 source.
 
-**No permanent test for 1.3 (dotted mock):** an end-to-end meta-test can't
-independently guard it — require-based mocking works via the worker's registry
-override regardless of the shim path, and `.uc` program-mode modules can't be
-consumed via `import` (the only path that depends on the shim). 1.3 is verified
-by an ad-hoc e2e run (dotted shim tree + interception) but is not enshrined in
-`make meta-test`.
+**No permanent test for 1.3 (dotted mock) — re-confirmed empirically.** An
+end-to-end meta-test can't independently guard it, and the reason is deeper than
+first stated:
+
+1. **`require()`-consumption is path-independent.** The worker's `global.require`
+   override (`bootstrap.uc:29-38`) returns `reg.global.proxy` straight from the
+   registry when a mock is active — the dots→slash shim path is never consulted.
+   So a `require`-based dotted test passes *with or without* the fix (can't fail
+   without it → not a valid regression guard).
+2. **`import`-consumption *does* depend on the shim path, but no user `.uc`
+   module can be cleanly shimmed.** `generate_standard_shim` (manager.uc) probes
+   the module via `require(name)` to list its functions, yet emits a shim that
+   does `import * as _real from 'real_<name>'`. Those two demand opposite module
+   kinds: a user **ES-module** can't be introspected by `require` (observed:
+   "could not inspect '…'; the shim will have no interceptable functions" → the
+   shim intercepts nothing), and a user **program-mode** `.uc` can't be consumed
+   by the shim's `import _real`. Only native builtins satisfy both — and there
+   are no dotted builtins.
+
+Secondary obstacle even before (2): `-l` lib paths reach only the worker's `-L`
+flags, not the host `REQUIRE_SEARCH_PATH` where the shim generator runs, so a
+lib-path dotted module isn't found host-side at all (a CWD-relative `./*.uc`
+fixture gets past this, but then hits (2)). Net: there is no CLI-expressible
+dotted mock whose interception both works *and* runs through the shim-path-
+dependent `import` path. 1.3 is verified by an ad-hoc e2e run (dotted shim tree +
+interception) and by the fix's use throughout `manager.uc`, but is not — and
+cannot be — enshrined in `make meta-test`.
 
 ---
 
