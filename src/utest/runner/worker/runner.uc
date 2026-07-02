@@ -35,9 +35,12 @@ export function run_tests(reporter, filter, seed) {
 	atomic_tests = util.shuffle(atomic_tests, seed);
 
 	let run_count = 0;
-	for (let t in atomic_tests)
-		if (!filter_re || match(t.path_str, filter_re))
-			run_count++;
+	for (let t in atomic_tests) {
+		// Compute the filter verdict once here and stash it on the record so the
+		// run loop below doesn't re-run the regex for every test.
+		t.included = !filter_re || match(t.path_str, filter_re);
+		if (t.included) run_count++;
+	}
 	reporter.suite_start(run_count);
 
 	let setup_ok = true;
@@ -64,7 +67,7 @@ export function run_tests(reporter, filter, seed) {
 
 		if (snap_ok) {
 			for (let test in atomic_tests) {
-				if (filter_re && !match(test.path_str, filter_re)) {
+				if (!test.included) {
 					reporter.test_result(null, test.path, "IGNORE", test.index);
 					continue;
 				}
