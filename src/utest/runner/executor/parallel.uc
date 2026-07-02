@@ -2,160 +2,132 @@ import * as fs from 'fs';
 import { ExecutorBase, q, build_l_flags, make_stream, worker_arg } from 'utest.runner.executor.base';
 import { mkdir_p } from 'utest.util';
 
-// Monotonic across the whole run. Every bundle shares one run_dir/pipes dir, so
-// resetting per bundle reused pipe filenames (out.1/done.1/…) between bundles.
-// In practice the timeout cleanup's `rm` beats the killed wrapper's `touch`, so
-// no stale done-file survives — but a unique id per worker removes the collision
-// class entirely, staying correct even if that cleanup ever fails to complete.
+// Unique across the whole run so per-worker output files never collide between
+// bundles that share one run_dir.
 let worker_id_counter = 0;
 
 export function create() {
 	return proto({
 		run: function(ctx) {
-			let reporter = ctx.reporter, bundle_name = ctx.bundle, jobs = ctx.jobs;
-			let shuffled_files = ctx.files;
+			// uloop-only: the parallel executor drives the whole worker lifecycle
+			// through the event loop and has no polling fallback. Fail with an
+			// actionable message (not a raw require error) when uloop is absent;
+			// sequential mode (-j 1) never reaches here and needs no uloop.
+			let uloop;
+			try {
+				uloop = require('uloop');
+			} catch (e) {
+				die("[utest] error: parallel execution (-j > 1) requires the ucode " +
+					"'uloop' module, which could not be loaded. Install it or run without -j.\n");
+			}
+			const self = this;
+			const reporter = ctx.reporter, bundle_name = ctx.bundle, jobs = ctx.jobs;
 			const WORKER_TIMEOUT_MS = ctx.timeout * 1000;
-			const pipes_dir = ctx.run_dir + "/pipes";
 
-			if (!mkdir_p(pipes_dir))
-				die("[utest] error: could not create pipes directory: " + pipes_dir);
+			const out_dir = ctx.run_dir + "/workers";
+			if (!mkdir_p(out_dir))
+				die("[utest] error: could not create worker output directory: " + out_dir);
 
-			let queue = [ ...shuffled_files ];
-			let active_workers = [];
-			let finished_count = 0;
+			const lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
 
-			let lf = build_l_flags(ctx.src_dir, ctx.shim_paths, ctx.lib_paths);
+			let queue = [ ...ctx.files ];
+			const total = length(ctx.files);
+			let finished = 0;
+			let active = 0;
+			let running = false;
 
-			// Feed every complete newline-terminated line from fh into the worker's
-			// decoder, advancing its byte offset.  A trailing partial line (no
-			// newline yet) is left for the next poll — more bytes may still arrive.
-			function drain(worker, fh) {
-				let line;
-				while ((line = fh.read("line")) !== null) {
-					if (ord(line, length(line) - 1) !== 10) break;
-					worker.stream.feed(line);
-					worker.offset += length(line);
-				}
-			}
+			// Forward-declared so the mutually-recursive spawn/advance/pump closures can
+			// reference each other (ucode does not hoist nested function declarations).
+			let finalize, advance, spawn, pump;
 
-			// At terminal time, capture any bytes past the drained offset — a final
-			// unterminated line a crashed worker never newline-flushed — so the
-			// FATAL diagnostic sees everything the worker wrote, matching the -j1
-			// path (whose blocking pipe read surrenders that tail at EOF).
-			function capture_tail(worker) {
-				let fh = fs.open(worker.out_file, "r");
-				if (!fh) return;
-				fh.seek(worker.offset, 0);
-				worker.stream.capture_raw(fh.read("all") || "");
-				fh.close();
-			}
+			// Feed a finished worker's output — read once from its file — into the
+			// shared decoder, then emit any terminal FATAL. Because a worker's whole
+			// output is fed in one callback, its events reach the reporter contiguously,
+			// with no interleaving between concurrent workers.
+			finalize = function(worker, timed_out) {
+				const content = fs.readfile(worker.out_file) ?? "";
+				// Every protocol event ends in a newline, so split() yields the complete
+				// lines plus a trailing segment: "" for a clean end, or an unterminated
+				// final line (e.g. a crash mid-write) captured as diagnostic output.
+				const parts = split(content, "\n");
+				for (let i = 0; i < length(parts) - 1; i++)
+					worker.stream.feed(parts[i]);
+				const tail = parts[length(parts) - 1];
+				if (tail !== "") worker.stream.capture_raw(tail);
 
-			// Remove a finished worker's three temp files directly — one syscall
-			// each — rather than forking /bin/sh for `rm -f` per test file.
-			function cleanup_files(worker) {
+				const smsg = self.terminal_fatal(worker.stream.terminal(timed_out, int(WORKER_TIMEOUT_MS / 1000)));
+				if (smsg !== null)
+					reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: smsg });
+
 				fs.unlink(worker.out_file);
-				fs.unlink(worker.done_file);
-				fs.unlink(worker.pid_file);
-			}
+			};
 
-			while (finished_count < length(shuffled_files)) {
-				while (length(active_workers) < jobs && length(queue) > 0) {
-					let file = shift(queue);
-					let id = ++worker_id_counter;
-					let out_file = pipes_dir + "/out." + id;
-					let done_file = pipes_dir + "/done." + id;
-					let pid_file = pipes_dir + "/pid." + id;
+			// A worker slot freed up (finished or failed to spawn): start the next
+			// queued file, or end the loop once every file is accounted for.
+			advance = function() {
+				if (finished >= total) {
+					if (running) uloop.end();
+					return;
+				}
+				pump();
+			};
 
-					let warg = worker_arg(file, ctx);
-					// Launch ucode in background inside the subshell so pid_file holds the
-					// ucode PID directly — killing it on timeout hits the right process.
-					let cmd = sprintf("( ucode %s %s %s > %s 2>&1 & echo $! > %s; wait; touch %s ) &",
-						lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), q(out_file), q(pid_file), q(done_file));
+			spawn = function(file) {
+				const id = ++worker_id_counter;
+				const out_file = out_dir + "/out." + id;
+				const warg = worker_arg(file, ctx);
+				let worker = { file, out_file, stream: make_stream(reporter),
+				               timer: null, timed_out: false, done: false };
 
-					system(cmd);
-					push(active_workers, {
-						file: file,
-						out_file: out_file,
-						done_file: done_file,
-						pid_file: pid_file,
-						start_time: clock(true),
-						offset: 0,
-						stream: make_stream(reporter)
-					});
+				// Redirect the worker's stdout+stderr to a regular file, read at exit.
+				// exec so the pid uloop tracks (and we kill on timeout) is ucode's, not
+				// the wrapping shell's. Env is inherited (PATH etc.) via the empty dict.
+				const cmd = sprintf("exec ucode %s %s %s > %s 2>&1",
+					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), q(out_file));
+				const proc = uloop.process("/bin/sh", ["-c", cmd], {}, function(code) {
+					if (worker.done) return;
+					worker.done = true;
+					if (worker.timer) { worker.timer.cancel(); worker.timer = null; }
+					finalize(worker, worker.timed_out);
+					finished++;
+					active--;
+					advance();
+				});
+
+				if (!proc) {
+					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name,
+						error: "Failed to spawn worker for " + file });
+					finished++;
+					advance();
+					return;
 				}
 
-				let still_active = [];
-				for (let worker in active_workers) {
-					let now = clock(true);
-					let elapsed_ms = (now[0] - worker.start_time[0]) * 1000 +
-					                 int((now[1] - worker.start_time[1]) / 1000000);
+				const pid = proc.pid();
+				active++;
+				// On timeout, kill the worker; its exit callback then finalizes with the
+				// partial output. A SIGKILL exit status is indistinguishable from a clean
+				// 0, so the timed_out flag — not the exit code — drives the diagnostic.
+				worker.timer = uloop.timer(WORKER_TIMEOUT_MS, function() {
+					if (worker.done) return;
+					worker.timed_out = true;
+					system("kill -9 " + pid + " 2>/dev/null");
+				});
+			};
 
-					if (elapsed_ms > WORKER_TIMEOUT_MS) {
-						let pid_raw = fs.readfile(worker.pid_file);
-						if (pid_raw) system("kill -9 " + replace(pid_raw, /\s+/, "") + " 2>/dev/null");
-						// Drain any output the worker wrote before being killed so partial
-						// results are not silently discarded.
-						let fh_t = fs.open(worker.out_file, "r");
-						if (fh_t) {
-							fh_t.seek(worker.offset, 0);
-							drain(worker, fh_t);
-							fh_t.close();
-						}
-						// Suppress the timeout fatal if the drain just revealed the worker
-						// had actually completed (SUITE_END) or already reported its own
-						// fatal right before the deadline — otherwise we double-report.
-						let tmsg = this.terminal_fatal(worker.stream.terminal(true, int(WORKER_TIMEOUT_MS / 1000)));
-						if (tmsg !== null)
-							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: tmsg });
-						finished_count++;
-						cleanup_files(worker);
-						continue;
-					}
+			pump = function() {
+				while (active < jobs && length(queue) > 0)
+					spawn(shift(queue));
+			};
 
-					let fh = fs.open(worker.out_file, "r");
-					if (fh) {
-						fh.seek(worker.offset, 0);
-						drain(worker, fh);
-						fh.close();
-					}
-
-					if (fs.access(worker.done_file, "r")) {
-						// Second drain: pick up any lines the worker wrote after our last
-						// read loop finished but before we noticed done_file.
-						let fh2 = fs.open(worker.out_file, "r");
-						if (fh2) {
-							fh2.seek(worker.offset, 0);
-							drain(worker, fh2);
-							fh2.close();
-						}
-						// The worker already emitted its own FATAL — don't pile a second one
-						// on top.  Only flag missing output or an unexplained early exit.
-						// When no protocol output arrived, fold in the unterminated tail so
-						// the "produced no test output" diagnostic shows what the worker did
-						// write (terminal_fatal ignores `captured` on the other branches).
-						if (!worker.stream.received_any) capture_tail(worker);
-						let dmsg = this.terminal_fatal(worker.stream.terminal(false, 0));
-						if (dmsg !== null)
-							reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: dmsg });
-						finished_count++;
-						cleanup_files(worker);
-					} else {
-						push(still_active, worker);
-					}
-				}
-				active_workers = still_active;
-				if (finished_count < length(shuffled_files)) {
-					// Sleep at most 50 ms, but wake sooner if a worker is about to time out.
-					let wait_ms = 50;
-					let now = clock(true);
-					for (let w in active_workers) {
-						let elapsed = (now[0] - w.start_time[0]) * 1000 +
-						              int((now[1] - w.start_time[1]) / 1000000);
-						let remaining = WORKER_TIMEOUT_MS - elapsed;
-						if (remaining > 0 && remaining < wait_ms) wait_ms = remaining;
-					}
-					sleep(wait_ms);
-				}
+			if (total === 0) return;
+			uloop.init();
+			pump();
+			// If every worker failed to spawn synchronously, finished already reached
+			// total (advance() saw running === false and did not end the loop); running
+			// it would then block forever, so only run when work is actually pending.
+			if (finished < total) {
+				running = true;
+				uloop.run();
 			}
 		}
 	}, ExecutorBase);
