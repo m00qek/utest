@@ -69,7 +69,11 @@ export function ensure_channels(reg, channels) {
 export function to_layer(state, channels) {
 	let layer = {
 		fns:    state.behavior ? { ...state.behavior } : {},
-		strict: state.strict   ? true : false,
+		// Three-state: an explicit bool overrides; unset (null) inherits the
+		// strictness of the enclosing layer/global (see is_strict). Collapsing
+		// unset to false would let a nested inject silently disable an outer
+		// strict boundary.
+		strict: type(state.strict) == "bool" ? state.strict : null,
 		calls:  {}
 	};
 	for (let ch in channels)
@@ -167,8 +171,13 @@ const internal_obj = {
 
 	is_strict: function(name) {
 		const reg = get_registry(name);
-		if (length(reg.layers) > 0)
-			return reg.layers[length(reg.layers) - 1].strict ? true : false;
+		// Walk layers top-down and honor the first that set strict explicitly
+		// (true or false); a null layer inherits from below. Fall back to the
+		// global state, whose strict is always a real bool.
+		for (let i = length(reg.layers) - 1; i >= 0; i--) {
+			if (reg.layers[i].strict !== null)
+				return reg.layers[i].strict;
+		}
 		return reg.global.strict ? true : false;
 	}
 };

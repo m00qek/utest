@@ -14,12 +14,21 @@ test quality B-, performance B-.
 
 ## STATUS (updated after fix pass)
 
-**Fixed & verified (12):** 1.1, 1.3, 1.4, 1.5, 1.7, 1.8, 1.9, 1.11, 1.13, 1.15,
-1.16, 1.17. All meta-tests pass; 1.1/1.3/1.4 (no prior coverage) were verified
-with dedicated end-to-end runs; 1.7/1.8 verified to reach previously-blind
-values. The `99_property_test.json` baseline was regenerated for the two
-shrinking-demo properties whose RNG-dependent output changed (stats unchanged;
-only those 2 of 33 results differ).
+**Fixed & verified (13):** 1.1, 1.2, 1.3, 1.4, 1.5, 1.7, 1.8, 1.9, 1.11, 1.13,
+1.15, 1.16, 1.17. All meta-tests pass; 1.1/1.3/1.4 (no prior coverage) were
+verified with dedicated end-to-end runs; 1.7/1.8 verified to reach
+previously-blind values. The `99_property_test.json` baseline was regenerated
+for the two shrinking-demo properties whose RNG-dependent output changed (stats
+unchanged; only those 2 of 33 results differ).
+
+**1.2 (strict mode across layers) — fixed with Option B (three-state strict).**
+`to_layer` now stores `strict` as true / false / null(=inherit) instead of
+collapsing unset to false, and `is_strict` walks layers top-down honoring the
+first explicit value, falling back to global. This fixes "inner inject without
+strict inherits an outer strict:true" while preserving the existing, tested
+behavior that an explicit inner `strict:false` overrides an outer strict:true
+(`11_mocking_fs_test.uc:314`). New regression test added at
+`11_mocking_fs_test.uc` for the inherit case (confirmed to fail without the fix).
 
 **Reverted — false positive (1):** 1.14. An explicit test (`examples/unit/
 16_combinators_test.uc:71`, "contains() recurses into nested arrays") and the
@@ -32,7 +41,7 @@ search entry) produced broken symlinks once the real-module symlink moved into
 a nested `real_<ns>/` directory. Latent bug for any relative-path mocked module,
 exposed by the dotted-name test.
 
-**Still open — need a design decision, not fixed (4):** 1.2, 1.6, 1.10, 1.12.
+**Still open — need a design decision, not fixed (3):** 1.6, 1.10, 1.12.
 See section notes; these are directions with an unresolved semantics/UX choice.
 
 **Regression tests added (verified to fail without their fix):**

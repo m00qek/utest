@@ -321,6 +321,17 @@ describe('FS Mocking', () => {
 		mock.global.unpatch('fs');
 	});
 
+	it('inject without a strict flag inherits a global strict:true', () => {
+		mock.global.patch('fs', { strict: true, data: { '/base': 'x' } });
+		// An inner inject that does not mention strict must inherit the outer
+		// strict boundary — collapsing "unset" to false used to silently let
+		// unmocked calls fall through to the real filesystem.
+		mock.inject('fs', { data: { '/base': 'x' } }, (m_fs) => {
+			assert.throws(() => m_fs.readfile('/unmocked'), /strict mock/);
+		});
+		mock.global.unpatch('fs');
+	});
+
 	it('readfile() returns null (not a strict error) for a path deleted with unlink()', () => {
 		// In strict mode: if readfile() cannot distinguish a deleted key (value null)
 		// from an absent key, it falls through to the strict guard and dies.
