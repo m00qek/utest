@@ -305,7 +305,10 @@ function report_failure(info, runs) {
 		push(lines, "  Error:          " + indent_continuation(parse_thrown(info.error).message, 18));
 	} else {
 		push(lines, sprintf("Property failed after %d case(s)", info.cases_tried));
-		push(lines, sprintf("  Seed:           %d", info.seed));
+		// The seed regenerates the *original* value (below); the shrunk value is
+		// reached by re-shrinking, or replayed directly from the saved file when
+		// persisted. Note it so the seed isn't misread as reproducing the shrunk value.
+		push(lines, sprintf("  Seed:           %d (regenerates the original value)", info.seed));
 		push(lines, sprintf("  Original value: %J", info.original_value));
 		push(lines, sprintf("  Shrunk value:   %J", info.shrunk_value));
 		push(lines, sprintf("  Shrink evals:   %d%s",
