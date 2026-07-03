@@ -221,6 +221,33 @@ describe('FS Mocking', () => {
 		});
 	});
 
+	// Character classes — behavior verified against the ucode interpreter (musl).
+	it('glob() supports [abc] and [a-c] character classes', () => {
+		mock.inject('fs', { strict: true, data: {
+			'/d/xa.txt': '1', '/d/xb.txt': '1', '/d/xc.txt': '1', '/d/xd.txt': '1'
+		}}, (m_fs) => {
+			let set = m_fs.glob('/d/x[abc].txt'); sort(set);
+			assert.match(['/d/xa.txt', '/d/xb.txt', '/d/xc.txt'], set);
+			let rng = m_fs.glob('/d/x[a-c].txt'); sort(rng);
+			assert.match(['/d/xa.txt', '/d/xb.txt', '/d/xc.txt'], rng);
+		});
+	});
+
+	it('glob() negates a class with [!..] or [^..] and never crosses /', () => {
+		mock.inject('fs', { strict: true, data: {
+			'/d/xa.txt': '1', '/d/xd.txt': '1', '/d/x1.txt': '1', '/d/a/b.txt': '1'
+		}}, (m_fs) => {
+			// Both negation syntaxes behave identically (musl accepts ! and ^).
+			let bang  = m_fs.glob('/d/x[!ad].txt'); sort(bang);
+			let caret = m_fs.glob('/d/x[^ad].txt'); sort(caret);
+			assert.match(['/d/x1.txt'], bang);
+			assert.match(['/d/x1.txt'], caret);
+			// A negated class matches a single component char, never '/', so this
+			// cannot match across the separator into /d/a/b.txt.
+			assert.match([], m_fs.glob('/d[!z]b.txt') || []);
+		});
+	});
+
 	it('open() in read mode returns a handle that reads the virtual file', () => {
 		mock.inject('fs', { data: { '/tmp/hello.txt': 'line1\nline2\n' } }, (m_fs) => {
 			const f = m_fs.open('/tmp/hello.txt', 'r');

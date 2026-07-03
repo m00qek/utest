@@ -6,6 +6,63 @@ function dir_prefix(path) {
 	return (path !== "/" && substr(path, length(path) - 1) !== "/") ? path + "/" : path;
 }
 
+// Translate a glob(3) pattern into an anchored regex. Verified against the ucode
+// interpreter (musl, openwrt/rootfs 25.12.4): '*' and '?' match within a single
+// path component (never across '/'); '**' has NO globstar meaning — it is just
+// two '*'; and '[...]' is a POSIX character class where a leading '!' or '^' means
+// negation, '-' forms ranges (literal when leading/trailing), and a leading ']'
+// is a literal member. Bracket expressions are parsed explicitly rather than
+// escaped, because those members don't survive naive metacharacter escaping.
+const GLOB_META = "\\.^$|+(){}]";  // regex metacharacters escaped when literal (outside a class)
+function glob_to_regex(pattern) {
+	let out = "^";
+	let i = 0;
+	const n = length(pattern);
+	while (i < n) {
+		const ch = substr(pattern, i, 1);
+		if (ch === "*") { out += "[^/]*"; i++; continue; }
+		if (ch === "?") { out += "[^/]";  i++; continue; }
+		if (ch === "[") {
+			let j = i + 1;
+			let negated = false;
+			if (j < n) {
+				const marker = substr(pattern, j, 1);
+				if (marker === "!" || marker === "^") { negated = true; j++; }
+			}
+			const body_start = j;
+			// A ']' as the first member is a literal, not the terminator.
+			if (j < n && substr(pattern, j, 1) === "]") j++;
+			while (j < n && substr(pattern, j, 1) !== "]") j++;
+			if (j >= n) {
+				// No closing ']': POSIX treats the '[' as a literal character.
+				out += "\\[";
+				i++;
+				continue;
+			}
+			// The parser already keeps a leading ']' (a literal member) at the front of
+			// the body, and ucode's regex — like glob and POSIX — reads a leading ']'
+			// as literal (backslash-escaping ']' inside a class does NOT work here, so
+			// must not be attempted). Only a raw backslash needs escaping.
+			let body = substr(pattern, body_start, j - body_start);
+			body = replace(body, /\\/g, "\\\\");
+			if (negated) {
+				// A bracket expression never matches '/'. Append it to the exclusion,
+				// escaping a trailing literal '-' first so it can't form a '-/' range.
+				if (substr(body, length(body) - 1) === "-")
+					body = substr(body, 0, length(body) - 1) + "\\-";
+				out += "[^" + body + "/]";
+			} else {
+				out += "[" + body + "]";
+			}
+			i = j + 1;
+			continue;
+		}
+		out += (index(GLOB_META, ch) >= 0) ? ("\\" + ch) : ch;
+		i++;
+	}
+	return out + "$";
+}
+
 return {
 	channels: ['commands'],
 	create: function(name, real, ctx) {
@@ -278,33 +335,9 @@ return {
 			if (type(real_files) === "array") {
 				for (let item in real_files) files[item] = true;
 			}
-			// Translate glob to regex. Escape all regex metacharacters that have no
-			// glob meaning first (\\ must be first to avoid double-escaping), then
-			// translate the wildcards. Real fs.glob is glob(3): '*' and '?' match
-			// within a single path component (never across '/'), and '**' has NO
-			// special (globstar) meaning — it is just two '*', still bounded by '/'.
-			// So '*' -> [^/]* (and '**' naturally becomes [^/]*[^/]*, i.e. the same).
-			// Verified against the ucode interpreter on musl (openwrt/rootfs 25.12.4):
-			// e.g. glob('a/**/*.txt') matches a/<one-comp>/*.txt, not a recursive tree.
-			// KNOWN GAP: glob(3) character classes ([abc], ranges) are unsupported here
-			// and escaped to literals — real fs.glob does honor them.
-			let p = pattern;
-			p = replace(p, /\\/g,  "\\\\");
-			p = replace(p, /\[/g,  "\\[");
-			p = replace(p, /\]/g,  "\\]");
-			p = replace(p, /\+/g,  "\\+");
-			p = replace(p, /\^/g,  "\\^");
-			p = replace(p, /\$/g,  "\\$");
-			p = replace(p, /\{/g,  "\\{");
-			p = replace(p, /\}/g,  "\\}");
-			p = replace(p, /\(/g,  "\\(");
-			p = replace(p, /\)/g,  "\\)");
-			p = replace(p, /\|/g,  "\\|");
-			p = replace(p, /\./g,  "\\.");
-			p = replace(p, /\*/g,  "[^/]*");
-			p = replace(p, /\?/g,  "[^/]");
-			let re_pattern = "^" + p + "$";
-			let re = regexp(re_pattern);
+			// Translate the glob to an anchored regex (see glob_to_regex: glob(3)
+			// semantics — '**' is not globstar, '[...]' is a real character class).
+			let re = regexp(glob_to_regex(pattern));
 			for (let vp in virtual_paths) {
 				if (!match(vp, re)) continue;
 				// A matching path mocked as deleted (null) must be removed even when the
