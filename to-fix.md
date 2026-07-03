@@ -38,8 +38,9 @@ three test-coverage additions:
   **2.8** `equals(NaN)` explains NaN never compares equal. **2.9** ambiguous
   keys rendered as quoted brackets. **2.12** Seed line notes it reproduces the
   original value. **2.13** shim name emitted as a `%J` literal.
-- **2.2** glob mock matches real glob(3) — `**` is no longer globstar (verified
-  against the interpreter). (Char-class support remains open as 2.2b.)
+- **2.2 / 2.2b** glob mock matches real glob(3), verified against the interpreter:
+  `**` is no longer globstar, and character classes (`[abc]`, ranges, `[!..]`/
+  `[^..]` negation, literal leading `]`) are honored via a proper glob→regex parser.
 - **2.10** generator name threaded into `gen.alphanumeric`/`gen.ascii` errors.
 - **3.2** -j2 rendering-contiguity smoke. **3.3** `failures[]` compared in
   verify.uc. **3.5** SKIP/IGNORE smoke tokens.
@@ -56,11 +57,6 @@ three test-coverage additions:
   in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
 
 ### Design / robustness concerns — remaining (each needs a decision)
-- **2.2b (new, found while fixing 2.2)** real `fs.glob` honors glob(3) character
-  classes (`[abc]`, ranges, `[!..]` negation) — verified against the interpreter
-  — but the mock escapes `[`/`]` to literals. Supporting them means a proper
-  glob-class→regex translation (with the `!`→`^` and leading-`]` edge cases).
-  Same mock-passes/target-fails shape as 2.2 was. **Worth doing? Needs a call.**
 - **2.4** A proxy leaked out of its inject callback loses the seal after pop
   (writes fall through to real fs). User misuse; a clean fix needs per-layer
   identity threaded into the proxy so a stale call can die — moderately invasive.
