@@ -271,6 +271,25 @@ describe("Regression tests", () => {
 		       { seed: 1, runs: 100, persist: false });
 		assert.match(true, saw_large, "gen.int over a 2^40 range must exceed 2^31");
 	});
+
+	it("consecutive property cases are seeded independently (no LCG lockstep)", () => {
+		// Before the fix, each case was seeded with base_seed + i fed straight to
+		// srand, whose first draw is very nearly linear in the seed. Consecutive
+		// cases therefore drew values in a fixed arithmetic progression — their
+		// first differences were essentially constant, biasing the sample. Mixing
+		// each seed through an avalanche decorrelates them. Deterministic under a
+		// fixed seed: capture each case's value and count distinct step sizes.
+		let seen = [];
+		forall(gen.int(0, 1099511627776), (n) => { push(seen, n); },
+		       { seed: 1, runs: 12, persist: false });
+		let diffs = {};
+		for (let i = 1; i < length(seen); i++)
+			diffs[seen[i] - seen[i - 1]] = true;
+		// Decorrelated seeding yields 11 distinct steps here; lockstep seeding gives
+		// ~1. Assert a wide margin so the test tracks the property, not the stream.
+		assert.match(true, length(keys(diffs)) >= 8,
+		             "consecutive-case values must not step in lockstep (correlated seeds)");
+	});
 });
 
 describe("Failing properties (demonstrate shrinking output)", () => {

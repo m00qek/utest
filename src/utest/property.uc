@@ -34,8 +34,28 @@ const OVERRUN_MSG = sprintf('%J', { __utest__: { kind: 'property_overrun' } });
 // "interesting" edge values across all generators, surfacing bugs faster.
 const BIAS_DENOM = 8;
 
+// Avalanche a per-case seed into a well-distributed srand seed. ucode's srand/rand
+// is an LCG whose *first* draw is very nearly linear in the seed, so seeding
+// consecutive cases with base_seed + i makes their first generated values march in
+// lockstep — a sampling bias that leaves whole regions of the input space unvisited.
+// A Murmur3 fmix32 finalizer decorrelates consecutive seeds; the leading fold mixes
+// all 64 bits of the input so distinct base seeds stay distinct. Every product is
+// masked back to 32 bits so the value never goes negative — ucode's `>>` is an
+// arithmetic (sign-propagating) shift, which would otherwise corrupt the avalanche.
+// It is deterministic, so the reproducibility contract holds: the reported seed is
+// still the linear base_seed + i, and replaying it re-derives the same stream.
+function mix_seed(x) {
+	let h = (x ^ (x >> 32)) & 0xffffffff;
+	h ^= h >> 16;
+	h = (h * 0x85ebca6b) & 0xffffffff;
+	h ^= h >> 13;
+	h = (h * 0xc2b2ae35) & 0xffffffff;
+	h ^= h >> 16;
+	return h & 0x7fffffff;
+}
+
 function record_source(seed) {
-	math.srand(seed);
+	math.srand(mix_seed(seed));
 	const choices = [];
 	return {
 		seed,

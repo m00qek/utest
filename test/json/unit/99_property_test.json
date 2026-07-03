@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 45,
-    "passed": 43,
+    "total": 46,
+    "passed": 44,
     "failed": 2,
     "errors": 0,
     "fatals": 0,
@@ -15,41 +15,41 @@
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 2 case(s)\n  Seed:           2 (regenerates the original value)\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   18\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
+      "error": "Property failed after 1 case(s)\n  Seed:           1 (regenerates the original value)\n  Original value: [ 3, 8, 0, 9, 7, 1, 1, 4 ]\n  Shrunk value:   [ 3 ]\n  Shrink evals:   256\n  Error:          xs[0] is 3\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,
           "name": "root"
         },
         {
-          "id": 50,
+          "id": 51,
           "name": "Failing properties (demonstrate shrinking output)"
         },
         {
-          "id": 51,
-          "name": "all ints in [0, 1000] are < 50"
+          "id": 53,
+          "name": "no array of ints contains 3"
         }
       ],
-      "index": 44
+      "index": 46
     },
     {
       "event": "TEST_RESULT",
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 6 case(s)\n  Seed:           6 (regenerates the original value)\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   147\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
+      "error": "Property failed after 1 case(s)\n  Seed:           1 (regenerates the original value)\n  Original value: 929\n  Shrunk value:   50\n  Shrink evals:   20\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,
           "name": "root"
         },
         {
-          "id": 50,
+          "id": 51,
           "name": "Failing properties (demonstrate shrinking output)"
         },
         {
           "id": 52,
-          "name": "no array of ints contains 3"
+          "name": "all ints in [0, 1000] are < 50"
         }
       ],
       "index": 45
@@ -68,15 +68,15 @@
           "name": "root"
         },
         {
-          "id": 27,
-          "name": "Generator smoke tests"
+          "id": 1,
+          "name": "Properties of arithmetic"
         },
         {
-          "id": 41,
-          "name": "gen.constant always produces the same value"
+          "id": 2,
+          "name": "addition is commutative"
         }
       ],
-      "index": 36
+      "index": 1
     },
     {
       "event": "TEST_RESULT",
@@ -94,11 +94,55 @@
           "name": "Generator smoke tests"
         },
         {
-          "id": 38,
-          "name": "gen.frequency picks a value from one of the weighted generators"
+          "id": 32,
+          "name": "gen.string has bounded length"
         }
       ],
-      "index": 33
+      "index": 27
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 11,
+          "name": "gen.int rejects lo > hi"
+        }
+      ],
+      "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 21,
+          "name": "gen.string rejects negative max_len"
+        }
+      ],
+      "index": 17
     },
     {
       "event": "TEST_RESULT",
@@ -134,59 +178,15 @@
           "name": "root"
         },
         {
-          "id": 5,
-          "name": "Properties of arrays"
-        },
-        {
-          "id": 6,
-          "name": "length is non-negative"
-        }
-      ],
-      "index": 4
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
           "id": 27,
           "name": "Generator smoke tests"
         },
         {
-          "id": 44,
-          "name": "gen.string with exact length via len option"
+          "id": 40,
+          "name": "gen.map transforms the output of a generator"
         }
       ],
-      "index": 39
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "FAIL",
-      "error": "Property failed after 2 case(s)\n  Seed:           2 (regenerates the original value)\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   18\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 50,
-          "name": "Failing properties (demonstrate shrinking output)"
-        },
-        {
-          "id": 51,
-          "name": "all ints in [0, 1000] are < 50"
-        }
-      ],
-      "index": 44
+      "index": 35
     },
     {
       "event": "TEST_RESULT",
@@ -200,37 +200,15 @@
           "name": "root"
         },
         {
-          "id": 5,
-          "name": "Properties of arrays"
+          "id": 45,
+          "name": "Regression tests"
         },
         {
-          "id": 7,
-          "name": "reverse of reverse is identity"
+          "id": 47,
+          "name": "mkdir_p creates directories at relative paths without redirecting to root"
         }
       ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 19,
-          "name": "gen.float returns a double even for a degenerate all-int range"
-        }
-      ],
-      "index": 15
+      "index": 41
     },
     {
       "event": "TEST_RESULT",
@@ -270,55 +248,11 @@
           "name": "Generator smoke tests"
         },
         {
-          "id": 29,
-          "name": "gen.float is within bounds"
+          "id": 34,
+          "name": "gen.alphanumeric has bounded length"
         }
       ],
-      "index": 24
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 27,
-          "name": "Generator smoke tests"
-        },
-        {
-          "id": 32,
-          "name": "gen.string has bounded length"
-        }
-      ],
-      "index": 27
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 27,
-          "name": "Generator smoke tests"
-        },
-        {
-          "id": 43,
-          "name": "gen.array with exact length via len option"
-        }
-      ],
-      "index": 38
+      "index": 29
     },
     {
       "event": "TEST_RESULT",
@@ -336,99 +270,11 @@
           "name": "Generator validation"
         },
         {
-          "id": 25,
-          "name": "forall fails when all runs are discarded"
+          "id": 17,
+          "name": "gen.float rejects NaN bounds"
         }
       ],
-      "index": 21
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 15,
-          "name": "gen.int rejects a non-integer (double) bound"
-        }
-      ],
-      "index": 11
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 21,
-          "name": "gen.string rejects negative max_len"
-        }
-      ],
-      "index": 17
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 45,
-          "name": "Regression tests"
-        },
-        {
-          "id": 48,
-          "name": "gen.int reaches nonzero multiples of the 0-bias denominator"
-        }
-      ],
-      "index": 42
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 45,
-          "name": "Regression tests"
-        },
-        {
-          "id": 46,
-          "name": "gen.float with strongly asymmetric range generates values on both sides of zero"
-        }
-      ],
-      "index": 40
+      "index": 13
     },
     {
       "event": "TEST_RESULT",
@@ -464,301 +310,15 @@
           "name": "root"
         },
         {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 20,
-          "name": "gen.array rejects negative max_len"
-        }
-      ],
-      "index": 16
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
           "id": 27,
           "name": "Generator smoke tests"
         },
         {
-          "id": 35,
-          "name": "gen.record produces an object with correct field ranges"
+          "id": 43,
+          "name": "gen.array with exact length via len option"
         }
       ],
-      "index": 30
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Properties of arithmetic"
-        },
-        {
-          "id": 4,
-          "name": "absolute value is non-negative"
-        }
-      ],
-      "index": 3
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "FAIL",
-      "error": "Property failed after 6 case(s)\n  Seed:           6 (regenerates the original value)\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   147\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 50,
-          "name": "Failing properties (demonstrate shrinking output)"
-        },
-        {
-          "id": 52,
-          "name": "no array of ints contains 3"
-        }
-      ],
-      "index": 45
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 27,
-          "name": "Generator smoke tests"
-        },
-        {
-          "id": 37,
-          "name": "gen.elements picks one of the given values"
-        }
-      ],
-      "index": 32
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 27,
-          "name": "Generator smoke tests"
-        },
-        {
-          "id": 31,
-          "name": "gen.float with lo=0 never produces NaN"
-        }
-      ],
-      "index": 26
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Properties of arithmetic"
-        },
-        {
-          "id": 2,
-          "name": "addition is commutative"
-        }
-      ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 26,
-          "name": "prop() with explicit persist_id: null disables persistence"
-        }
-      ],
-      "index": 22
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 11,
-          "name": "gen.int rejects lo > hi"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 27,
-          "name": "Generator smoke tests"
-        },
-        {
-          "id": 34,
-          "name": "gen.alphanumeric has bounded length"
-        }
-      ],
-      "index": 29
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 23,
-          "name": "gen.ascii sizing errors report their own name, not gen.string"
-        }
-      ],
-      "index": 19
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 16,
-          "name": "gen.float rejects lo > hi"
-        }
-      ],
-      "index": 12
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 8,
-          "name": "Properties with dependent generation"
-        },
-        {
-          "id": 9,
-          "name": "array of length n really has length ≤ n"
-        }
-      ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/99_property_test.uc",
-      "bundle": "examples/unit/99_property_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "Generator validation"
-        },
-        {
-          "id": 22,
-          "name": "gen.alphanumeric sizing errors report their own name, not gen.string"
-        }
-      ],
-      "index": 18
+      "index": 38
     },
     {
       "event": "TEST_RESULT",
@@ -794,15 +354,15 @@
           "name": "root"
         },
         {
-          "id": 27,
-          "name": "Generator smoke tests"
+          "id": 10,
+          "name": "Generator validation"
         },
         {
-          "id": 40,
-          "name": "gen.map transforms the output of a generator"
+          "id": 20,
+          "name": "gen.array rejects negative max_len"
         }
       ],
-      "index": 35
+      "index": 16
     },
     {
       "event": "TEST_RESULT",
@@ -816,15 +376,15 @@
           "name": "root"
         },
         {
-          "id": 10,
-          "name": "Generator validation"
+          "id": 45,
+          "name": "Regression tests"
         },
         {
-          "id": 18,
-          "name": "gen.float rejects infinite bounds"
+          "id": 48,
+          "name": "gen.int reaches nonzero multiples of the 0-bias denominator"
         }
       ],
-      "index": 14
+      "index": 42
     },
     {
       "event": "TEST_RESULT",
@@ -860,15 +420,81 @@
           "name": "root"
         },
         {
+          "id": 5,
+          "name": "Properties of arrays"
+        },
+        {
+          "id": 7,
+          "name": "reverse of reverse is identity"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "FAIL",
+      "error": "Property failed after 1 case(s)\n  Seed:           1 (regenerates the original value)\n  Original value: [ 3, 8, 0, 9, 7, 1, 1, 4 ]\n  Shrunk value:   [ 3 ]\n  Shrink evals:   256\n  Error:          xs[0] is 3\n                  Expected true\n                    got false",
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 51,
+          "name": "Failing properties (demonstrate shrinking output)"
+        },
+        {
+          "id": 53,
+          "name": "no array of ints contains 3"
+        }
+      ],
+      "index": 46
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
           "id": 27,
           "name": "Generator smoke tests"
         },
         {
-          "id": 42,
-          "name": "gen.filter only returns values matching the predicate"
+          "id": 29,
+          "name": "gen.float is within bounds"
         }
       ],
-      "index": 37
+      "index": 24
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 28,
+          "name": "gen.bool produces only true or false"
+        }
+      ],
+      "index": 23
     },
     {
       "event": "TEST_RESULT",
@@ -886,11 +512,11 @@
           "name": "Generator validation"
         },
         {
-          "id": 12,
-          "name": "gen.int rejects a span wider than 2^62"
+          "id": 23,
+          "name": "gen.ascii sizing errors report their own name, not gen.string"
         }
       ],
-      "index": 8
+      "index": 19
     },
     {
       "event": "TEST_RESULT",
@@ -908,11 +534,11 @@
           "name": "Generator smoke tests"
         },
         {
-          "id": 33,
-          "name": "gen.ascii has bounded length"
+          "id": 44,
+          "name": "gen.string with exact length via len option"
         }
       ],
-      "index": 28
+      "index": 39
     },
     {
       "event": "TEST_RESULT",
@@ -926,15 +552,81 @@
           "name": "root"
         },
         {
-          "id": 10,
-          "name": "Generator validation"
+          "id": 45,
+          "name": "Regression tests"
         },
         {
-          "id": 13,
-          "name": "gen.int rejects a range whose span overflows int64"
+          "id": 50,
+          "name": "consecutive property cases are seeded independently (no LCG lockstep)"
         }
       ],
-      "index": 9
+      "index": 44
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 31,
+          "name": "gen.float with lo=0 never produces NaN"
+        }
+      ],
+      "index": 26
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 45,
+          "name": "Regression tests"
+        },
+        {
+          "id": 46,
+          "name": "gen.float with strongly asymmetric range generates values on both sides of zero"
+        }
+      ],
+      "index": 40
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 8,
+          "name": "Properties with dependent generation"
+        },
+        {
+          "id": 9,
+          "name": "array of length n really has length ≤ n"
+        }
+      ],
+      "index": 6
     },
     {
       "event": "TEST_RESULT",
@@ -974,11 +666,11 @@
           "name": "Generator smoke tests"
         },
         {
-          "id": 28,
-          "name": "gen.bool produces only true or false"
+          "id": 33,
+          "name": "gen.ascii has bounded length"
         }
       ],
-      "index": 23
+      "index": 28
     },
     {
       "event": "TEST_RESULT",
@@ -992,15 +684,191 @@
           "name": "root"
         },
         {
-          "id": 45,
-          "name": "Regression tests"
+          "id": 1,
+          "name": "Properties of arithmetic"
         },
         {
-          "id": 47,
-          "name": "mkdir_p creates directories at relative paths without redirecting to root"
+          "id": 4,
+          "name": "absolute value is non-negative"
         }
       ],
-      "index": 41
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 12,
+          "name": "gen.int rejects a span wider than 2^62"
+        }
+      ],
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 15,
+          "name": "gen.int rejects a non-integer (double) bound"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 25,
+          "name": "forall fails when all runs are discarded"
+        }
+      ],
+      "index": 21
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 19,
+          "name": "gen.float returns a double even for a degenerate all-int range"
+        }
+      ],
+      "index": 15
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 22,
+          "name": "gen.alphanumeric sizing errors report their own name, not gen.string"
+        }
+      ],
+      "index": 18
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 38,
+          "name": "gen.frequency picks a value from one of the weighted generators"
+        }
+      ],
+      "index": 33
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 5,
+          "name": "Properties of arrays"
+        },
+        {
+          "id": 6,
+          "name": "length is non-negative"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 35,
+          "name": "gen.record produces an object with correct field ranges"
+        }
+      ],
+      "index": 30
     },
     {
       "event": "TEST_RESULT",
@@ -1036,21 +904,175 @@
           "name": "root"
         },
         {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 41,
+          "name": "gen.constant always produces the same value"
+        }
+      ],
+      "index": 36
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 37,
+          "name": "gen.elements picks one of the given values"
+        }
+      ],
+      "index": 32
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
           "id": 10,
           "name": "Generator validation"
         },
         {
-          "id": 17,
-          "name": "gen.float rejects NaN bounds"
+          "id": 18,
+          "name": "gen.float rejects infinite bounds"
         }
       ],
-      "index": 13
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 26,
+          "name": "prop() with explicit persist_id: null disables persistence"
+        }
+      ],
+      "index": 22
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 27,
+          "name": "Generator smoke tests"
+        },
+        {
+          "id": 42,
+          "name": "gen.filter only returns values matching the predicate"
+        }
+      ],
+      "index": 37
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 16,
+          "name": "gen.float rejects lo > hi"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "FAIL",
+      "error": "Property failed after 1 case(s)\n  Seed:           1 (regenerates the original value)\n  Original value: 929\n  Shrunk value:   50\n  Shrink evals:   20\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 51,
+          "name": "Failing properties (demonstrate shrinking output)"
+        },
+        {
+          "id": 52,
+          "name": "all ints in [0, 1000] are < 50"
+        }
+      ],
+      "index": 45
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/99_property_test.uc",
+      "bundle": "examples/unit/99_property_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "Generator validation"
+        },
+        {
+          "id": 13,
+          "name": "gen.int rejects a range whose span overflows int64"
+        }
+      ],
+      "index": 9
     }
   ],
   "bundles": {
     "examples/unit/99_property_test.uc": {
-      "total": 45,
-      "passed": 43,
+      "total": 46,
+      "passed": 44,
       "failed": 2,
       "errors": 0,
       "fatals": 0,

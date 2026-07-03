@@ -51,19 +51,18 @@ three test-coverage additions:
 - **4.2** proxy_base label; **4.3** both false comments; **4.4** path-asymmetry
   note; **4.5** compact dedup + wrap-width comment; **4.6** registry header.
 
+- **1.15** parallel spawn-failure handling is iterative (folded the terminal check
+  into `pump`, dropped `advance`), so a burst of synchronous spawn failures no
+  longer nests a stack frame per failure. **2.11** per-case seeds are avalanched
+  through a Murmur3 fmix32 before `srand` — ucode's LCG first-draw is near-linear
+  in the seed, so `base_seed + i` marched consecutive cases in lockstep; the mix
+  decorrelates them while keeping the linear seed as the reported/reproducible
+  token. Verified empirically (old: 5 distinct steps / 12 cases; new: 11) with a
+  regression test in `99_property_test.uc`.
+
 ---
 
 ## Still open
-
-### 1.15 NIT — unbounded recursion on consecutive synchronous spawn failures
-- `parallel.uc` spawn-fail → `advance()` → `pump()` → `spawn()` nests one frame
-  per consecutive failure (only under fd/EMFILE exhaustion). An iterative retry
-  in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
-
-### Design / robustness concerns — remaining (each needs a decision)
-- **2.11** Correlated per-case seeds (`base_seed + i` into libc srand). Improving
-  stream independence changes generated sequences → churns every failing-property
-  baseline and risks the reproducibility contract. **Core seeding change.**
 
 ### Carried over (from the first review; unchanged)
 - **shell escaping**: `utest.sh` `json_str` doesn't escape control chars.
