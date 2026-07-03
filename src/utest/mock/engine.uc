@@ -39,13 +39,24 @@ function proxy_module(name) {
 	return m;
 }
 
+// Channel data shares a dict with a module's per-scope metadata (fns/strict/
+// calls/proxy in the global and layer records; channels/fns/strict/proxy in a
+// snapshot). A proxy that declared a channel named after any of these would
+// silently clobber that metadata — record_call() writing into the channel dict,
+// restore() resurrecting channel data as fns, etc. Reject such names outright.
+const RESERVED_CHANNELS = { fns: true, strict: true, calls: true, proxy: true, channels: true };
+
 export function get_proxy_channels(name) {
 	const m = proxy_module(name);
 	if (!m) return null;
 	const channels = ['data'];
 	if (type(m.channels) === 'array') {
-		for (let ch in m.channels)
+		for (let ch in m.channels) {
+			if (exists(RESERVED_CHANNELS, ch))
+				die(sprintf("[utest] proxy '%s' declares reserved channel name '%s'; " +
+					"channel names must not be any of: fns, strict, calls, proxy, channels", name, ch));
 			if (ch !== 'data') push(channels, ch);
+		}
 	}
 	return channels;
 };
