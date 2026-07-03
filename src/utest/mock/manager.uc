@@ -42,14 +42,18 @@ function generate_standard_shim(name, shim_dir) {
 	if (!real) {
 		warn(sprintf("[utest] warning: could not inspect '%s'; the shim will have no interceptable functions\n", name));
 	}
+	// The module name is interpolated into the generated source, so emit it as a
+	// %J (JSON) string literal rather than a bare single-quoted one — a name
+	// containing a quote would otherwise break the literal and the shim wouldn't
+	// compile. Function names come from the real module's keys and are safe idents.
 	let lines = [
-		sprintf("import * as _real from 'real_%s';", name),
+		sprintf("import * as _real from %J;", "real_" + name),
 		"import { __internal__ } from 'utest.mock.engine';"
 	];
 	for (let fn_name in (real ? keys(real) : [])) {
 		if (type(real[fn_name]) === 'function') {
 			push(lines, sprintf(
-				"export const %s = function(...args) { let p = __internal__.get_proxy_global('%s'); return p ? p.%s(...args) : _real.%s(...args); };",
+				"export const %s = function(...args) { let p = __internal__.get_proxy_global(%J); return p ? p.%s(...args) : _real.%s(...args); };",
 				fn_name, name, fn_name, fn_name
 			));
 		} else {
@@ -76,7 +80,7 @@ function setup_shim(name, shim_dir) {
 			let lines = ["import { __internal__ } from 'utest.mock.engine';"];
 			for (let fn_name in api) {
 				push(lines, sprintf(
-					"export const %s = function(...args) { let p = __internal__.get_proxy_global('%s'); if (p) return p.%s(...args); };",
+					"export const %s = function(...args) { let p = __internal__.get_proxy_global(%J); if (p) return p.%s(...args); };",
 					fn_name, name, fn_name
 				));
 			}
