@@ -86,6 +86,7 @@ export function patch(name, state) {
 	const real = engine.get_real(name);
 	engine.guard_mock_target('mock.global.patch', name, proxy_channels, real);
 	const channels = proxy_channels || ['data'];
+	engine.validate_state('mock.global.patch', name, state, channels);
 	const reg = engine.get_registry(name);
 	engine.ensure_channels(reg, channels);
 	// Build the new global atomically: save the old state so we can roll back

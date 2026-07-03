@@ -80,3 +80,25 @@ describe('mock.global.patch input validation', () => {
 		assert.throws(() => mock.global.patch('fs', null), /must be a non-null object/);
 	});
 });
+
+describe('mock state rejects unknown keys (typo protection)', () => {
+	it('inject() rejects a misspelled key, naming the valid keys for the module', () => {
+		assert.throws(() => mock.inject('fs', { behaviour: {} }, () => {}),
+		              /unknown key 'behaviour'.*allowed keys: behavior, strict, data, commands/);
+	});
+
+	it("inject() accepts a proxy's declared channel (fs 'commands')", () => {
+		mock.inject('fs', { commands: { 'echo hi': 'hi\n' } }, (m_fs) => {
+			assert.match('hi\n', m_fs.popen('echo hi').read('all'));
+		});
+	});
+
+	it("rejects a channel that belongs to a different proxy (uci has no 'commands')", () => {
+		assert.throws(() => mock.inject('uci', { commands: {} }, () => {}),
+		              /unknown key 'commands'/);
+	});
+
+	it('global.patch() rejects a misspelled key too', () => {
+		assert.throws(() => mock.global.patch('fs', { files: {} }), /unknown key 'files'/);
+	});
+});

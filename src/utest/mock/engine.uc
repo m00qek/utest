@@ -97,6 +97,21 @@ export function ensure_channels(reg, channels) {
 	}
 };
 
+// The state dict for mock.inject/inject_all/global.patch may contain only
+// `behavior`, `strict`, and the module's declared channels (get_proxy_channels
+// always yields 'data' plus any the proxy factory adds — e.g. fs's 'commands').
+// A key outside that set is almost always a typo (`behaviour`, `files`, `date`)
+// that to_layer/patch would silently drop, leaving an empty mock with no
+// diagnostic. Reject it, naming the keys that are actually valid for this module.
+export function validate_state(op, name, state, channels) {
+	let allowed = { behavior: true, strict: true };
+	for (let ch in channels) allowed[ch] = true;
+	for (let k in keys(state))
+		if (!exists(allowed, k))
+			die(sprintf("%s: unknown key '%s' in state for '%s'; allowed keys: behavior, strict, %s",
+				op, k, name, join(", ", channels)));
+};
+
 export function to_layer(state, channels) {
 	let layer = {
 		fns:    state.behavior ? { ...state.behavior } : {},

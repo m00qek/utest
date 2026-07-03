@@ -134,6 +134,7 @@ export function inject(name, state, cb) {
 	const real = engine.get_real(name);
 	engine.guard_mock_target('mock.inject', name, proxy_channels, real);
 	const channels = proxy_channels || ['data'];
+	engine.validate_state('mock.inject', name, state, channels);
 	const reg = engine.get_registry(name);
 	engine.ensure_channels(reg, channels);
 	push(reg.layers, engine.to_layer(state, channels));
@@ -188,6 +189,7 @@ export function inject_all(states, cb) {
 			die(sprintf("mock.inject_all: state for '%s' must be a non-null object", name));
 		reals[name] = real;
 		channels_map[name] = proxy_channels || ['data'];
+		engine.validate_state('mock.inject_all', name, states[name], channels_map[name]);
 	}
 
 	// Push one layer per proxy, tracking count so cleanup covers only what was pushed.

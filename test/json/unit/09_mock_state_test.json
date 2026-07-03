@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 8,
-    "passed": 8,
+    "total": 12,
+    "passed": 12,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,7 +9,8 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
     {
       "event": "TEST_RESULT",
@@ -27,11 +28,11 @@
           "name": "Mock State"
         },
         {
-          "id": 2,
-          "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
+          "id": 7,
+          "name": "mock.reset() discards all active inject() layers"
         }
       ],
-      "index": 1
+      "index": 6
     },
     {
       "event": "TEST_RESULT",
@@ -71,11 +72,99 @@
           "name": "Mock State"
         },
         {
+          "id": 2,
+          "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
           "id": 3,
           "name": "mock.global.patch() intercepts the imported module via the shim"
         }
       ],
       "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 12,
+          "name": "mock state rejects unknown keys (typo protection)"
+        },
+        {
+          "id": 13,
+          "name": "inject() rejects a misspelled key, naming the valid keys for the module"
+        }
+      ],
+      "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 12,
+          "name": "mock state rejects unknown keys (typo protection)"
+        },
+        {
+          "id": 16,
+          "name": "global.patch() rejects a misspelled key too"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 12,
+          "name": "mock state rejects unknown keys (typo protection)"
+        },
+        {
+          "id": 15,
+          "name": "rejects a channel that belongs to a different proxy (uci has no 'commands')"
+        }
+      ],
+      "index": 11
     },
     {
       "event": "TEST_RESULT",
@@ -102,50 +191,6 @@
         }
       ],
       "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/09_mock_state_test.uc",
-      "bundle": "examples/unit/09_mock_state_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Mock State"
-        },
-        {
-          "id": 7,
-          "name": "mock.reset() discards all active inject() layers"
-        }
-      ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/09_mock_state_test.uc",
-      "bundle": "examples/unit/09_mock_state_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Mock State"
-        },
-        {
-          "id": 4,
-          "name": "inject() layer is visible on top of a global patch"
-        }
-      ],
-      "index": 3
     },
     {
       "event": "TEST_RESULT",
@@ -190,20 +235,64 @@
         }
       ],
       "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 4,
+          "name": "inject() layer is visible on top of a global patch"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 12,
+          "name": "mock state rejects unknown keys (typo protection)"
+        },
+        {
+          "id": 14,
+          "name": "inject() accepts a proxy's declared channel (fs 'commands')"
+        }
+      ],
+      "index": 10
     }
-  ],
-  "files": [
-    "examples/unit/09_mock_state_test.uc"
   ],
   "bundles": {
     "examples/unit/09_mock_state_test.uc": {
-      "total": 8,
-      "passed": 8,
+      "total": 12,
+      "passed": 12,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/09_mock_state_test.uc"
+  ]
 }
