@@ -81,10 +81,13 @@ export function create() {
 
 				// Redirect the worker's stdout+stderr to a regular file, read at exit.
 				// exec so the pid uloop tracks (and we kill on timeout) is ucode's, not
-				// the wrapping shell's. Env is inherited (PATH etc.) via the empty dict.
+				// the wrapping shell's. uloop.process builds the child's environment from
+				// exactly the given dict (exec-style, NOT inherit-style: {} would exec with
+				// an empty envp), so pass the parent's full environment through — otherwise
+				// a -jN worker sees no PATH and cannot even find ucode, diverging from -j1.
 				const cmd = sprintf("exec ucode %s %s %s > %s 2>&1",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), q(out_file));
-				const proc = uloop.process("/bin/sh", ["-c", cmd], {}, function(code) {
+				const proc = uloop.process("/bin/sh", ["-c", cmd], getenv(), function(code) {
 					if (worker.done) return;
 					worker.done = true;
 					if (worker.timer) { worker.timer.cancel(); worker.timer = null; }

@@ -15,12 +15,15 @@ run_verify() {
     example=$1
     expected=$2
     extra_flags=${3:-""}
+    docker_env=${4:-""}
     # Map the host uid/gid so any files the run touches under the bind-mounted
     # repo are host-owned, not root. --tmpfs gives a writable /tmp for utest.sh's
     # mktemp run dir (newer rootfs images ship /tmp as 0755 root-owned).
+    # $docker_env is intentionally unquoted so "-e VAR=val" splits into flags.
     docker run --rm \
         --user "$(id -u):$(id -g)" \
         --tmpfs /tmp:mode=1777 \
+        $docker_env \
         -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
         -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
         -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
@@ -146,6 +149,23 @@ if run_verify "$timeout_arg" "test/json/timeout/timeout_seq_test.json" "-j 1 -c 
 else
     failed_tests="$failed_tests timeout_seq_test"
 fi
+
+# Env passthrough (1.1): a -jN worker is spawned via uloop.process, which is
+# exec-style — it builds the child environment from exactly the dict it is given,
+# so an empty dict would leave the worker with no environment (no PATH -> cannot
+# even find ucode), silently diverging from -j1. The probe fixture asserts a
+# custom variable set on the parent is visible; running it identically under -j1
+# (in-process) and -j2 (through a spawned worker) against one baseline pins the
+# invariant. A custom var (not PATH) is used because the container ships a shell
+# fallback PATH that would mask a truly empty envp.
+for j in 1 2; do
+    if run_verify "examples/envprobe/01_env_test.uc" "test/json/envprobe/env_probe.json" \
+        "-j $j" "-e UTEST_ENV_PROBE=present"; then
+        :
+    else
+        failed_tests="$failed_tests env_probe_j$j"
+    fi
+done
 
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would

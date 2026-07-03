@@ -1,0 +1,74 @@
+{
+  "stats": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 0,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 1
+  },
+  "failures": [
+  ],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/envprobe/01_env_test.uc",
+      "bundle": "examples/envprobe/01_env_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Environment passthrough"
+        },
+        {
+          "id": 2,
+          "name": "a worker sees the parent's custom environment variable"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/envprobe/01_env_test.uc",
+      "bundle": "examples/envprobe/01_env_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Environment passthrough"
+        },
+        {
+          "id": 3,
+          "name": "a worker sees the parent's PATH"
+        }
+      ],
+      "index": 2
+    }
+  ],
+  "bundles": {
+    "examples/envprobe/01_env_test.uc": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    }
+  },
+  "files": [
+    "examples/envprobe/01_env_test.uc"
+  ]
+}
