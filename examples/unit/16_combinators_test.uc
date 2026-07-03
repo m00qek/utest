@@ -265,3 +265,25 @@ describe('Combinators', () => {
 		assert.throws(() => assert.match(falsy(), 1), /falsy/);
 	});
 });
+
+describe('equals() failure key-paths', () => {
+	it('names the key path of a nested object mismatch', () => {
+		assert.throws(() => assert.match({ user: { age: 30 } }, { user: { age: 31 } }),
+		              /at user\.age:/);
+	});
+
+	it('names the index and key path of a nested array mismatch', () => {
+		assert.throws(() => assert.match({ items: [{ name: 'x' }, { name: 'y' }] },
+		                                 { items: [{ name: 'x' }, { name: 'z' }] }),
+		              /at items\[1\]\.name:/);
+	});
+
+	it('gives a nested non-structural combinator failure its key path too', () => {
+		assert.throws(() => assert.match({ status: between(200, 299) }, { status: 500 }),
+		              /at status:/);
+	});
+
+	it('leaves a top-level scalar mismatch unprefixed', () => {
+		assert.throws(() => assert.match(3, 2), /^Expected 3/);
+	});
+});

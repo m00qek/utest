@@ -23,6 +23,18 @@ function comb(match) {
 // Forward declaration: equals_object/equals_array reference this before it is assigned.
 let _normalize_equals;
 
+// Render an accumulated structural path (object keys and array indices) so a
+// nested equals() failure can say *where* it mismatched, e.g. ['user','age'] ->
+// "user.age" and ['items',2,'name'] -> "items[2].name". The path is built
+// bottom-up by equals_object/equals_array (each prepends its own segment as the
+// failure bubbles up) and formatted once by assert.match().
+export function path_str(path) {
+	let s = "";
+	for (let seg in path)
+		s += (type(seg) === 'int') ? ("[" + seg + "]") : ((s === "" ? "" : ".") + seg);
+	return s;
+};
+
 function equals_scalar(expected) {
 	return comb(function(actual) {
 		if (actual === expected)
@@ -49,7 +61,9 @@ function equals_object(expected) {
 			if (!exists(actual, k))
 				return { ok: false, message: sprintf("Missing key '%s'", k) };
 			const r = matchers[k].match(actual[k]);
-			if (!r.ok) return { ok: false, message: r.message };
+			// Prepend this key to the child's path (empty for a leaf/non-structural
+			// combinator) so the failure carries the full location to assert.match().
+			if (!r.ok) return { ok: false, message: r.message, path: [k, ...(r.path ?? [])] };
 		}
 		return { ok: true };
 	});
@@ -67,7 +81,8 @@ function equals_array(expected) {
 			return { ok: false, message: sprintf("Expected %d elements, got %d", length(matchers), length(actual)) };
 		for (let i = 0; i < length(matchers); i++) {
 			const r = matchers[i].match(actual[i]);
-			if (!r.ok) return { ok: false, message: r.message };
+			// Prepend this index (rendered [i]) to the child's path.
+			if (!r.ok) return { ok: false, message: r.message, path: [i, ...(r.path ?? [])] };
 		}
 		return { ok: true };
 	});

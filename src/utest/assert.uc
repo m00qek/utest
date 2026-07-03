@@ -5,7 +5,7 @@
  */
 
 import { parse_thrown, fail_envelope } from 'utest.util';
-import { is_combinator, equals, regex as _regex, contains } from 'utest.combinators';
+import { is_combinator, equals, regex as _regex, contains, path_str } from 'utest.combinators';
 
 function fail(msg) {
 	die(fail_envelope(msg));
@@ -60,5 +60,10 @@ export function throws(fn, pattern, msg) {
  */
 export function match(expected, actual, msg) {
 	const r = (is_combinator(expected) ? expected : equals(expected)).match(actual);
-	if (!r.ok) fail(msg ? (msg + "\n" + r.message) : r.message);
+	if (!r.ok) {
+		// A nested structural mismatch carries the key/index path to where it
+		// failed; prefix it once here so the message reads "at user.age: …".
+		let m = (r.path && length(r.path)) ? sprintf("at %s:\n%s", path_str(r.path), r.message) : r.message;
+		fail(msg ? (msg + "\n" + m) : m);
+	}
 };
