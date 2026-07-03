@@ -28,6 +28,8 @@ three test-coverage additions:
   `seed_from_clock` (4.1).
 - **1.13** `gen.float` always returns a double.
 - **1.14** `equals()` unwraps a top-level combinator.
+- **2.1** unknown state keys rejected, channel-aware (allowlist =
+  `{behavior, strict}` ∪ `get_proxy_channels`, so fs's `commands` is accepted).
 - **2.10** generator name threaded into `gen.alphanumeric`/`gen.ascii` errors.
 - **3.2** -j2 rendering-contiguity smoke. **3.3** `failures[]` compared in
   verify.uc. **3.5** SKIP/IGNORE smoke tokens.
@@ -44,9 +46,6 @@ three test-coverage additions:
   in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
 
 ### Design / robustness concerns (need a decision, not a clear path)
-- **2.1** Misspelled state keys silently dropped (`inject('fs', { behaviour })`
-  yields an empty mock). A die-on-unknown-key would catch a class of quiet test
-  bugs — but could break lenient usage. **Recommended, needs a policy call.**
 - **2.6** `assert.throws` accepts *any* throw with no pattern, including a nested
   assertion failure or a property sentinel. Rejecting `kind === 'fail'`/sentinel
   throws changes established semantics. **Needs a decision.**
