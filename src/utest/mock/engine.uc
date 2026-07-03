@@ -280,6 +280,34 @@ export function get_real(name) {
 	return m;
 };
 
+// Build one guarded method. A named helper (not an inline closure) so fn/key bind
+// per call — ucode's for-in shares a single `let` binding across iterations, which
+// an inline closure would capture by reference.
+function guarded_method(name, fn, key, is_live, guarded) {
+	return function(...args) {
+		if (!is_live(guarded))
+			die(sprintf("[utest] mock: the '%s' proxy was used outside its scope — its inject()/patch() has already ended (method '%s')", name, key));
+		return fn(...args);
+	};
+}
+
+// Wrap a proxy so each method dies once its scope has ended, instead of falling
+// through to the real module and silently defeating the seal — the exact failure a
+// leaked/stale proxy causes (e.g. a captured fs proxy writing to the real
+// filesystem after its inject() callback returned). `is_live(guarded)` reports
+// whether the wrapping scope is still active; it receives the wrapper so a
+// global-patch proxy can check it is still the registered proxy (robust to
+// unpatch/restore/re-patch). Non-function properties (e.g. __utest__ for spy())
+// pass through unchanged.
+export function guard_proxy(name, proxy, is_live) {
+	let guarded = {};
+	for (let k, v in proxy) {
+		if (type(v) !== 'function') { guarded[k] = v; continue; }
+		guarded[k] = guarded_method(name, v, k, is_live, guarded);
+	}
+	return guarded;
+};
+
 export function build_proxy(name, real) {
 	const proxy_base = require('utest.mock.proxy_base');
 	const ctx = proxy_base.context(name, real);

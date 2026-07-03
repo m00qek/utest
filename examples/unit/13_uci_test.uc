@@ -139,7 +139,9 @@ describe('uci Mocking', () => {
 		});
 		assert.match('1', uci.cursor().get('luci-sso', 'default', 'enabled'));
 		mock.global.unpatch('uci');
-		assert.match(null, m_uci.cursor().get('luci-sso', 'default', 'enabled'));
+		// The handle captured from patch() is now stale: using it dies rather than
+		// silently falling through to the real uci.
+		assert.throws(() => m_uci.cursor(), /used outside its scope/);
 	});
 });
 

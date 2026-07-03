@@ -105,7 +105,12 @@ export function patch(name, state) {
 	let err, had_err = false;
 	let proxy;
 	try {
-		proxy = engine.build_proxy(name, real);
+		// A global-patch proxy persists until unpatch/restore/re-patch; guard it so a
+		// call after it is no longer the registered proxy dies rather than falling
+		// through to the real module. The identity check needs no extra bookkeeping
+		// in unpatch/restore — they already swap reg.global.proxy.
+		proxy = engine.guard_proxy(name, engine.build_proxy(name, real),
+			(self) => engine.__internal__.get_proxy_global(name) === self);
 	} catch(e) {
 		err = e; had_err = true;
 	}

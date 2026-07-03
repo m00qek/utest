@@ -97,6 +97,8 @@ describe('ubus Mocking', () => {
 		assert.match('patched', ubus.connect().call('system', 'board', {}).hostname, 'shim transparently intercepts');
 		mock.global.unpatch('ubus');
 
-		assert.match(null, m_ubus.connect().call('system', 'board', {}));
+		// The handle captured from patch() is now stale: using it dies rather than
+		// silently falling through to the real ubus.
+		assert.throws(() => m_ubus.connect(), /used outside its scope/);
 	});
 });

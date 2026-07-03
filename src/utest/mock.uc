@@ -138,14 +138,19 @@ export function inject(name, state, cb) {
 	const reg = engine.get_registry(name);
 	engine.ensure_channels(reg, channels);
 	push(reg.layers, engine.to_layer(state, channels));
+	// The proxy is valid only for the duration of cb; a leaked call afterwards
+	// would otherwise fall through to the real module. Guard it against use once
+	// this scope ends.
+	let live = { active: true };
 	let err, had_err = false;
 	let result;
 	try {
-		let proxy = engine.build_proxy(name, real);
+		let proxy = engine.guard_proxy(name, engine.build_proxy(name, real), () => live.active);
 		result = cb(proxy);
 	} catch (e) {
 		err = e; had_err = true;
 	}
+	live.active = false;
 	pop(reg.layers);
 	if (had_err) die(err);
 	return result;
@@ -194,6 +199,9 @@ export function inject_all(states, cb) {
 
 	// Push one layer per proxy, tracking count so cleanup covers only what was pushed.
 	let pushed = 0;
+	// All proxies are valid only for cb's duration; one shared cell invalidates
+	// every one of them the moment cb returns (see guard_proxy).
+	let live = { active: true };
 	let err, had_err = false;
 	let result;
 	try {
@@ -205,12 +213,13 @@ export function inject_all(states, cb) {
 		}
 		const deps = {};
 		for (let name in names)
-			deps[name] = engine.build_proxy(name, reals[name]);
+			deps[name] = engine.guard_proxy(name, engine.build_proxy(name, reals[name]), () => live.active);
 		result = cb(deps);
 	} catch (e) {
 		err = e; had_err = true;
 	}
 
+	live.active = false;
 	// Pop in reverse order, limited to what was successfully pushed.
 	for (let i = pushed - 1; i >= 0; i--)
 		pop(engine.get_registry(names[i]).layers);

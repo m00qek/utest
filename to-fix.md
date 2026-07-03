@@ -41,6 +41,10 @@ three test-coverage additions:
 - **2.2 / 2.2b** glob mock matches real glob(3), verified against the interpreter:
   `**` is no longer globstar, and character classes (`[abc]`, ranges, `[!..]`/
   `[^..]` negation, literal leading `]`) are honored via a proper glob→regex parser.
+- **2.4** a proxy used outside its `inject()`/`inject_all()`/`global.patch()` scope
+  now dies (`guard_proxy` in the engine) instead of falling through to the real
+  module and defeating the seal. inject/inject_all guard on a per-call live cell;
+  global.patch guards on proxy identity (dies after unpatch/restore/re-patch).
 - **2.10** generator name threaded into `gen.alphanumeric`/`gen.ascii` errors.
 - **3.2** -j2 rendering-contiguity smoke. **3.3** `failures[]` compared in
   verify.uc. **3.5** SKIP/IGNORE smoke tokens.
@@ -57,9 +61,6 @@ three test-coverage additions:
   in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
 
 ### Design / robustness concerns — remaining (each needs a decision)
-- **2.4** A proxy leaked out of its inject callback loses the seal after pop
-  (writes fall through to real fs). User misuse; a clean fix needs per-layer
-  identity threaded into the proxy so a stale call can die — moderately invasive.
 - **2.11** Correlated per-case seeds (`base_seed + i` into libc srand). Improving
   stream independence changes generated sequences → churns every failing-property
   baseline and risks the reproducibility contract. **Core seeding change.**

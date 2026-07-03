@@ -15,7 +15,9 @@ describe('FS Mocking', () => {
 		assert.match('setup', fs.readfile('/tmp/setup.txt'), 'shim transparently intercepts global state');
 		mock.global.unpatch('fs');
 
-		assert.match(null, m_fs.readfile('/tmp/setup.txt'));
+		// The handle captured from patch() is now stale: a read through it dies
+		// rather than silently falling through to the real filesystem.
+		assert.throws(() => m_fs.readfile('/tmp/setup.txt'), /used outside its scope/);
 	});
 
 	it('injects scoped mock via mock.inject()', () => {
@@ -23,6 +25,18 @@ describe('FS Mocking', () => {
 			assert.match('data', m_fs.readfile('/tmp/scoped'));
 			assert.match(null, fs.readfile('/tmp/scoped'), 'real fs is unaffected inside callback');
 		});
+	});
+
+	it('a proxy leaked out of mock.inject() dies instead of hitting the real fs', () => {
+		let leaked;
+		mock.inject('fs', { data: { '/tmp/scoped': 'data' } }, (m_fs) => {
+			leaked = m_fs;
+			assert.match('data', leaked.readfile('/tmp/scoped'));
+		});
+		// Using the captured proxy after the callback returned would otherwise write
+		// straight to the real filesystem, silently defeating the seal.
+		assert.throws(() => leaked.writefile('/tmp/scoped', 'oops'), /used outside its scope/);
+		assert.throws(() => leaked.readfile('/tmp/scoped'), /used outside its scope/);
 	});
 
 	it('supports nesting mock.inject()', () => {

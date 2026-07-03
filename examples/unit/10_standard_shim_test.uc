@@ -33,7 +33,10 @@ describe('Generic Proxy (math)', () => {
 		assert.match(42, math.abs(-1));
 		mock.global.unpatch('math');
 
-		assert.match(1, m_math.abs(-1));
+		// The imported binding falls back to the real module once unpatched.
 		assert.match(1, math.abs(-1));
+		// The handle captured from patch() is now stale: using it dies rather than
+		// silently falling through to the real module.
+		assert.throws(() => m_math.abs(-1), /used outside its scope/);
 	});
 });
