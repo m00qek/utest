@@ -31,8 +31,10 @@ committed**, each verified via `make meta-test` (still fully green):
   captured as diagnostics, never dispatched (was crashing the whole runner).
 - **1.4** `regex()` validates its argument (kills the `not(regex("str"))`
   always-pass). Regression tests in 16_combinators.
-- **1.5** uci strict mode now enforced on `get_all`/`delete`/`load`. Regression
-  tests in 13_uci.
+- **1.5** uci strict mode now enforced on `get_all`/`delete` (die on unmocked
+  package, like `get`/`foreach`); `load` returns `false` for an unmocked package
+  (real-uci fidelity) rather than dying — the read accessors still catch typos.
+  Regression tests in 13_uci.
 - **1.6** a generator dying on a shrink candidate is classified invalid, not
   fatal — the real counterexample survives.
 - **1.7** `gen.float` rejects non-finite bounds (NaN/Inf) via `math.isnan`.

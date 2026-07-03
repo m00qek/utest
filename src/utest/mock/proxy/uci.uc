@@ -16,8 +16,13 @@ return {
 					push(cursor_calls.load, [pkg]);
 					let override = ctx.get_behavior('load');
 					if (override) return override(pkg);
+					// Real uci load() returns false for a package that has no config.
+					// Under strict, an unmocked package reports that false (rather than
+					// dying) — get()/foreach()/get_all()/delete() still enforce strict on
+					// any actual data access, so a typo is still caught the moment the
+					// code reads. Non-strict stays optimistic (always true).
 					if (ctx.is_strict() && type(ctx.get_data(pkg)) !== 'object')
-						die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
+						return false;
 					return true;
 				},
 

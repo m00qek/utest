@@ -1,4 +1,4 @@
-import { describe, it, assert, mock, truthy } from 'utest';
+import { describe, it, assert, mock, truthy, falsy } from 'utest';
 import * as uci from 'uci';
 
 // Data keys are package names; values are UCI section maps: { section: { '.type': '...', option: value } }.
@@ -164,10 +164,9 @@ describe('uci strict mode blocks every accessor on an unmocked package', () => {
 		});
 	});
 
-	it('load() dies for an unmocked package but returns true for the mocked one', () => {
+	it('load() returns false for an unmocked package (like real uci), true for the mocked one', () => {
 		mock.inject('uci', cfg, (m) => {
-			assert.throws(() => m.cursor().load('typo-pkg'),
-			              /strict mock: uci package 'typo-pkg'/);
+			assert.match(falsy(),  m.cursor().load('typo-pkg'));
 			assert.match(truthy(), m.cursor().load('luci-sso'));
 		});
 	});
