@@ -358,3 +358,32 @@ describe('FS Mocking', () => {
 	});
 
 });
+
+describe('destructive ops are sealed from the real filesystem', () => {
+	// The bare `fs` binding falls through to the real filesystem when no mock is
+	// active, so these create a real sentinel, mutate it through an active mock,
+	// and confirm the real file is untouched (the mock only tombstones/moves it
+	// within its own state).
+	it('unlink() on an unmocked path leaves the real file intact', () => {
+		const path = '/tmp/utest_seal_unlink.txt';
+		fs.writefile(path, 'real');
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.match(true,  m_fs.unlink(path));   // sealed: reports success
+			assert.match(false, m_fs.access(path));   // tombstoned inside the mock
+		});
+		assert.match('real', fs.readfile(path), 'real file must survive a mocked unlink');
+		fs.unlink(path);
+	});
+
+	it('rename() on an unmocked path moves within the mock, not on disk', () => {
+		const src = '/tmp/utest_seal_rename.txt';
+		fs.writefile(src, 'payload');
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.match(true,      m_fs.rename(src, '/tmp/utest_seal_moved.txt'));
+			assert.match('payload', m_fs.readfile('/tmp/utest_seal_moved.txt'));  // content moved in mock
+			assert.match(false,     m_fs.access(src));                            // source tombstoned in mock
+		});
+		assert.match('payload', fs.readfile(src), 'real source must survive a mocked rename');
+		fs.unlink(src);
+	});
+});

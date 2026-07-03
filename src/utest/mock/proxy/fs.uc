@@ -153,6 +153,19 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.rename' called with unmocked path: " + old_path);
+			// Sealed like writes: a destructive op never mutates the real filesystem
+			// while a mock is active. Overlay-read the real content of an unmocked
+			// source (null for a nonexistent path or a directory - nothing to move,
+			// so report failure) and move it *within the mock*, leaving the real
+			// file intact.
+			if (ctx.is_active()) {
+				let v = ctx.real_call('readfile', [old_path], null);
+				if (v === null) return false;
+				if (old_path === new_path) return true;
+				ctx.set_data(new_path, v);
+				ctx.set_data(old_path, null);
+				return true;
+			}
 			return ctx.real_call('rename', [old_path, new_path], false);
 		};
 
@@ -167,6 +180,13 @@ return {
 			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.unlink' called with unmocked path: " + path);
+			// Sealed like writes: never delete on the real filesystem while a mock is
+			// active. Tombstone the path so subsequent reads/access/stat see it gone;
+			// the real file (if any) is left intact.
+			if (ctx.is_active()) {
+				ctx.set_data(path, null);
+				return true;
+			}
 			return ctx.real_call('unlink', [path], false);
 		};
 
