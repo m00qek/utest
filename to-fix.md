@@ -81,12 +81,20 @@ deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
   non-null-object guard (was crashing with a bare "left-hand side expression is
   null"). Regression test in 09_mock_state.
 
+- **4.11** structural key-paths in `equals()` failures — **done**: a nested
+  mismatch now reads `at user.age:` / `at items[1].name:`. Path is accumulated
+  bottom-up in the result (equals_object/equals_array prepend their segment) and
+  formatted once in assert.match() via `path_str()`; non-structural combinators
+  unchanged but get location context when nested; top-level scalars unchanged
+  (no baseline churn). Covers the `equals` path only — contains/any_order/
+  starts_with keep their own element-matching (out of scope). Tests in
+  16_combinators.
+
 **Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
 control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
 1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle shrink goldens),
 remaining §2 (2.3 patch_builtin isolation, 2.6–2.12 lesser), and §4 (4.4
-combinator-list check, 4.6, 4.9 architecture overview, 4.11 structural
-deep-equal paths).
+combinator-list check, 4.6, 4.9 architecture overview).
 
 ---
 
