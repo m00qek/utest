@@ -56,6 +56,15 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.int(10, 0), /lo \(10\) must be <= hi \(0\)/);
 	});
 
+	it("gen.int rejects a span wider than 2^62", () => {
+		assert.throws(() => gen.int(0, 1 << 62), /too wide to sample/);
+	});
+
+	it("gen.int rejects a range whose span overflows int64", () => {
+		// hi - lo + 1 wraps to <= 0 for a ~2^63-wide range.
+		assert.throws(() => gen.int(-(1 << 62), 1 << 62), /too wide to sample/);
+	});
+
 	it("gen.float rejects lo > hi", () => {
 		assert.throws(() => gen.float(1.0, 0.0), /lo .* must be <= hi/);
 	});

@@ -61,6 +61,12 @@ export function is_generator(v) {
 export function int(lo, hi) {
 	if (lo > hi) die(sprintf("gen.int: lo (%d) must be <= hi (%d)", lo, hi));
 	const span = hi - lo + 1;
+	// draw() produces 62-bit values, so a span wider than 2^62 can't be sampled
+	// across its whole range, and a span for a range >= 2^63 overflows int64 to
+	// <= 0 (which would otherwise degenerate to always-0). Reject both rather than
+	// silently truncate or collapse. Realistic ranges are nowhere near this.
+	if (span <= 0 || span > (1 << 62))
+		die(sprintf("gen.int: range [%d, %d] is too wide to sample; span must be <= 2^62", lo, hi));
 	const zp = (lo > 0) ? lo : ((hi < 0) ? hi : 0);
 	const pos_room = hi - zp;
 	return gen_from(function(source) {
