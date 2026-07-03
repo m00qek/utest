@@ -10,20 +10,34 @@ export const dispatch = function(msg, reporter) {
 	else if (msg.event === "FATAL")       reporter.fatal(msg);
 };
 
+// The set of TEST_RESULT statuses the reporters know how to tally (reporter/
+// base.uc keys stats off these). A result with any other status would render as
+// an error but count as nothing, so treat it as malformed rather than dispatch.
+const KNOWN_STATUS = { PASS: true, FAIL: true, ERROR: true, SKIP: true, IGNORE: true };
+
 // A line is a protocol event only if it is an object with a recognized `event`
-// AND the fields the reporters dereference for it: every event carries a `suite`
-// string (reporter/base.uc keys per-suite stats on it), and a TEST_RESULT also
-// carries a non-empty `path` array (the detailed reporter reads its leaf's name).
-// The stream is in-band — a test's own stdout shares it — so a well-typed but
-// malformed line (e.g. `{"event":"TEST_RESULT","status":"PASS"}` printed by a
-// test) must be treated as diagnostics, never dispatched: dispatching it would
-// crash the whole runner on the missing field. Fully-formed forgeries are an
-// accepted limitation of an in-band protocol and out of scope here.
+// AND every field the reporters dereference for it. Every event carries a `suite`
+// string (reporter/base.uc keys per-suite stats on it). A TEST_RESULT additionally
+// carries a known `status` and a non-empty `path` array whose every element is an
+// object with a string `name` — the detailed reporter reads the leaf's `name` and
+// compact reads each element's `id`/`name`, so a scalar element (e.g. `[1]`) would
+// raise an uncaught reference error mid-dispatch and, in parallel mode, abort the
+// whole run from inside the exit callback. The stream is in-band — a test's own
+// stdout shares it — so a well-typed but malformed line (e.g. `{"event":
+// "TEST_RESULT","status":"PASS","path":[1]}` printed by a test) must be treated as
+// diagnostics, never dispatched. Fully-formed forgeries are an accepted limitation
+// of an in-band protocol and out of scope here.
 function is_event(msg) {
 	if (type(msg) !== "object" || type(msg.suite) !== "string") return false;
 	let e = msg.event;
 	if (e === "SUITE_START" || e === "SUITE_END" || e === "FATAL") return true;
-	if (e === "TEST_RESULT") return type(msg.path) === "array" && length(msg.path) > 0;
+	if (e === "TEST_RESULT") {
+		if (!KNOWN_STATUS[msg.status]) return false;
+		if (type(msg.path) !== "array" || length(msg.path) === 0) return false;
+		for (let p in msg.path)
+			if (type(p) !== "object" || type(p.name) !== "string") return false;
+		return true;
+	}
 	return false;
 }
 

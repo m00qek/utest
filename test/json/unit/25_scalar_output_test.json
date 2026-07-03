@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 2,
-    "passed": 2,
+    "total": 4,
+    "passed": 4,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,8 +9,53 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/25_scalar_output_test.uc",
+      "bundle": "examples/unit/25_scalar_output_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "hostile worker stdout"
+        },
+        {
+          "id": 4,
+          "name": "survives a forged TEST_RESULT with a scalar path element"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/25_scalar_output_test.uc",
+      "bundle": "examples/unit/25_scalar_output_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "hostile worker stdout"
+        },
+        {
+          "id": 5,
+          "name": "survives a forged TEST_RESULT with an unknown status"
+        }
+      ],
+      "index": 4
+    },
     {
       "event": "TEST_RESULT",
       "suite": "examples/unit/25_scalar_output_test.uc",
@@ -56,20 +101,18 @@
       "index": 1
     }
   ],
-  "files": [
-    "examples/unit/25_scalar_output_test.uc"
-  ],
-  "duration_ms": 8,
-  "seed": 892532932,
   "bundles": {
     "examples/unit/25_scalar_output_test.uc": {
-      "total": 2,
-      "passed": 2,
+      "total": 4,
+      "passed": 4,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/25_scalar_output_test.uc"
+  ]
 }
