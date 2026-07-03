@@ -142,3 +142,33 @@ describe('uci Mocking', () => {
 		assert.match(null, m_uci.cursor().get('luci-sso', 'default', 'enabled'));
 	});
 });
+
+describe('uci strict mode blocks every accessor on an unmocked package', () => {
+	// Strict mode's contract: any access to an unmocked package dies, so a
+	// typo'd package name is caught. get()/foreach() already enforced it;
+	// get_all(), delete(), and load() must too (regression for those holes).
+	const cfg = { strict: true, data: uci_data };
+
+	it('get_all() dies for an unmocked package but still serves the mocked one', () => {
+		mock.inject('uci', cfg, (m) => {
+			assert.throws(() => m.cursor().get_all('typo-pkg', 'default'),
+			              /strict mock: uci package 'typo-pkg'/);
+			assert.match('oidc', m.cursor().get_all('luci-sso', 'default')['.type']);
+		});
+	});
+
+	it('delete() dies for an unmocked package', () => {
+		mock.inject('uci', cfg, (m) => {
+			assert.throws(() => m.cursor().delete('typo-pkg', 'default'),
+			              /strict mock: uci package 'typo-pkg'/);
+		});
+	});
+
+	it('load() dies for an unmocked package but returns true for the mocked one', () => {
+		mock.inject('uci', cfg, (m) => {
+			assert.throws(() => m.cursor().load('typo-pkg'),
+			              /strict mock: uci package 'typo-pkg'/);
+			assert.match(truthy(), m.cursor().load('luci-sso'));
+		});
+	});
+});

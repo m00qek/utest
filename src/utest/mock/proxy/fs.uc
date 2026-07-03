@@ -78,8 +78,6 @@ return {
 				return ctx.real_call('popen', [cmd, mode], null);
 			}
 
-			let existing = ctx.get('commands', cmd);
-
 			if (ctx.is_active())
 				return make_handle('', (data) => ctx.set('commands', cmd, data));
 

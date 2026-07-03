@@ -68,6 +68,26 @@ describe('uclient Mocking', () => {
 		});
 	});
 
+	it('read() serves a fresh body after a second request on the same handle', () => {
+		// Reusing a handle for a second request must serve that response's body,
+		// not stay stuck on the first request's consumed EOF (regression for the
+		// _body_served flag never resetting between requests).
+		const url = 'http://api.example.com/twice';
+		mock.inject('uclient', {
+			data: { [url]: { status: 200, headers: {}, body: 'again' } }
+		}, (m_uclient) => {
+			let chunks = [];
+			let u = m_uclient.new(url, null, {
+				data_read: (conn) => { let c; while ((c = conn.read()) !== null) push(chunks, c); },
+				header_done: () => {},
+				data_eof:    () => {}
+			});
+			u.request('GET', {});
+			u.request('GET', {});
+			assert.match(['again', 'again'], chunks);
+		});
+	});
+
 	it('request() fires error callback for error responses', () => {
 		const url = 'http://api.example.com/broken';
 		mock.inject('uclient', {

@@ -38,6 +38,10 @@ return {
 
 			u.request = function(method, opts) {
 				push(u_calls.request, [method, opts]);
+				// A new request serves a fresh response body; reset so read() returns
+				// it instead of the previous request's already-consumed EOF (real
+				// uclient serves each response's body when a handle is reused).
+				_body_served = false;
 				let f = ctx.get_behavior('request');
 				if (f) return f(method, opts);
 

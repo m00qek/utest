@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 11,
-    "passed": 11,
+    "total": 12,
+    "passed": 12,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -11,6 +11,50 @@
   },
   "failures": [],
   "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
+          "id": 4,
+          "name": "status() and get_headers() are readable inside callbacks"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
+          "id": 11,
+          "name": "supports behavior override for new()"
+        }
+      ],
+      "index": 10
+    },
     {
       "event": "TEST_RESULT",
       "suite": "examples/unit/15_uclient_test.uc",
@@ -50,7 +94,7 @@
         },
         {
           "id": 10,
-          "name": "supports behavior override for new()"
+          "name": "supports behavior override for connect() to simulate failure"
         }
       ],
       "index": 9
@@ -71,11 +115,99 @@
           "name": "uclient Mocking"
         },
         {
+          "id": 7,
+          "name": "request() fires error callback for error responses"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
           "id": 8,
-          "name": "strict mode dies on unmocked URL"
+          "name": "request() returns false and skips callbacks for unmocked URLs"
         }
       ],
       "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
+          "id": 13,
+          "name": "patches global state via mock.global.patch()"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
+          "id": 12,
+          "name": "does not fire data_read for responses with no body"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/15_uclient_test.uc",
+      "bundle": "examples/unit/15_uclient_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uclient Mocking"
+        },
+        {
+          "id": 9,
+          "name": "strict mode dies on unmocked URL"
+        }
+      ],
+      "index": 8
     },
     {
       "event": "TEST_RESULT",
@@ -115,77 +247,11 @@
           "name": "uclient Mocking"
         },
         {
-          "id": 7,
-          "name": "request() returns false and skips callbacks for unmocked URLs"
+          "id": 3,
+          "name": "request() fires header_done, data_read, data_eof in order"
         }
       ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/15_uclient_test.uc",
-      "bundle": "examples/unit/15_uclient_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uclient Mocking"
-        },
-        {
-          "id": 12,
-          "name": "patches global state via mock.global.patch()"
-        }
-      ],
-      "index": 11
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/15_uclient_test.uc",
-      "bundle": "examples/unit/15_uclient_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uclient Mocking"
-        },
-        {
-          "id": 11,
-          "name": "does not fire data_read for responses with no body"
-        }
-      ],
-      "index": 10
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/15_uclient_test.uc",
-      "bundle": "examples/unit/15_uclient_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uclient Mocking"
-        },
-        {
-          "id": 4,
-          "name": "status() and get_headers() are readable inside callbacks"
-        }
-      ],
-      "index": 3
+      "index": 2
     },
     {
       "event": "TEST_RESULT",
@@ -204,65 +270,19 @@
         },
         {
           "id": 6,
-          "name": "request() fires error callback for error responses"
+          "name": "read() serves a fresh body after a second request on the same handle"
         }
       ],
       "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/15_uclient_test.uc",
-      "bundle": "examples/unit/15_uclient_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uclient Mocking"
-        },
-        {
-          "id": 9,
-          "name": "supports behavior override for connect() to simulate failure"
-        }
-      ],
-      "index": 8
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/15_uclient_test.uc",
-      "bundle": "examples/unit/15_uclient_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uclient Mocking"
-        },
-        {
-          "id": 3,
-          "name": "request() fires header_done, data_read, data_eof in order"
-        }
-      ],
-      "index": 2
     }
   ],
   "files": [
     "examples/unit/15_uclient_test.uc"
   ],
-  "duration_ms": 7,
-  "seed": 802691458,
   "bundles": {
     "examples/unit/15_uclient_test.uc": {
-      "total": 11,
-      "passed": 11,
+      "total": 12,
+      "passed": 12,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

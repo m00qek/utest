@@ -221,11 +221,21 @@ if (!global.__utest_internal_instance) global.__utest_internal_instance = intern
 // When a shim is in -L, require(name) finds the shim's ES-module .uc and fails
 // (program mode forbids import/export). Try real_<name> first (the symlink to
 // the actual module created by manager.uc), then fall back to require(name).
+// Memoized including the null miss: the real_<name> symlink is created once at
+// setup and never changes for the run, and ucode does not cache failed
+// require()s, so without this every inject of a proxy-backed module absent on
+// the host (e.g. uloop off-target) re-runs two full-search-path scans and
+// reprints the warning.
+const _real_module_cache = {};
 export function get_real(name) {
-	try { return require('real_' + name); } catch(e) {}
-	try { return require(name); }           catch(e) {}
-	warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
-	return null;
+	if (exists(_real_module_cache, name)) return _real_module_cache[name];
+	let m = null;
+	try { m = require('real_' + name); } catch(e) {}
+	if (m === null) try { m = require(name); } catch(e) {}
+	if (m === null)
+		warn(sprintf("[utest] warning: could not load module '%s'; non-overridden calls on its proxy will fail\n", name));
+	_real_module_cache[name] = m;
+	return m;
 };
 
 export function build_proxy(name, real) {

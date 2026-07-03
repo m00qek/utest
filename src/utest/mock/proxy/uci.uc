@@ -16,6 +16,8 @@ return {
 					push(cursor_calls.load, [pkg]);
 					let override = ctx.get_behavior('load');
 					if (override) return override(pkg);
+					if (ctx.is_strict() && type(ctx.get_data(pkg)) !== 'object')
+						die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
 					return true;
 				},
 
@@ -42,7 +44,10 @@ return {
 					if (override) return override(pkg, sec);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) !== 'object') return null;
+					if (type(p) !== 'object') {
+						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
+						return null;
+					}
 					let s = p[sec];
 					if (type(s) !== 'object') return null;
 					return { ...s, '.name': sec };
@@ -106,7 +111,10 @@ return {
 					if (override) return override(pkg, sec, opt);
 
 					let p = ctx.get_data(pkg);
-					if (type(p) !== 'object') return false;
+					if (type(p) !== 'object') {
+						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
+						return false;
+					}
 					p = { ...p };
 					if (opt !== null) {
 						if (type(p[sec]) !== 'object') return false;
