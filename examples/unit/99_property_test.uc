@@ -65,6 +65,17 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.int(-(1 << 62), 1 << 62), /too wide to sample/);
 	});
 
+	it("gen.int rejects a NaN bound", () => {
+		// A NaN bound slips past every range guard (all NaN comparisons are false)
+		// and makes every draw NaN — a property would then pass vacuously.
+		assert.throws(() => gen.int(0, 0.0 / 0.0), /bounds must be integers/);
+	});
+
+	it("gen.int rejects a non-integer (double) bound", () => {
+		// A double span draws via fmod and can return values below lo.
+		assert.throws(() => gen.int(1.5, 10), /bounds must be integers/);
+	});
+
 	it("gen.float rejects lo > hi", () => {
 		assert.throws(() => gen.float(1.0, 0.0), /lo .* must be <= hi/);
 	});
@@ -75,6 +86,12 @@ describe("Generator validation", () => {
 
 	it("gen.float rejects infinite bounds", () => {
 		assert.throws(() => gen.float(0.0, 1.0 / 0.0), /bounds must be finite/);
+	});
+
+	it("gen.float returns a double even for a degenerate all-int range", () => {
+		// gen.float(3, 3) used to return the int 3 (equals(3.0) then fails in a
+		// framework that distinguishes 3 from 3.0); it must yield a double.
+		forall(gen.float(3, 3), (x) => assert.match(3.0, x));
 	});
 
 	it("gen.array rejects negative max_len", () => {

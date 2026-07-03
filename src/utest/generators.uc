@@ -59,6 +59,13 @@ export function is_generator(v) {
  * @returns {Generator<int>} The configured generator.
  */
 export function int(lo, hi) {
+	// Require integer bounds. A NaN bound (e.g. gen.int(0, sqrt(-1))) would slip
+	// past every range guard below — all NaN comparisons are false — and make
+	// `bits % NaN` NaN, so every draw is NaN and the property passes vacuously.
+	// A double bound (gen.int(1.5, 10)) draws via a non-integer span and can
+	// return values below lo. Rejecting non-ints closes both.
+	if (type(lo) !== 'int' || type(hi) !== 'int')
+		die(sprintf("gen.int: bounds must be integers; got lo (%s), hi (%s)", type(lo), type(hi)));
 	if (lo > hi) die(sprintf("gen.int: lo (%d) must be <= hi (%d)", lo, hi));
 	const span = hi - lo + 1;
 	// draw() produces 62-bit values, so a span wider than 2^62 can't be sampled
@@ -113,6 +120,11 @@ export function float(lo, hi, opts) {
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
 	const precision = (opts !== null && opts.precision !== null) ? opts.precision : 10000;
 	if (precision < 1) die(sprintf("gen.float: precision (%d) must be >= 1", precision));
+	// Force double arithmetic so an all-int range (e.g. gen.float(3, 3)) still
+	// yields a double. Otherwise a degenerate range returns zp unchanged as an int,
+	// which then fails is_type('double')/equals(3.0) in a framework that
+	// deliberately distinguishes 3 from 3.0.
+	lo *= 1.0; hi *= 1.0;
 	const zp = (lo > 0) ? lo : ((hi < 0) ? hi : 0.0);
 	const pos_room = hi - zp;
 	const neg_room = zp - lo;
