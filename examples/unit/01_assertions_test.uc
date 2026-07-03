@@ -52,4 +52,13 @@ describe("Assertions", () => {
 			/did not match/
 		);
 	});
+
+	it("assert.throws() reports a non-matching combinator pattern as a label", () => {
+		// The failure message must not dump the combinator's serialized { match }
+		// object; it should read "pattern the given combinator".
+		assert.throws(
+			() => assert.throws(() => die("boom"), contains("xyz")),
+			/did not match pattern the given combinator/
+		);
+	});
 });

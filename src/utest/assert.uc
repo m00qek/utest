@@ -47,9 +47,12 @@ export function throws(fn, pattern, msg) {
 			// of either dying inside contains() or trivially passing on an empty array/object.
 			else fail(sprintf("assert.throws: pattern must be a string, regex, or combinator, got %s", type(pattern)));
 			// A matching pattern is the caller's explicit opt-in to catch even a
-			// sentinel; a non-match fails regardless of kind.
-			if (!combinator.match(emsg).ok)
-				fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pattern));
+			// sentinel; a non-match fails regardless of kind. Render a combinator
+			// pattern as a label rather than dumping its serialized { match } object.
+			if (!combinator.match(emsg).ok) {
+				const pat_desc = is_combinator(pattern) ? "the given combinator" : sprintf("%s", pattern);
+				fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pat_desc));
+			}
 			return;
 		}
 

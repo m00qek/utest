@@ -1,4 +1,5 @@
 import { describe, it, assert, equals, contains, truthy, falsy, not, pred, any_order, any, regex, starts_with, ends_with, has_length, between, is_type } from 'utest';
+import * as math from 'math';
 
 describe('Combinators', () => {
 	it('assert.match() with a plain scalar behaves like assert.eq()', () => {
@@ -46,6 +47,13 @@ describe('Combinators', () => {
 		assert.match(equals(any()), 42);
 		assert.match(equals(any()), { anything: true });
 		assert.match(equals(contains('host')), 'connected to host');
+	});
+
+	it('equals(NaN) fails with a helpful message, not two identical lines', () => {
+		// NaN never compares equal to itself, so equals(NaN) can't match; the message
+		// must explain that rather than print "Expected NaN / got NaN".
+		assert.throws(() => assert.match(equals(math.sqrt(-1.0)), math.sqrt(-1.0)),
+		              /NaN never compares equal/);
 	});
 
 	it('contains() works on strings, arrays, and objects', () => {
@@ -293,5 +301,12 @@ describe('equals() failure key-paths', () => {
 
 	it('leaves a top-level scalar mismatch unprefixed', () => {
 		assert.throws(() => assert.match(3, 2), /^Expected 3/);
+	});
+
+	it('renders an ambiguous (dotted) key with quoted bracket notation', () => {
+		// A key containing a dot would read like a nested path in dotted form, so it
+		// must be quoted-bracketed: at ["a.b"]:, not at a.b:.
+		assert.throws(() => assert.match({ 'a.b': 1 }, { 'a.b': 2 }),
+		              /at \["a\.b"\]:/);
 	});
 });

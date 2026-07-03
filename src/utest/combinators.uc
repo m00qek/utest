@@ -1,3 +1,5 @@
+import * as math from 'math';
+
 // ─── Combinator prototype ────────────────────────────────────────────────────
 
 const Combinator = { __utest__: { kind: 'combinator' } };
@@ -30,15 +32,32 @@ let _normalize_equals;
 // failure bubbles up) and formatted once by assert.match().
 export function path_str(path) {
 	let s = "";
-	for (let seg in path)
-		s += (type(seg) === 'int') ? ("[" + seg + "]") : ((s === "" ? "" : ".") + seg);
+	for (let seg in path) {
+		if (type(seg) === 'int')
+			s += "[" + seg + "]";                       // array index
+		else if (match(seg, /^[A-Za-z_][A-Za-z0-9_]*$/))
+			s += (s === "" ? "" : ".") + seg;           // plain identifier key: dotted
+		else
+			// A key with dots, digits, spaces, or empty is ambiguous in dotted form
+			// (e.g. "a.b" would read like nested a->b, and "0" like an index); render
+			// it as a quoted bracket segment instead.
+			s += "[" + sprintf("%J", seg) + "]";
+	}
 	return s;
 };
 
 function equals_scalar(expected) {
+	// NaN never compares equal to anything (including itself), so equals(NaN) can
+	// never match — and its default message would read "Expected NaN / got NaN",
+	// two identical lines that look like a bug in the framework. Detect it up front
+	// and explain the real cause.
+	const exp_is_nan = (type(expected) === 'double' && math.isnan(expected));
 	return comb(function(actual) {
 		if (actual === expected)
 			return { ok: true };
+		if (exp_is_nan)
+			return { ok: false, message: "Expected NaN, but NaN never compares equal to itself — " +
+				"match it with pred(math.isnan) or is_type('double') instead of equals(NaN)" };
 		return { ok: false, message: sprintf("Expected %J\n  got %J", expected, actual) };
 	});
 }

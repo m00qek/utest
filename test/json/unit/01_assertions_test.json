@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -28,11 +28,33 @@
           "name": "Assertions"
         },
         {
-          "id": 3,
-          "name": "assert.throws() passes when exception is thrown, with optional pattern"
+          "id": 2,
+          "name": "assert.match() passes for deeply equal values"
         }
       ],
-      "index": 2
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/01_assertions_test.uc",
+      "bundle": "examples/unit/01_assertions_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Assertions"
+        },
+        {
+          "id": 9,
+          "name": "assert.throws() reports a non-matching combinator pattern as a label"
+        }
+      ],
+      "index": 8
     },
     {
       "event": "TEST_RESULT",
@@ -72,33 +94,11 @@
           "name": "Assertions"
         },
         {
-          "id": 8,
-          "name": "assert.throws() accepts a combinator as pattern"
+          "id": 6,
+          "name": "assert.throws() without a pattern still accepts a genuine exception"
         }
       ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/01_assertions_test.uc",
-      "bundle": "examples/unit/01_assertions_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Assertions"
-        },
-        {
-          "id": 2,
-          "name": "assert.match() passes for deeply equal values"
-        }
-      ],
-      "index": 1
+      "index": 5
     },
     {
       "event": "TEST_RESULT",
@@ -138,11 +138,11 @@
           "name": "Assertions"
         },
         {
-          "id": 7,
-          "name": "assert.throws() accepts a string pattern (regex string)"
+          "id": 8,
+          "name": "assert.throws() accepts a combinator as pattern"
         }
       ],
-      "index": 6
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -160,17 +160,39 @@
           "name": "Assertions"
         },
         {
-          "id": 6,
-          "name": "assert.throws() without a pattern still accepts a genuine exception"
+          "id": 3,
+          "name": "assert.throws() passes when exception is thrown, with optional pattern"
         }
       ],
-      "index": 5
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/01_assertions_test.uc",
+      "bundle": "examples/unit/01_assertions_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Assertions"
+        },
+        {
+          "id": 7,
+          "name": "assert.throws() accepts a string pattern (regex string)"
+        }
+      ],
+      "index": 6
     }
   ],
   "bundles": {
     "examples/unit/01_assertions_test.uc": {
-      "total": 7,
-      "passed": 7,
+      "total": 8,
+      "passed": 8,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
