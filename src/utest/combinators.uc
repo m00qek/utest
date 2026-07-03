@@ -131,6 +131,11 @@ function contains_object(expected) {
 			if (!exists(actual, k))
 				return { ok: false, message: sprintf("Missing key '%s'", k) };
 			const r = matchers[k].match(actual[k]);
+			// Note: unlike equals_object, the partial matchers (contains/starts_with/
+			// ends_with) do not prepend `k` to a child's `path`, so a nested
+			// contains({user:{age:…}}) failure reports the leaf message without the
+			// "at user.age:" prefix that equals() failures get. Left as-is: a known
+			// asymmetry in the feature surface, not wired through here.
 			if (!r.ok) return { ok: false, message: r.message };
 		}
 		return { ok: true };

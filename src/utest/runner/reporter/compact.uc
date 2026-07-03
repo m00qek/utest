@@ -17,12 +17,20 @@ export function create(use_color) {
 		return bundle_data[name];
 	}
 
+	// A FAIL/ERROR/FATAL can arrive before its suite_start (or with none), so every
+	// site that records into a file's failure bucket first ensures it exists.
+	function ensure_failures(b, suite) {
+		if (!b.file_failures[suite]) b.file_failures[suite] = [];
+		return b.file_failures[suite];
+	}
+
 	function print_dot(bundle_name, sym, clr) {
 		let b = get_bundle(bundle_name);
 		// Start new bundle with indent
 		if (b.dots_on_line === 0) {
 			print("  ");
 		}
+		// Wrap the dot stream at 78 columns (an 80-col terminal minus the 2-space indent).
 		if (b.dots_on_line >= 78) {
 			print("\n  ");
 			b.dots_on_line = 0;
@@ -101,10 +109,7 @@ export function create(use_color) {
 		},
 
 		render_suite_start: function(msg) {
-			let b = get_bundle(msg.bundle);
-			if (!b.file_failures[msg.suite]) {
-				b.file_failures[msg.suite] = [];
-			}
+			ensure_failures(get_bundle(msg.bundle), msg.suite);
 		},
 
 		render_test_result: function(msg) {
@@ -116,14 +121,10 @@ export function create(use_color) {
 				print_dot(msg.bundle, "◌", t.IGNORE);
 			} else if (msg.status === "FAIL") {
 				print_dot(msg.bundle, "■", t.FAIL);
-				let b = get_bundle(msg.bundle);
-				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
-				push(b.file_failures[msg.suite], msg);
+				push(ensure_failures(get_bundle(msg.bundle), msg.suite), msg);
 			} else if (msg.status === "ERROR") {
 				print_dot(msg.bundle, "▲", t.ERROR);
-				let b = get_bundle(msg.bundle);
-				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
-				push(b.file_failures[msg.suite], msg);
+				push(ensure_failures(get_bundle(msg.bundle), msg.suite), msg);
 			}
 		},
 
@@ -135,9 +136,7 @@ export function create(use_color) {
 			let rec = { status: "FATAL", error: msg.error, path: [{ name: msg.suite || "Fatal error" }] };
 			if (msg.bundle) {
 				print_dot(msg.bundle, "!", t.BOLD + t.ERROR);
-				let b = get_bundle(msg.bundle);
-				if (!b.file_failures[msg.suite]) b.file_failures[msg.suite] = [];
-				push(b.file_failures[msg.suite], rec);
+				push(ensure_failures(get_bundle(msg.bundle), msg.suite), rec);
 			} else {
 				push(orphan_fatals, rec);
 			}

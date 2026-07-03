@@ -102,6 +102,14 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.string({ max_len: -1 }), /max_len \(-1\) must be >= 0/);
 	});
 
+	it("gen.alphanumeric sizing errors report their own name, not gen.string", () => {
+		assert.throws(() => gen.alphanumeric({ max_len: -1 }), /^gen\.alphanumeric:/);
+	});
+
+	it("gen.ascii sizing errors report their own name, not gen.string", () => {
+		assert.throws(() => gen.ascii({ max_len: -1 }), /^gen\.ascii:/);
+	});
+
 	it("gen.frequency rejects a negative weight", () => {
 		assert.throws(() => gen.frequency([2, gen.int(0, 1)], [-1, gen.int(2, 3)]),
 		              /weight must be a non-negative integer/);

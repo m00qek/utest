@@ -292,10 +292,12 @@ function _ascii_chars() {
  * @param {string} [opts.charset] - The character set to sample from.
  * @returns {Generator<string>} The configured generator.
  */
-export function string(opts) {
-	const sz = size_from_opts(opts, "gen.string");
+// The shared string builder. `name` is threaded through so a sizing error from
+// gen.alphanumeric/gen.ascii reports its own name, not "gen.string".
+function build_string(opts, name) {
+	const sz = size_from_opts(opts, name);
 	const charset = ((opts.charset ?? null) !== null) ? opts.charset : STRING_CHARS;
-	if (length(charset) === 0) die("gen.string: charset must be non-empty");
+	if (length(charset) === 0) die(name + ": charset must be non-empty");
 	const clen = length(charset);
 	return gen_from(function(source) {
 		const n = sz.min_len + source.draw(sz.max_len - sz.min_len + 1);
@@ -304,6 +306,10 @@ export function string(opts) {
 			push(chars, substr(charset, source.draw(clen), 1));
 		return join("", chars);
 	});
+}
+
+export function string(opts) {
+	return build_string(opts, "gen.string");
 };
 
 function with_locked_charset(opts, charset, name) {
@@ -329,7 +335,7 @@ function with_locked_charset(opts, charset, name) {
  * @param {int} [opts.max_len] - The maximum length.
  * @returns {Generator<string>} The configured generator.
  */
-export function alphanumeric(opts) { return string(with_locked_charset(opts, ALPHANUMERIC_CHARS, "gen.alphanumeric")); };
+export function alphanumeric(opts) { return build_string(with_locked_charset(opts, ALPHANUMERIC_CHARS, "gen.alphanumeric"), "gen.alphanumeric"); };
 
 /**
  * Generates a string consisting of visible ASCII characters (codepoints 32–126).
@@ -345,7 +351,7 @@ export function alphanumeric(opts) { return string(with_locked_charset(opts, ALP
  * @param {int} [opts.max_len] - The maximum length.
  * @returns {Generator<string>} The configured generator.
  */
-export function ascii(opts)        { return string(with_locked_charset(opts, _ascii_chars(),    "gen.ascii")); };
+export function ascii(opts)        { return build_string(with_locked_charset(opts, _ascii_chars(),    "gen.ascii"), "gen.ascii"); };
 
 /**
  * Randomly picks one generator from the provided choices and generates a value from it.

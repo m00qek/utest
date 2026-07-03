@@ -23,7 +23,9 @@ return {
 			get_local: function(channel, key)     { return __internal__.get_local_channel(name, channel, key); },
 			set:      function(channel, key, val) { __internal__.set_channel(name, channel, key, val); },
 
-			// Shorthands for the 'data' channel — kept for backward compatibility
+			// Shorthands for the 'data' channel — the primary API of every built-in
+			// proxy (fs.uc alone uses get_data/set_data ~30 times); the generic
+			// channel form above is for proxies that need multiple namespaces.
 			get_data:          function(key)      { return __internal__.get_channel(name, 'data', key); },
 			get_local_data:    function(key)      { return __internal__.get_local_channel(name, 'data', key); },
 			set_data:          function(key, val) { __internal__.set_channel(name, 'data', key, val); },
