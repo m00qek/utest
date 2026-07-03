@@ -36,9 +36,9 @@ export function create() {
 			let active = 0;
 			let running = false;
 
-			// Forward-declared so the mutually-recursive spawn/advance/pump closures can
+			// Forward-declared so the mutually-recursive spawn/pump closures can
 			// reference each other (ucode does not hoist nested function declarations).
-			let finalize, advance, spawn, pump;
+			let finalize, spawn, pump;
 
 			// Feed a finished worker's output — read once from its file — into the
 			// shared decoder, then emit any terminal FATAL. Because a worker's whole
@@ -60,16 +60,6 @@ export function create() {
 					reporter.fatal({ event: "FATAL", suite: worker.file, bundle: bundle_name, error: smsg });
 
 				fs.unlink(worker.out_file);
-			};
-
-			// A worker slot freed up (finished or failed to spawn): start the next
-			// queued file, or end the loop once every file is accounted for.
-			advance = function() {
-				if (finished >= total) {
-					if (running) uloop.end();
-					return;
-				}
-				pump();
 			};
 
 			spawn = function(file) {
@@ -94,14 +84,17 @@ export function create() {
 					finalize(worker, worker.timed_out);
 					finished++;
 					active--;
-					advance();
+					pump();
 				});
 
 				if (!proc) {
 					reporter.fatal({ event: "FATAL", suite: file, bundle: bundle_name,
 						error: "Failed to spawn worker for " + file });
 					finished++;
-					advance();
+					// Do NOT recurse into pump() here: a burst of consecutive synchronous
+					// spawn failures (e.g. fd/EMFILE exhaustion) would nest one frame per
+					// failure. The enclosing pump() while-loop continues to the next queued
+					// file on its own, and its post-loop terminal check closes the run.
 					return;
 				}
 
@@ -117,24 +110,34 @@ export function create() {
 				});
 			};
 
+			// Fill every free worker slot, then — once no more can start — close the
+			// event loop if every file is accounted for. Called both to prime the run
+			// and from each worker's exit callback to refill the slot it freed. Spawn
+			// failures increment `finished` inline and stay inside this loop, so a run
+			// where every worker fails to spawn still terminates here: the invariant
+			// finished + active + len(queue) === total means finished >= total implies
+			// both active === 0 and an empty queue.
 			pump = function() {
 				while (active < jobs && length(queue) > 0)
 					spawn(shift(queue));
+				if (finished >= total && running)
+					uloop.end();
 			};
 
 			if (total === 0) return false;
 			uloop.init();
 			pump();
 			// If every worker failed to spawn synchronously, finished already reached
-			// total (advance() saw running === false and did not end the loop); running
-			// it would then block forever, so only run when work is actually pending.
+			// total during the priming pump() above (running was still false, so its
+			// terminal check did not end a loop that was not yet started); running uloop
+			// would then block forever, so only run when work is actually pending.
 			let rv = 0;
 			if (finished < total) {
 				running = true;
 				rv = uloop.run();
 			}
 
-			// uloop.run() returns either when advance() called uloop.end() (every
+			// uloop.run() returns either when pump() called uloop.end() (every
 			// worker accounted for) or when libubox caught SIGINT/SIGTERM, set
 			// uloop_cancelled, and returned — leaving pending exit callbacks unfired
 			// and finished still < total. In that case the interrupted suites would
