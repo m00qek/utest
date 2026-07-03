@@ -126,6 +126,21 @@ function main() {
         }
     }
 
+    // 5. Verify the per-bundle stats map (bundles{}). Multi-bundle runs advertise
+    // that they exercise cross-bundle aggregation, but nothing compared it — so
+    // per-bundle stats could regress with global stats and results still green.
+    if (expected_json.bundles !== null) {
+        let a_bundles = normalize(actual_json.bundles);
+        let e_bundles = normalize(expected_json.bundles);
+        if (deep_equal(a_bundles, e_bundles)) {
+            print(sprintf("  [PASS] %s (Bundle Stats)\n", example_file));
+        } else {
+            print(sprintf("  [FAIL] %s (Bundle Stats Mismatch)\n", example_file));
+            print(sprintf("         Expected: %J\n         Actual:   %J\n", e_bundles, a_bundles));
+            all_pass = false;
+        }
+    }
+
     exit(all_pass ? 0 : 1);
 }
 

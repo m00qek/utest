@@ -1,0 +1,74 @@
+{
+  "stats": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "errors": 0,
+    "fatals": 1,
+    "skipped": 0,
+    "ignored": 0,
+    "suites": 2
+  },
+  "failures": [
+    {
+      "event": "FATAL",
+      "suite": "examples/timeout/02_hang_test.uc",
+      "bundle": "Hang",
+      "error": "worker timed out after 2s (partial results above)"
+    }
+  ],
+  "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/timeout/01_pass_test.uc",
+      "bundle": "Pass",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Passing suite"
+        },
+        {
+          "id": 2,
+          "name": "completes normally"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "FATAL",
+      "suite": "examples/timeout/02_hang_test.uc",
+      "bundle": "Hang",
+      "error": "worker timed out after 2s (partial results above)"
+    }
+  ],
+  "files": [
+    "examples/timeout/01_pass_test.uc",
+    "examples/timeout/02_hang_test.uc"
+  ],
+  "bundles": {
+    "Pass": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 0,
+      "skipped": 0,
+      "ignored": 0
+    },
+    "Hang": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "fatals": 1,
+      "skipped": 0,
+      "ignored": 0
+    }
+  }
+}

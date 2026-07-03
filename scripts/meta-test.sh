@@ -106,6 +106,15 @@ else
     failed_tests="$failed_tests timeout_test"
 fi
 
+# Same timeout scenario under -j 1: exercises the SEQUENTIAL executor's shell
+# watchdog (sleep-kill -> SIGTERM -> exit 143) and its exact-143 timeout
+# detection, which the parallel (uloop) path above does not cover.
+if run_verify "$timeout_arg" "test/json/timeout/timeout_seq_test.json" "-j 1 -c examples/timeout/timeout.config.uc"; then
+    :
+else
+    failed_tests="$failed_tests timeout_seq_test"
+fi
+
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
     exit 0
