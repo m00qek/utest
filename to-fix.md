@@ -62,11 +62,21 @@ committed**, each verified via `make meta-test` (still fully green):
 **1.6 note:** the fix is verified ad-hoc but has no baselined test — a
 deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
 
-**Still open** (Tier 3/4 from the triage — need real work or a policy call):
-1.9 (shell control-char escaping), 1.10/1.11 (process-group kill — shell
-restructuring), 1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle
-shrink goldens), and all of §2 (policy decisions, esp. 2.1/2.2 destructive-fs
-sandboxing) plus the remaining §4 items (4.4 combinator-list check, 4.6, 4.9
+### §2 policy (decided)
+
+- **2.1/2.2** destructive-fs sandboxing — **Option A (seal)** chosen and done:
+  `unlink`/`rename` on an unmocked path no longer touch the real filesystem
+  while a mock is active (unlink tombstones; rename overlay-reads + moves within
+  the mock). Consistent with the already-sealed writes. Regression tests in
+  11_mocking_fs prove a real sentinel survives. Related `popen('r')`
+  real-command execution left as-is (an overlay read the author writes
+  explicitly; different class).
+
+**Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
+control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
+1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle shrink goldens),
+remaining §2 (2.3 patch_builtin isolation, 2.4 reserved channel-name
+validation, 2.5–2.12 lesser), and §4 (4.4 combinator-list check, 4.6, 4.9
 architecture overview, 4.11 structural deep-equal paths).
 
 ---
