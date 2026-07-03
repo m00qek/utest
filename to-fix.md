@@ -90,11 +90,15 @@ deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
   starts_with keep their own element-matching (out of scope). Tests in
   16_combinators.
 
+- **3.5** de-brittle shrink goldens — **done**: `verify.uc` `normalize()` scrubs
+  the volatile "Shrink evals: N" count to `<n>` (the shrunk value is still
+  compared exactly), so a shrinker tweak no longer breaks the baseline.
+
 **Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
 control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
-1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle shrink goldens),
-remaining §2 (2.3 patch_builtin isolation, 2.6–2.12 lesser), and §4 (4.4
-combinator-list check, 4.6, 4.9 architecture overview).
+1.12/1.13 (bookkeeping/search-order edges), remaining §2 (2.3 patch_builtin
+isolation, 2.6–2.12 lesser), and §4 (4.4 combinator-list check, 4.6, 4.9
+architecture overview).
 
 ---
 
