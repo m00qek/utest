@@ -12,9 +12,9 @@ import * as math from 'math';
 // caught and counted as a discarded case by forall.
 const DISCARD_MSG = sprintf('%J', { __utest__: { kind: 'property_discard' } });
 
-// A float bound is usable only if finite. ucode comparisons can't detect NaN
-// (nan !== nan is false), so reject it via math.isnan; +/-Inf is caught because
-// Inf - Inf is NaN while any finite x - x is 0.
+// A float bound is usable only if finite. Detect NaN via math.isnan (the reliable
+// test — never eyeball it through a comparison, whose result varies) and catch
+// +/-Inf too, since Inf - Inf is NaN while any finite x - x is 0.
 function is_finite_num(x) { return !math.isnan(x) && !math.isnan(x - x); }
 
 // Capture before export function int() shadows it — float() uses int() to truncate.
