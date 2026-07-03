@@ -129,6 +129,19 @@ export function create() {
 				running = true;
 				uloop.run();
 			}
+
+			// uloop.run() returns either when advance() called uloop.end() (every
+			// worker accounted for) or when libubox caught SIGINT/SIGTERM, set
+			// uloop_cancelled, and returned — leaving pending exit callbacks unfired
+			// and finished still < total. In that case the interrupted suites would
+			// otherwise vanish from the report and the run would exit 0 despite being
+			// truncated. Emit a FATAL so the summary is honest and the exit code is
+			// non-zero. (Under -j1 a signal kills the runner outright, so this only
+			// arises for -jN.)
+			if (finished < total)
+				reporter.fatal({ event: "FATAL", suite: "<parallel run>", bundle: bundle_name,
+					error: sprintf("parallel run interrupted before completion: %d of %d suite(s) did not finish",
+						total - finished, total) });
 		}
 	}, ExecutorBase);
 };

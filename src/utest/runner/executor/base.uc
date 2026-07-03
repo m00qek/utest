@@ -10,12 +10,29 @@ export const dispatch = function(msg, reporter) {
 	else if (msg.event === "FATAL")       reporter.fatal(msg);
 };
 
+// A line is a protocol event only if it is an object with a recognized `event`
+// AND the fields the reporters dereference for it: every event carries a `suite`
+// string (reporter/base.uc keys per-suite stats on it), and a TEST_RESULT also
+// carries a non-empty `path` array (the detailed reporter reads its leaf's name).
+// The stream is in-band — a test's own stdout shares it — so a well-typed but
+// malformed line (e.g. `{"event":"TEST_RESULT","status":"PASS"}` printed by a
+// test) must be treated as diagnostics, never dispatched: dispatching it would
+// crash the whole runner on the missing field. Fully-formed forgeries are an
+// accepted limitation of an in-band protocol and out of scope here.
+function is_event(msg) {
+	if (type(msg) !== "object" || type(msg.suite) !== "string") return false;
+	let e = msg.event;
+	if (e === "SUITE_START" || e === "SUITE_END" || e === "FATAL") return true;
+	if (e === "TEST_RESULT") return type(msg.path) === "array" && length(msg.path) > 0;
+	return false;
+}
+
 // Per-worker decoder for the newline-delimited JSON event stream a worker emits.
-// feed() classifies one complete line: protocol events (SUITE_START/TEST_RESULT/
-// SUITE_END/FATAL) are dispatched to the reporter and update the flags; anything
-// else — non-JSON diagnostics, or valid JSON that is not an event object (e.g. a
-// test that printed a bare number/string/array, whose .event access would crash
-// the runner) — is echoed to stderr and captured for the terminal FATAL message.
+// feed() classifies one complete line: well-formed protocol events (see is_event)
+// are dispatched to the reporter and update the flags; anything else — non-JSON
+// diagnostics, valid JSON that is not an event object (e.g. a test that printed a
+// bare number/string/array), or a malformed event missing required fields — is
+// echoed to stderr and captured for the terminal FATAL message, never dispatched.
 // capture_raw() records unparsed trailing output (a partial, non-newline-
 // terminated line left behind by a crash) as diagnostics without ever treating
 // it as a protocol event.  Both executors decode through one instance so the
@@ -33,7 +50,7 @@ export const make_stream = function(reporter) {
 				push(this.captured, rtrim(line));
 				return;
 			}
-			if (type(msg) !== "object") {
+			if (!is_event(msg)) {
 				warn(rtrim(line) + "\n");
 				push(this.captured, rtrim(line));
 				return;
