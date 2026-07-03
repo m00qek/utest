@@ -94,11 +94,17 @@ deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
   the volatile "Shrink evals: N" count to `<n>` (the shrunk value is still
   compared exactly), so a shrinker tweak no longer breaks the baseline.
 
+- **4.4** combinator re-export consistency check — **declined**: the umbrella's
+  re-export list is a *deliberately curated* public surface, not accidental
+  duplication. A check asserting utest re-exports every combinators.uc export
+  would fight that curation (forcing a NON_PUBLIC exclusion list and removing the
+  freedom to keep a combinator internal) — worse than the non-problem it solves.
+  (ucode has no `export *`, so the list is manual regardless.)
+
 **Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
 control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
 1.12/1.13 (bookkeeping/search-order edges), remaining §2 (2.3 patch_builtin
-isolation, 2.6–2.12 lesser), and §4 (4.4 combinator-list check, 4.6, 4.9
-architecture overview).
+isolation, 2.6–2.12 lesser), and §4 (4.6, 4.9 architecture overview).
 
 ---
 
