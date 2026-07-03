@@ -20,6 +20,44 @@ with those plus a reporter smoke test this is an A- project.
 
 ---
 
+## FIXED — Tier 1 batch (2026-07-03, after the review above)
+
+All items with a clear, localized, no-judgment-call path are **done and
+committed**, each verified via `make meta-test` (still fully green):
+
+- **1.1** parallel interrupt now emits a FATAL when `finished < total` after
+  `uloop.run()` → honest summary + non-zero exit.
+- **1.3** `is_event()` guard in the decoder: a malformed/forged protocol line is
+  captured as diagnostics, never dispatched (was crashing the whole runner).
+- **1.4** `regex()` validates its argument (kills the `not(regex("str"))`
+  always-pass). Regression tests in 16_combinators.
+- **1.5** uci strict mode now enforced on `get_all`/`delete`/`load`. Regression
+  tests in 13_uci.
+- **1.6** a generator dying on a shrink candidate is classified invalid, not
+  fatal — the real counterexample survives.
+- **1.7** `gen.float` rejects non-finite bounds (NaN/Inf) via `math.isnan`.
+  Regression tests in 99_property.
+- **1.8** uclient resets `_body_served` per request (handle reuse serves the
+  body). Regression test in 15_uclient.
+- **1.14** removed dead `fs.popen` read; memoized `engine.get_real()`.
+- **3.2** sequential (`-j1`) timeout watchdog now covered (baseline
+  `timeout_seq_test.json`).
+- **3.3** `verify.uc` now deep-compares the `bundles{}` map.
+- **§4 cleanup:** 4.1 (dedup describe/xdescribe + it/skip), 4.2 (shared
+  `seed_from_clock`/`elapsed_ms`), 4.3/4.5/4.10 (comments + docstring fixes).
+
+**1.6 note:** the fix is verified ad-hoc but has no baselined test — a
+deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
+
+**Still open** (deferred by design — Tier 2/3/4 from the triage): 1.2/1.2b
+(gen.int 64-bit overflow — needs a reject-vs-support decision + PRNG work), 1.9
+(shell control-char escaping), 1.10/1.11 (process-group kill), 1.12/1.13
+(bookkeeping/search-order edges), 3.1 (reporter smoke tests — clear but real
+work), 3.5 (de-brittle shrink goldens), and all of §2 (policy decisions,
+esp. 2.1/2.2 destructive-fs sandboxing) and the remaining §4 items.
+
+---
+
 ## 1. Correctness defects (ranked, all verified)
 
 ### 1.1 MAJOR — SIGINT/SIGTERM during a parallel run → green exit with missing suites
