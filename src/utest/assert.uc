@@ -11,12 +11,15 @@ function fail(msg) {
 	die(fail_envelope(msg));
 }
 
-function unwrap_error_msg(e) {
-	return parse_thrown(e).message;
-}
-
 /**
  * Asserts that a function throws an exception, optionally matching a pattern.
+ *
+ * A utest control-flow throw — an assertion failure (a nested assert.*) or a
+ * property-engine sentinel — is not counted as a caught exception unless the
+ * caller supplies a pattern that matches it: otherwise `assert.throws(() =>
+ * assert.match(1, 2))` would swallow a real failure inside `fn` and pass green.
+ * A genuine exception (a die() or runtime error from the code under test) is
+ * accepted as before.
  *
  * @example
  * assert.throws(() => { die("fatal error"); }, "fatal error");
@@ -29,8 +32,13 @@ export function throws(fn, pattern, msg) {
 	try {
 		fn();
 	} catch (e) {
+		const parsed = parse_thrown(e);
+		const emsg = parsed.message;
+		// A non-null kind means this is utest's own control flow (assertion failure
+		// or property sentinel), not an exception the code deliberately raised.
+		const sentinel = (parsed.kind !== null);
+
 		if (pattern !== null) {
-			const emsg = unwrap_error_msg(e);
 			let combinator;
 			if (is_combinator(pattern))             combinator = pattern;
 			else if (type(pattern) === 'regexp')    combinator = _regex(pattern);
@@ -38,9 +46,18 @@ export function throws(fn, pattern, msg) {
 			// Reject other types (bool, int, array, object) with a clear message instead
 			// of either dying inside contains() or trivially passing on an empty array/object.
 			else fail(sprintf("assert.throws: pattern must be a string, regex, or combinator, got %s", type(pattern)));
+			// A matching pattern is the caller's explicit opt-in to catch even a
+			// sentinel; a non-match fails regardless of kind.
 			if (!combinator.match(emsg).ok)
 				fail(msg || sprintf("Exception '%s' did not match pattern %s", emsg, pattern));
+			return;
 		}
+
+		// No pattern: accept a genuine throw, but refuse to silently swallow a
+		// utest assertion failure or sentinel bubbling up from inside `fn`.
+		if (sentinel)
+			fail(msg || sprintf("assert.throws caught a utest %s, not an exception from the code under test — pass a pattern to assert on it deliberately: %s",
+				parsed.kind === 'fail' ? "assertion failure" : "sentinel (" + parsed.kind + ")", emsg));
 		return;
 	}
 	fail(msg || "Expected exception but none was thrown");
