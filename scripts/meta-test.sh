@@ -65,6 +65,29 @@ smoke_reporter() {
     return $(( ! ok ))
 }
 
+# Assert utest rejects an invalid CLI/config value: non-zero exit and a matching
+# message. These validations die before any JSON is produced, so verify.uc (which
+# parses JSON) cannot cover them — check at the shell level.
+#   assert_cli_error <label> <expected-substring> <utest args...>
+assert_cli_error() {
+    label=$1; expect=$2; shift 2
+    out=$(docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest "$@" examples/unit/01_assertions_test.uc 2>&1)
+    ec=$?
+    ok=1
+    [ "$ec" -ne 0 ] || { echo "  [FAIL] cli-error[$label] (expected non-zero exit)"; ok=0; }
+    printf '%s\n' "$out" | grep -qF "$expect" || { echo "  [FAIL] cli-error[$label] (missing: $expect)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] cli-error[$label]"
+    return $(( ! ok ))
+}
+
 failed_tests=""
 
 printf 'Verification Started\n\n'
@@ -166,6 +189,15 @@ for j in 1 2; do
         failed_tests="$failed_tests env_probe_j$j"
     fi
 done
+
+# CLI/config coercion validation (1.12): a bad -j silently became sequential, a
+# bad -s became seed 0, and a misspelled config reporter fell through to default.
+assert_cli_error "bad-jobs"     "expected a positive integer" -j abc \
+    || failed_tests="$failed_tests cli_bad_jobs"
+assert_cli_error "bad-seed"     "expected an integer"         -s xyz \
+    || failed_tests="$failed_tests cli_bad_seed"
+assert_cli_error "bad-reporter" "expected one of"             -r bogus \
+    || failed_tests="$failed_tests cli_bad_reporter"
 
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
