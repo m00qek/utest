@@ -48,15 +48,26 @@ committed**, each verified via `make meta-test` (still fully green):
 - **§4 cleanup:** 4.1 (dedup describe/xdescribe + it/skip), 4.2 (shared
   `seed_from_clock`/`elapsed_ms`), 4.3/4.5/4.10 (comments + docstring fixes).
 
+### Tier 2 (decisions made, now done)
+
+- **1.2/1.2b** gen.int now rejects a span > 2^62 or one that overflows int64,
+  with a clear message (decision: reject rather than widen the draw, which would
+  churn the shrink goldens for a case nobody hits). Regression tests in
+  99_property.
+- **3.1** reporter smoke tests added to meta-test.sh (`smoke_reporter`): the
+  detailed and compact reporters are run `--no-color` over PASS / FAIL+ERROR /
+  FATAL fixtures, asserting exit code, non-empty output, no stack trace, and key
+  tokens (decision: smoke + tokens, not brittle golden text).
+
 **1.6 note:** the fix is verified ad-hoc but has no baselined test — a
 deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
 
-**Still open** (deferred by design — Tier 2/3/4 from the triage): 1.2/1.2b
-(gen.int 64-bit overflow — needs a reject-vs-support decision + PRNG work), 1.9
-(shell control-char escaping), 1.10/1.11 (process-group kill), 1.12/1.13
-(bookkeeping/search-order edges), 3.1 (reporter smoke tests — clear but real
-work), 3.5 (de-brittle shrink goldens), and all of §2 (policy decisions,
-esp. 2.1/2.2 destructive-fs sandboxing) and the remaining §4 items.
+**Still open** (Tier 3/4 from the triage — need real work or a policy call):
+1.9 (shell control-char escaping), 1.10/1.11 (process-group kill — shell
+restructuring), 1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle
+shrink goldens), and all of §2 (policy decisions, esp. 2.1/2.2 destructive-fs
+sandboxing) plus the remaining §4 items (4.4 combinator-list check, 4.6, 4.9
+architecture overview, 4.11 structural deep-equal paths).
 
 ---
 
