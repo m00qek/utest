@@ -37,6 +37,7 @@ run_verify() {
 # -r json, so these ~230 lines otherwise ship unexecuted. Asserts: exit code
 # matches, output is non-empty, no runner stack trace leaked, and each expected
 # token is present. Color is disabled (test/nocolor.config.uc) for stable output.
+# Extra utest flags may be passed via $SMOKE_EXTRA (unquoted, so it word-splits).
 #   smoke_reporter <reporter> <fixture> <expected_exit> [token...]
 smoke_reporter() {
     reporter=$1; fixture=$2; expected_exit=$3; shift 3
@@ -49,7 +50,7 @@ smoke_reporter() {
         -v "$PROJECT_ROOT:/app" \
         -w /app \
         "$IMAGE_OPENWRT" \
-        utest -r "$reporter" -c test/nocolor.config.uc "$fixture" 2>&1)
+        utest -r "$reporter" -c test/nocolor.config.uc ${SMOKE_EXTRA:-} "$fixture" 2>&1)
     ec=$?
     label="reporter[$reporter] ${fixture#examples/}"
     ok=1
@@ -210,6 +211,48 @@ for rep in compact detailed; do
     smoke_reporter "$rep" examples/unit/01_assertions_test.uc 0 "Summary" \
         || failed_tests="$failed_tests reporter_${rep}_pass"
 done
+
+# SKIP / IGNORE rendering (3.5): the smoke set above covers PASS/FAIL/ERROR/FATAL
+# but not skipped or ignored tests in either reporter. Detailed labels them
+# [SKIP]/[IGNORE]; compact shows them only in the summary counts.
+smoke_reporter detailed examples/unit/04_skipping_test.uc 0 "[SKIP]" \
+    || failed_tests="$failed_tests reporter_detailed_skip"
+smoke_reporter compact  examples/unit/04_skipping_test.uc 0 "skipped" \
+    || failed_tests="$failed_tests reporter_compact_skip"
+# A filter that matches nothing turns every test into IGNORE.
+SMOKE_EXTRA="-f ZZZ_no_match"
+smoke_reporter detailed examples/unit/01_assertions_test.uc 0 "[IGNORE]" \
+    || failed_tests="$failed_tests reporter_detailed_ignore"
+smoke_reporter compact  examples/unit/01_assertions_test.uc 0 "ignored" \
+    || failed_tests="$failed_tests reporter_compact_ignore"
+SMOKE_EXTRA=""
+
+# -j2 rendering contiguity (3.2): under parallel execution the detailed reporter
+# streams each worker's events live, relying on the executor feeding a worker's
+# whole output to the decoder in one callback so events never interleave between
+# concurrent workers. Run the two multi/ suites at -j2 and assert each suite
+# header appears exactly once — the buffering-removal invariant would otherwise
+# split or duplicate a header.
+smoke_parallel_contiguity() {
+    out=$(docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -r detailed -c test/nocolor.config.uc -j 2 examples/multi/ 2>&1)
+    ok=1
+    printf '%s\n' "$out" | grep -q "called from function" && { echo "  [FAIL] parallel-contiguity (stack trace)"; ok=0; }
+    for suite in 01_bundle_a_test.uc 02_bundle_b_test.uc; do
+        n=$(printf '%s\n' "$out" | grep -cF "$suite")
+        [ "$n" -eq 1 ] || { echo "  [FAIL] parallel-contiguity ($suite header appears $n times, expected 1)"; ok=0; }
+    done
+    [ "$ok" -eq 1 ] && echo "  [PASS] parallel-contiguity (each -j2 suite header exactly once)"
+    return $(( ! ok ))
+}
+smoke_parallel_contiguity || failed_tests="$failed_tests parallel_contiguity"
 
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'

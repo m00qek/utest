@@ -133,6 +133,22 @@ function main() {
         }
     }
 
+    // 4b. Verify the failures[] list — the array that drives the human reporters'
+    // detail blocks. Nothing compared it, so it could drift from `results` (e.g. a
+    // FAIL present in results but missing from failures) unnoticed. Sort by the
+    // same (suite, index) key for stability across FATALs and multi-bundle runs.
+    let a_failures = normalize(actual_json.failures || []);
+    let e_failures = normalize(expected_json.failures || []);
+    sort(a_failures, cmp_results);
+    sort(e_failures, cmp_results);
+    if (deep_equal(a_failures, e_failures)) {
+        print(sprintf("  [PASS] %s (Failures List)\n", example_file));
+    } else {
+        print(sprintf("  [FAIL] %s (Failures Mismatch)\n", example_file));
+        print(sprintf("         Expected: %J\n         Actual:   %J\n", e_failures, a_failures));
+        all_pass = false;
+    }
+
     // 5. Verify the per-bundle stats map (bundles{}). Multi-bundle runs advertise
     // that they exercise cross-bundle aggregation, but nothing compared it — so
     // per-bundle stats could regress with global stats and results still green.
