@@ -30,6 +30,8 @@ three test-coverage additions:
 - **1.14** `equals()` unwraps a top-level combinator.
 - **2.1** unknown state keys rejected, channel-aware (allowlist =
   `{behavior, strict}` ∪ `get_proxy_channels`, so fs's `commands` is accepted).
+- **2.6** `assert.throws` no longer swallows a nested assertion failure or
+  property sentinel — rejected unless a supplied pattern matches it.
 - **2.10** generator name threaded into `gen.alphanumeric`/`gen.ascii` errors.
 - **3.2** -j2 rendering-contiguity smoke. **3.3** `failures[]` compared in
   verify.uc. **3.5** SKIP/IGNORE smoke tokens.
@@ -45,10 +47,7 @@ three test-coverage additions:
   per consecutive failure (only under fd/EMFILE exhaustion). An iterative retry
   in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
 
-### Design / robustness concerns (need a decision, not a clear path)
-- **2.6** `assert.throws` accepts *any* throw with no pattern, including a nested
-  assertion failure or a property sentinel. Rejecting `kind === 'fail'`/sentinel
-  throws changes established semantics. **Needs a decision.**
+### Design / robustness concerns (open)
 - **2.2** fs `glob` `**` gives globstar semantics; real fs.glob is glob(3).
 - **2.3** `deep_clone` has no cycle detection — cyclic mock data stack-overflows.
 - **2.4** A proxy leaked out of its inject callback loses the seal after pop.
