@@ -30,6 +30,38 @@ run_verify() {
         ucode test/verify.uc "$example" "$expected" "$extra_flags"
 }
 
+# Smoke-test a human-facing reporter (detailed/compact). verify.uc only speaks
+# -r json, so these ~230 lines otherwise ship unexecuted. Asserts: exit code
+# matches, output is non-empty, no runner stack trace leaked, and each expected
+# token is present. Color is disabled (test/nocolor.config.uc) for stable output.
+#   smoke_reporter <reporter> <fixture> <expected_exit> [token...]
+smoke_reporter() {
+    reporter=$1; fixture=$2; expected_exit=$3; shift 3
+    out=$(docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" \
+        -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -r "$reporter" -c test/nocolor.config.uc "$fixture" 2>&1)
+    ec=$?
+    label="reporter[$reporter] ${fixture#examples/}"
+    ok=1
+    [ "$ec" -eq "$expected_exit" ] || { echo "  [FAIL] $label (exit $ec, expected $expected_exit)"; ok=0; }
+    [ -n "$out" ] || { echo "  [FAIL] $label (empty output)"; ok=0; }
+    if printf '%s\n' "$out" | grep -q "called from function"; then
+        echo "  [FAIL] $label (runner stack trace in output)"; ok=0
+    fi
+    for tok in "$@"; do
+        printf '%s\n' "$out" | grep -qF "$tok" || { echo "  [FAIL] $label (missing token: $tok)"; ok=0; }
+    done
+    [ "$ok" -eq 1 ] && echo "  [PASS] $label (smoke)"
+    return $(( ! ok ))
+}
+
 failed_tests=""
 
 printf 'Verification Started\n\n'
@@ -114,6 +146,18 @@ if run_verify "$timeout_arg" "test/json/timeout/timeout_seq_test.json" "-j 1 -c 
 else
     failed_tests="$failed_tests timeout_seq_test"
 fi
+
+# Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
+# so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
+# otherwise ship silently — the class of bug fixed in the decoder guard).
+for rep in compact detailed; do
+    smoke_reporter "$rep" examples/unit/06_diagnostics_test.uc 1 "is a failure" "is an error" \
+        || failed_tests="$failed_tests reporter_${rep}_diagnostics"
+    smoke_reporter "$rep" examples/unit/22_fatal_setup_test.uc 1 "Module setup failed: intentional" \
+        || failed_tests="$failed_tests reporter_${rep}_fatal"
+    smoke_reporter "$rep" examples/unit/01_assertions_test.uc 0 "Summary" \
+        || failed_tests="$failed_tests reporter_${rep}_pass"
+done
 
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
