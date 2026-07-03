@@ -28,77 +28,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 36,
-          "name": "inject without a strict flag inherits a global strict:true"
+          "id": 14,
+          "name": "stat() returns size and type for virtual files"
         }
       ],
-      "index": 35
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 40,
-          "name": "destructive ops are sealed from the real filesystem"
-        },
-        {
-          "id": 42,
-          "name": "rename() on an unmocked path moves within the mock, not on disk"
-        }
-      ],
-      "index": 40
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 35,
-          "name": "inject with strict:false suppresses a global strict:true"
-        }
-      ],
-      "index": 34
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 32,
-          "name": "popen() in read mode returns a handle that reads the virtual command output"
-        }
-      ],
-      "index": 31
+      "index": 13
     },
     {
       "event": "TEST_RESULT",
@@ -138,6 +72,182 @@
           "name": "FS Mocking"
         },
         {
+          "id": 18,
+          "name": "error() returns null by default"
+        }
+      ],
+      "index": 17
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 20,
+          "name": "stat() returns directory type for virtual directories"
+        }
+      ],
+      "index": 19
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 19,
+          "name": "access() returns true for virtual directories"
+        }
+      ],
+      "index": 18
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 25,
+          "name": "open() in read mode supports read(\"all\")"
+        }
+      ],
+      "index": 24
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 16,
+          "name": "unlink() removes a virtual file and it disappears from lsdir()"
+        }
+      ],
+      "index": 15
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 5,
+          "name": "supports nesting mock.inject()"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 27,
+          "name": "open() in read mode returns null for unmocked path"
+        }
+      ],
+      "index": 26
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 40,
+          "name": "destructive ops are sealed from the real filesystem"
+        },
+        {
+          "id": 41,
+          "name": "unlink() on an unmocked path leaves the real file intact"
+        }
+      ],
+      "index": 39
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
           "id": 21,
           "name": "glob() supports ? wildcard for single character"
         }
@@ -160,11 +270,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 2,
-          "name": "real fs is unaffected by default"
+          "id": 38,
+          "name": "access() returns false (not a real-fs lookup) for a path deleted with unlink()"
         }
       ],
-      "index": 1
+      "index": 37
     },
     {
       "event": "TEST_RESULT",
@@ -182,11 +292,121 @@
           "name": "FS Mocking"
         },
         {
-          "id": 9,
-          "name": "merges real and virtual files in lsdir()"
+          "id": 15,
+          "name": "rename() moves a virtual file"
         }
       ],
-      "index": 8
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 17,
+          "name": "mkdir() and chmod() are no-ops returning true"
+        }
+      ],
+      "index": 16
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 13,
+          "name": "access() returns true for virtual files"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 45,
+          "name": "lsdir strict mode and empty directories"
+        },
+        {
+          "id": 47,
+          "name": "returns [] (not null) for a directory emptied by unlink"
+        }
+      ],
+      "index": 44
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 3,
+          "name": "patches global state via mock.global.patch()"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 11,
+          "name": "supports writing to pre-registered virtual files"
+        }
+      ],
+      "index": 10
     },
     {
       "event": "TEST_RESULT",
@@ -248,253 +468,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 31,
-          "name": "open() error() always returns null"
-        }
-      ],
-      "index": 30
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 23,
-          "name": "glob() **/ matches zero intermediate path components"
-        }
-      ],
-      "index": 22
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
           "id": 34,
           "name": "popen() throws in strict mode for unmocked command"
         }
       ],
       "index": 33
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 17,
-          "name": "mkdir() and chmod() are no-ops returning true"
-        }
-      ],
-      "index": 16
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 16,
-          "name": "unlink() removes a virtual file and it disappears from lsdir()"
-        }
-      ],
-      "index": 15
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 37,
-          "name": "readfile() returns null (not a strict error) for a path deleted with unlink()"
-        }
-      ],
-      "index": 36
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 45,
-          "name": "lsdir strict mode and empty directories"
-        },
-        {
-          "id": 46,
-          "name": "dies in strict mode for an unmocked directory"
-        }
-      ],
-      "index": 43
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 14,
-          "name": "stat() returns size and type for virtual files"
-        }
-      ],
-      "index": 13
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 45,
-          "name": "lsdir strict mode and empty directories"
-        },
-        {
-          "id": 47,
-          "name": "returns [] (not null) for a directory emptied by unlink"
-        }
-      ],
-      "index": 44
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 6,
-          "name": "allows custom function implementation via mock.inject()"
-        }
-      ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 3,
-          "name": "patches global state via mock.global.patch()"
-        }
-      ],
-      "index": 2
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 12,
-          "name": "supports writing to new virtual paths when mock is active"
-        }
-      ],
-      "index": 11
     },
     {
       "event": "TEST_RESULT",
@@ -534,11 +512,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 19,
-          "name": "access() returns true for virtual directories"
+          "id": 39,
+          "name": "stat() returns null (not real stat) for a path deleted with unlink()"
         }
       ],
-      "index": 18
+      "index": 38
     },
     {
       "event": "TEST_RESULT",
@@ -556,11 +534,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 5,
-          "name": "supports nesting mock.inject()"
+          "id": 36,
+          "name": "inject without a strict flag inherits a global strict:true"
         }
       ],
-      "index": 4
+      "index": 35
     },
     {
       "event": "TEST_RESULT",
@@ -578,11 +556,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 25,
-          "name": "open() in read mode supports read(\"all\")"
+          "id": 8,
+          "name": "lists virtual files in lsdir()"
         }
       ],
-      "index": 24
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -600,55 +578,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 24,
-          "name": "open() in read mode returns a handle that reads the virtual file"
+          "id": 29,
+          "name": "open() in write mode overwrites existing content"
         }
       ],
-      "index": 23
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 18,
-          "name": "error() returns null by default"
-        }
-      ],
-      "index": 17
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 27,
-          "name": "open() in read mode returns null for unmocked path"
-        }
-      ],
-      "index": 26
+      "index": 28
     },
     {
       "event": "TEST_RESULT",
@@ -710,11 +644,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 10,
-          "name": "supports globbing virtual files"
+          "id": 31,
+          "name": "open() error() always returns null"
         }
       ],
-      "index": 9
+      "index": 30
     },
     {
       "event": "TEST_RESULT",
@@ -732,11 +666,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 13,
-          "name": "access() returns true for virtual files"
+          "id": 37,
+          "name": "readfile() returns null (not a strict error) for a path deleted with unlink()"
         }
       ],
-      "index": 12
+      "index": 36
     },
     {
       "event": "TEST_RESULT",
@@ -754,11 +688,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 39,
-          "name": "stat() returns null (not real stat) for a path deleted with unlink()"
+          "id": 6,
+          "name": "allows custom function implementation via mock.inject()"
         }
       ],
-      "index": 38
+      "index": 5
     },
     {
       "event": "TEST_RESULT",
@@ -776,143 +710,11 @@
           "name": "FS Mocking"
         },
         {
-          "id": 29,
-          "name": "open() in write mode overwrites existing content"
+          "id": 35,
+          "name": "inject with strict:false suppresses a global strict:true"
         }
       ],
-      "index": 28
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 22,
-          "name": "glob() supports ** globstar for recursive paths"
-        }
-      ],
-      "index": 21
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 40,
-          "name": "destructive ops are sealed from the real filesystem"
-        },
-        {
-          "id": 44,
-          "name": "append open() overlay-reads real content but seals the real file"
-        }
-      ],
-      "index": 42
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 20,
-          "name": "stat() returns directory type for virtual directories"
-        }
-      ],
-      "index": 19
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 8,
-          "name": "lists virtual files in lsdir()"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 15,
-          "name": "rename() moves a virtual file"
-        }
-      ],
-      "index": 14
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/11_mocking_fs_test.uc",
-      "bundle": "examples/unit/11_mocking_fs_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "FS Mocking"
-        },
-        {
-          "id": 11,
-          "name": "supports writing to pre-registered virtual files"
-        }
-      ],
-      "index": 10
+      "index": 34
     },
     {
       "event": "TEST_RESULT",
@@ -948,15 +750,15 @@
           "name": "root"
         },
         {
-          "id": 40,
-          "name": "destructive ops are sealed from the real filesystem"
+          "id": 45,
+          "name": "lsdir strict mode and empty directories"
         },
         {
-          "id": 41,
-          "name": "unlink() on an unmocked path leaves the real file intact"
+          "id": 46,
+          "name": "dies in strict mode for an unmocked directory"
         }
       ],
-      "index": 39
+      "index": 43
     },
     {
       "event": "TEST_RESULT",
@@ -974,11 +776,209 @@
           "name": "FS Mocking"
         },
         {
-          "id": 38,
-          "name": "access() returns false (not a real-fs lookup) for a path deleted with unlink()"
+          "id": 9,
+          "name": "merges real and virtual files in lsdir()"
         }
       ],
-      "index": 37
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 22,
+          "name": "glob() treats ** as * (glob(3) semantics, not globstar)"
+        }
+      ],
+      "index": 21
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 23,
+          "name": "glob() **/ requires exactly one intermediate component, not zero (glob(3))"
+        }
+      ],
+      "index": 22
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 2,
+          "name": "real fs is unaffected by default"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 10,
+          "name": "supports globbing virtual files"
+        }
+      ],
+      "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 24,
+          "name": "open() in read mode returns a handle that reads the virtual file"
+        }
+      ],
+      "index": 23
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 32,
+          "name": "popen() in read mode returns a handle that reads the virtual command output"
+        }
+      ],
+      "index": 31
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "FS Mocking"
+        },
+        {
+          "id": 12,
+          "name": "supports writing to new virtual paths when mock is active"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 40,
+          "name": "destructive ops are sealed from the real filesystem"
+        },
+        {
+          "id": 44,
+          "name": "append open() overlay-reads real content but seals the real file"
+        }
+      ],
+      "index": 42
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/11_mocking_fs_test.uc",
+      "bundle": "examples/unit/11_mocking_fs_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 40,
+          "name": "destructive ops are sealed from the real filesystem"
+        },
+        {
+          "id": 42,
+          "name": "rename() on an unmocked path moves within the mock, not on disk"
+        }
+      ],
+      "index": 40
     }
   ],
   "bundles": {

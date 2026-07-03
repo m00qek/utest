@@ -190,7 +190,12 @@ describe('FS Mocking', () => {
 		});
 	});
 
-	it('glob() supports ** globstar for recursive paths', () => {
+	it('glob() treats ** as * (glob(3) semantics, not globstar)', () => {
+		// Real fs.glob is glob(3): ** has no special recursive meaning, it is just
+		// two * and stays bounded by '/'. Verified against the ucode interpreter on
+		// musl. So **/*.txt matches exactly one intermediate component — a/d.txt —
+		// and NOT the two-level a/b/c.txt (which the old globstar mock wrongly
+		// matched, passing under mock but failing on target).
 		mock.inject('fs', { data: {
 			'/tmp/globstar/a/b/c.txt': 'deep',
 			'/tmp/globstar/a/d.txt': 'shallow',
@@ -198,11 +203,11 @@ describe('FS Mocking', () => {
 		}}, (m_fs) => {
 			const files = m_fs.glob('/tmp/globstar/**/*.txt');
 			sort(files);
-			assert.match(['/tmp/globstar/a/b/c.txt', '/tmp/globstar/a/d.txt'], files);
+			assert.match(['/tmp/globstar/a/d.txt'], files);
 		});
 	});
 
-	it('glob() **/ matches zero intermediate path components', () => {
+	it('glob() **/ requires exactly one intermediate component, not zero (glob(3))', () => {
 		mock.inject('fs', { strict: true, data: {
 			'/cfg/foo.conf': 'top-level',
 			'/cfg/sub/bar.conf': 'nested',
@@ -210,8 +215,9 @@ describe('FS Mocking', () => {
 		}}, (m_fs) => {
 			const files = m_fs.glob('/cfg/**/*.conf');
 			sort(files);
-			assert.match(['/cfg/foo.conf', '/cfg/sub/bar.conf'], files,
-				'**/ must match zero or more path components');
+			// /cfg/foo.conf (zero intermediate components) must NOT match, matching
+			// real glob(3); only /cfg/sub/bar.conf (one component) does.
+			assert.match(['/cfg/sub/bar.conf'], files);
 		});
 	});
 

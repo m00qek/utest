@@ -278,9 +278,16 @@ return {
 			if (type(real_files) === "array") {
 				for (let item in real_files) files[item] = true;
 			}
-			// Translate glob to regex. Escape all regex metacharacters that have
-			// no glob meaning first (\\ must be first to avoid double-escaping),
-			// then translate **, *, ? in that order. Character classes unsupported.
+			// Translate glob to regex. Escape all regex metacharacters that have no
+			// glob meaning first (\\ must be first to avoid double-escaping), then
+			// translate the wildcards. Real fs.glob is glob(3): '*' and '?' match
+			// within a single path component (never across '/'), and '**' has NO
+			// special (globstar) meaning — it is just two '*', still bounded by '/'.
+			// So '*' -> [^/]* (and '**' naturally becomes [^/]*[^/]*, i.e. the same).
+			// Verified against the ucode interpreter on musl (openwrt/rootfs 25.12.4):
+			// e.g. glob('a/**/*.txt') matches a/<one-comp>/*.txt, not a recursive tree.
+			// KNOWN GAP: glob(3) character classes ([abc], ranges) are unsupported here
+			// and escaped to literals — real fs.glob does honor them.
 			let p = pattern;
 			p = replace(p, /\\/g,  "\\\\");
 			p = replace(p, /\[/g,  "\\[");
@@ -294,12 +301,8 @@ return {
 			p = replace(p, /\)/g,  "\\)");
 			p = replace(p, /\|/g,  "\\|");
 			p = replace(p, /\./g,  "\\.");
-			p = replace(p, /\/\*\*\//g, "\x02");  // /**/ → zero-or-more path components
-			p = replace(p, /\*\*/g, "\x01");
 			p = replace(p, /\*/g,  "[^/]*");
 			p = replace(p, /\?/g,  "[^/]");
-			p = replace(p, /\x01/g, ".*");
-			p = replace(p, /\x02/g, "(/.*)?/");
 			let re_pattern = "^" + p + "$";
 			let re = regexp(re_pattern);
 			for (let vp in virtual_paths) {
