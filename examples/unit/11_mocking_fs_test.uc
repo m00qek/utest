@@ -386,4 +386,45 @@ describe('destructive ops are sealed from the real filesystem', () => {
 		assert.match('payload', fs.readfile(src), 'real source must survive a mocked rename');
 		fs.unlink(src);
 	});
+
+	it('unlink() reports false for a path that exists nowhere', () => {
+		// Sealed unlink probes reality (like rename): a path with no mock entry and
+		// no real file cannot be unlinked, so SUT branches on failure are exercised
+		// rather than always seeing success.
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.match(false, m_fs.unlink('/tmp/utest_no_such_seal_file'));
+		});
+	});
+
+	it('append open() overlay-reads real content but seals the real file', () => {
+		const path = '/tmp/utest_seal_append.txt';
+		fs.writefile(path, 'real-');
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			const h = m_fs.open(path, 'a');
+			h.write('added');
+			h.close();
+			assert.match('real-added', m_fs.readfile(path));  // append saw real content
+		});
+		assert.match('real-', fs.readfile(path), 'real file must survive a mocked append');
+		fs.unlink(path);
+	});
+});
+
+describe('lsdir strict mode and empty directories', () => {
+	it('dies in strict mode for an unmocked directory', () => {
+		assert.throws(() => {
+			mock.inject('fs', { strict: true, data: { '/tmp/known/a': 'x' } }, (m_fs) => {
+				m_fs.lsdir('/tmp/unknown');
+			});
+		}, /strict mock/);
+	});
+
+	it('returns [] (not null) for a directory emptied by unlink', () => {
+		mock.inject('fs', { data: { '/tmp/emptied/a': 'x' } }, (m_fs) => {
+			m_fs.unlink('/tmp/emptied/a');
+			// The directory was known to the mock, now empty: real fs returns [] here
+			// (ENOENT would be null), so distinguish the two.
+			assert.match([], m_fs.lsdir('/tmp/emptied'));
+		});
+	});
 });
