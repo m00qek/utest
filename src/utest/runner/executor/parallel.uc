@@ -122,15 +122,16 @@ export function create() {
 					spawn(shift(queue));
 			};
 
-			if (total === 0) return;
+			if (total === 0) return false;
 			uloop.init();
 			pump();
 			// If every worker failed to spawn synchronously, finished already reached
 			// total (advance() saw running === false and did not end the loop); running
 			// it would then block forever, so only run when work is actually pending.
+			let rv = 0;
 			if (finished < total) {
 				running = true;
-				uloop.run();
+				rv = uloop.run();
 			}
 
 			// uloop.run() returns either when advance() called uloop.end() (every
@@ -141,6 +142,13 @@ export function create() {
 			// truncated. Emit a FATAL so the summary is honest and the exit code is
 			// non-zero. (Under -j1 a signal kills the runner outright, so this only
 			// arises for -jN.)
+			// uloop.run() returns 0 on a normal end and the caught signal number on
+			// SIGINT/SIGTERM; a non-zero rv, or any pending-worker shortfall, means the
+			// run was truncated. Returning `interrupted` tells the runner to stop
+			// launching further bundles — otherwise the next bundle's uloop.init()/run()
+			// resets uloop_cancelled and spawns a fresh fleet, so the user would need
+			// one ^C per remaining bundle.
+			let interrupted = (rv !== 0) || (finished < total);
 			if (finished < total)
 				// aggregate: this FATAL stands for the whole interrupted run, not a
 				// real suite, so the reporter must not count "<parallel run>" toward
@@ -148,6 +156,7 @@ export function create() {
 				reporter.fatal({ event: "FATAL", suite: "<parallel run>", bundle: bundle_name, aggregate: true,
 					error: sprintf("parallel run interrupted before completion: %d of %d suite(s) did not finish",
 						total - finished, total) });
+			return interrupted;
 		}
 	}, ExecutorBase);
 };

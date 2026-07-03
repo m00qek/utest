@@ -54,8 +54,12 @@ export function run(options) {
 	for (let i = 0; i < length(bundle_work); i++) {
 		let b = bundle_work[i];
 		reporter.bundle_start(b.name);
-		execute_suites({ ...run_ctx, files: b.files, bundle: b.name });
+		let interrupted = execute_suites({ ...run_ctx, files: b.files, bundle: b.name });
 		reporter.bundle_end(b.name);
+		// A ^C during a -jN bundle only cancels that bundle's uloop; without this
+		// break the next bundle would start a fresh worker fleet, so the user would
+		// have to interrupt once per remaining bundle. Stop the run instead.
+		if (interrupted) break;
 	}
 
 	reporter.summary();
