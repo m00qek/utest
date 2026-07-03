@@ -14,13 +14,26 @@ describe('uloop Mocking', () => {
 		});
 	});
 
-	it('run() fires multiple timers in registration order', () => {
+	it('run() fires timers in deadline order, not registration order', () => {
 		mock.inject('uloop', {}, (m_uloop) => {
 			let order = [];
 			m_uloop.timer(3000, () => push(order, 'a'));
 			m_uloop.timer(1000, () => push(order, 'b'));
 			m_uloop.run();
-			assert.match(['a', 'b'], order);
+			// Real uloop fires the shorter deadline first, regardless of the order
+			// the timers were armed; the mock must match to stay target-faithful.
+			assert.match(['b', 'a'], order);
+		});
+	});
+
+	it('run() fires equal-deadline timers in registration order', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let order = [];
+			m_uloop.timer(100, () => push(order, 'first'));
+			m_uloop.timer(100, () => push(order, 'second'));
+			m_uloop.timer(100, () => push(order, 'third'));
+			m_uloop.run();
+			assert.match(['first', 'second', 'third'], order);
 		});
 	});
 

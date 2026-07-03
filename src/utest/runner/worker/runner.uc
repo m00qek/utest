@@ -27,7 +27,7 @@ function flatten(group, context, list) {
 }
 
 export function run_tests(reporter, filter, seed) {
-	let start_time = clock();
+	let start_time = util.mono_clock();
 	let filter_re = filter ? regexp(filter) : null;
 
 	let atomic_tests = [];
@@ -143,7 +143,7 @@ export function run_tests(reporter, filter, seed) {
 		}
 	}
 
-	let duration_ms = util.elapsed_ms(start_time, clock());
+	let duration_ms = util.elapsed_ms(start_time, util.mono_clock());
 
 	reporter.suite_end(int(duration_ms));
 };

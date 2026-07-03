@@ -29,7 +29,15 @@ return {
 			if (f) return f();
 			let pending = ctx.get_local_data('__pending__') || [];
 			ctx.set_data('__pending__', []);
-			for (let t in pending) t.cb();
+			// Real uloop fires timers in deadline order, not registration order, so a
+			// deadline-dependent SUT that passes under a naive FIFO mock would fail on
+			// target. Sort by ms, breaking ties on the original registration index
+			// (ucode's sort is not guaranteed stable) to preserve the real
+			// "equal-deadline timers fire in the order armed" behavior. This is a
+			// single pass: timers armed by a callback need another run() (documented).
+			let ordered = map(pending, (t, i) => ({ ...t, _i: i }));
+			sort(ordered, (a, b) => (a.ms - b.ms) || (a._i - b._i));
+			for (let t in ordered) t.cb();
 		};
 
 		proxy.end = function() {

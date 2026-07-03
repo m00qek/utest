@@ -50,7 +50,13 @@ export const seed_from_clock = function() {
 	return t[0] * 1000000000 + t[1];
 };
 
-// Milliseconds elapsed between two clock() readings (each [seconds, nanoseconds]).
+// A monotonic clock reading ([seconds, nanoseconds]) for measuring elapsed time.
+// clock() is CLOCK_REALTIME, which an NTP step can move backwards mid-run (wrong
+// or negative durations); clock(true) is CLOCK_MONOTONIC. Use this for every
+// duration measurement so the reporter and worker timings cannot drift.
+export const mono_clock = function() { return clock(true); };
+
+// Milliseconds elapsed between two mono_clock() readings (each [seconds, nanoseconds]).
 export const elapsed_ms = function(start, end) {
 	return (end[0] - start[0]) * 1000 + (end[1] - start[1]) / 1000000;
 };

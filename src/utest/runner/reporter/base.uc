@@ -1,4 +1,4 @@
-import { elapsed_ms } from 'utest.util';
+import { elapsed_ms, mono_clock } from 'utest.util';
 
 function empty_stats() {
 	return { total: 0, passed: 0, failed: 0, errors: 0, fatals: 0, skipped: 0, ignored: 0 };
@@ -27,7 +27,7 @@ export const ReporterBase = {
 		this.stats = { ...empty_stats(), suites: 0 };
 		this.failures = [];
 		this.results = [];
-		this._start_time = clock();
+		this._start_time = mono_clock();
 		this._suite_stats = {};
 		this._bundle_stats = {};
 		this._bundle_start_times = {};
@@ -35,7 +35,7 @@ export const ReporterBase = {
 	},
 
 	bundle_start: function(name) {
-		this._bundle_start_times[name] = clock();
+		this._bundle_start_times[name] = mono_clock();
 		if (!this._bundle_stats[name]) {
 			this._bundle_stats[name] = empty_stats();
 		}
@@ -44,7 +44,7 @@ export const ReporterBase = {
 
 	bundle_end: function(name) {
 		let start = this._bundle_start_times[name];
-		let duration_ms = start ? elapsed_ms(start, clock()) : 0;
+		let duration_ms = start ? elapsed_ms(start, mono_clock()) : 0;
 		if (this.render_bundle_end) this.render_bundle_end(name, int(duration_ms), this._bundle_stats[name]);
 	},
 
@@ -101,7 +101,7 @@ export const ReporterBase = {
 	},
 
 	summary: function() {
-		let duration_ms = elapsed_ms(this._start_time, clock());
+		let duration_ms = elapsed_ms(this._start_time, mono_clock());
 
 		let context = {
 			stats: this.stats,
