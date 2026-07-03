@@ -15,7 +15,7 @@
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 2 case(s)\n  Seed:           2\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   18\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
+      "error": "Property failed after 2 case(s)\n  Seed:           2\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   <n>\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,
@@ -37,7 +37,7 @@
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 6 case(s)\n  Seed:           6\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   147\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
+      "error": "Property failed after 6 case(s)\n  Seed:           6\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   <n>\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,
@@ -149,7 +149,7 @@
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 2 case(s)\n  Seed:           2\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   18\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
+      "error": "Property failed after 2 case(s)\n  Seed:           2\n  Original value: 340\n  Shrunk value:   50\n  Shrink evals:   <n>\n  Error:          n = 50 is not < 50\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,
@@ -435,7 +435,7 @@
       "suite": "examples/unit/99_property_test.uc",
       "bundle": "examples/unit/99_property_test.uc",
       "status": "FAIL",
-      "error": "Property failed after 6 case(s)\n  Seed:           6\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   147\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
+      "error": "Property failed after 6 case(s)\n  Seed:           6\n  Original value: [ 2, 1, 0, 6, 4, 2, 3, 2 ]\n  Shrunk value:   [ 0, 3 ]\n  Shrink evals:   <n>\n  Error:          xs[1] is 3\n                  Expected true\n                    got false",
       "path": [
         {
           "id": 0,

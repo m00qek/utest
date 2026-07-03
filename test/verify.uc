@@ -15,14 +15,21 @@ function normalize(obj) {
         for (let item in obj) push(n, normalize(item));
         return n;
     }
+    // A property-failure message reports "Shrink evals: N" — how many candidates
+    // the shrinker tried. That count is an implementation detail (it shifts on any
+    // move-ordering tweak) while the shrunk *value* on the line above is the
+    // meaningful golden. Scrub the count so a shrinker change doesn't break the
+    // baseline for no behavioral reason; the value is still compared exactly.
+    if (type(obj) === "string")
+        return replace(obj, /Shrink evals: +[0-9]+/, "Shrink evals:   <n>");
     if (type(obj) !== "object") return obj;
     let n = { ...obj };
     delete n.duration_ms;
     delete n.seed;
-    for (let k, v in n) {
-        if (type(v) === "object" || type(v) === "array")
-            n[k] = normalize(v);
-    }
+    // Normalize every value (not just nested objects/arrays) so string fields —
+    // e.g. a result's `error` — pass through the scrub above.
+    for (let k, v in n)
+        n[k] = normalize(v);
     return n;
 }
 
