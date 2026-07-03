@@ -143,8 +143,7 @@ export function run_tests(reporter, filter, seed) {
 		}
 	}
 
-	let end_time = clock();
-	let duration_ms = (end_time[0] - start_time[0]) * 1000 + (end_time[1] - start_time[1]) / 1000000;
+	let duration_ms = util.elapsed_ms(start_time, clock());
 
 	reporter.suite_end(int(duration_ms));
 };

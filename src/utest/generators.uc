@@ -45,8 +45,9 @@ export function is_generator(v) {
 // Small draws map to values near the "zero point" — the endpoint of [lo, hi]
 // closest to 0 — so gen.int(-100, 100) shrinks toward 0, not toward -100.
 /**
- * Generates an integer uniformly distributed in the inclusive range [lo, hi].
- * Shrinks toward 0.
+ * Generates an integer in the inclusive range [lo, hi], shrinking toward 0.
+ * The distribution is near-uniform but deliberately over-samples the zero-point
+ * (the in-range value closest to 0) so boundary cases are hit more often.
  *
  * @example
  * forall(gen.int(1, 100), n => {

@@ -1,3 +1,5 @@
+import { elapsed_ms } from 'utest.util';
+
 function empty_stats() {
 	return { total: 0, passed: 0, failed: 0, errors: 0, fatals: 0, skipped: 0, ignored: 0 };
 }
@@ -42,10 +44,7 @@ export const ReporterBase = {
 
 	bundle_end: function(name) {
 		let start = this._bundle_start_times[name];
-		let end_time = clock();
-		let duration_ms = start
-			? (end_time[0] - start[0]) * 1000 + (end_time[1] - start[1]) / 1000000
-			: 0;
+		let duration_ms = start ? elapsed_ms(start, clock()) : 0;
 		if (this.render_bundle_end) this.render_bundle_end(name, int(duration_ms), this._bundle_stats[name]);
 	},
 
@@ -102,9 +101,8 @@ export const ReporterBase = {
 	},
 
 	summary: function() {
-		let end_time = clock();
-		let duration_ms = (end_time[0] - this._start_time[0]) * 1000 + (end_time[1] - this._start_time[1]) / 1000000;
-		
+		let duration_ms = elapsed_ms(this._start_time, clock());
+
 		let context = {
 			stats: this.stats,
 			failures: this.failures,

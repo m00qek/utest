@@ -19,13 +19,11 @@ function is_currently_skipped() {
  * @typedef {function(): void} TestCallback
  */
 
-/**
- * Defines a test suite.
- * 
- * @param {string} name - The name of the test suite.
- * @param {TestCallback} fn - The callback containing the test suite definition.
- */
-export function describe(name, fn) {
+// Shared body for describe/xdescribe: push a group, run its definition callback
+// with the stack extended, then pop — propagating any error only after the pop so
+// the stack stays balanced (ucode has no `finally`). `skipped` is the one axis
+// that varies between the plain and x-prefixed forms.
+function define_group(name, fn, skipped) {
 	guard();
 	let parent = stack[length(stack)-1];
 	let group = {
@@ -35,71 +33,7 @@ export function describe(name, fn) {
 		groups: [],
 		beforeEach: [],
 		afterEach: [],
-		skipped: is_currently_skipped()
-	};
-	push(parent.groups, group);
-	push(stack, group);
-	let _err, _had_err = false;
-	try { fn(); } catch(e) { _err = e; _had_err = true; }
-	pop(stack);
-	if (_had_err) die(_err);
-};
-
-/**
- * Defines a single test case.
- * 
- * @param {string} name - The name of the test.
- * @param {TestCallback} fn - The test logic to execute.
- */
-export function it(name, fn) {
-	guard();
-	let current = stack[length(stack)-1];
-	push(current.tests, { 
-		id: ++root.id_counter,
-		name, 
-		fn,
-		index: ++root.test_counter,
-		skipped: is_currently_skipped()
-	});
-};
-
-/**
- * Unconditionally skips a test case.
- * 
- * @param {string} name - The name of the test.
- * @param {TestCallback} [fn] - The test logic (which will not be executed).
- */
-export function skip(name, fn) {
-	guard();
-	let current = stack[length(stack)-1];
-	push(current.tests, {
-		id: ++root.id_counter,
-		name,
-		fn: null,
-		index: ++root.test_counter,
-		skipped: true
-	});
-};
-
-export const xit = skip;
-
-/**
- * Unconditionally skips an entire test suite and all tests within it.
- * 
- * @param {string} name - The name of the test suite.
- * @param {TestCallback} [fn] - The callback containing the suite definition.
- */
-export function xdescribe(name, fn) {
-	guard();
-	let parent = stack[length(stack)-1];
-	let group = {
-		id: ++root.id_counter,
-		name,
-		tests: [],
-		groups: [],
-		beforeEach: [],
-		afterEach: [],
-		skipped: true
+		skipped
 	};
 	push(parent.groups, group);
 	push(stack, group);
@@ -107,7 +41,53 @@ export function xdescribe(name, fn) {
 	try { if (fn) fn(); } catch(e) { _err = e; _had_err = true; }
 	pop(stack);
 	if (_had_err) die(_err);
-};
+}
+
+// Shared body for it/skip: register a test on the current group.
+function define_test(name, fn, skipped) {
+	guard();
+	push(stack[length(stack)-1].tests, {
+		id: ++root.id_counter,
+		name,
+		fn,
+		index: ++root.test_counter,
+		skipped
+	});
+}
+
+/**
+ * Defines a test suite.
+ *
+ * @param {string} name - The name of the test suite.
+ * @param {TestCallback} fn - The callback containing the test suite definition.
+ */
+export function describe(name, fn) { define_group(name, fn, is_currently_skipped()); };
+
+/**
+ * Defines a single test case.
+ *
+ * @param {string} name - The name of the test.
+ * @param {TestCallback} fn - The test logic to execute.
+ */
+export function it(name, fn) { define_test(name, fn, is_currently_skipped()); };
+
+/**
+ * Unconditionally skips a test case.
+ *
+ * @param {string} name - The name of the test.
+ * @param {TestCallback} [fn] - The test logic (which will not be executed).
+ */
+export function skip(name, fn) { define_test(name, null, true); };
+
+export const xit = skip;
+
+/**
+ * Unconditionally skips an entire test suite and all tests within it.
+ *
+ * @param {string} name - The name of the test suite.
+ * @param {TestCallback} [fn] - The callback containing the suite definition.
+ */
+export function xdescribe(name, fn) { define_group(name, fn, true); };
 
 /**
  * Registers a setup function to run once before any tests in the current module.

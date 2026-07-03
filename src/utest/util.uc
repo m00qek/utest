@@ -43,12 +43,21 @@ export const format_path = function(path) {
 	return join(" > ", parts);
 };
 
+// clock() returns [seconds, nanoseconds]; fold it into one integer for a
+// reproducible-but-fresh seed. Shared so every "no seed given" site agrees.
+export const seed_from_clock = function() {
+	let t = clock();
+	return t[0] * 1000000000 + t[1];
+};
+
+// Milliseconds elapsed between two clock() readings (each [seconds, nanoseconds]).
+export const elapsed_ms = function(start, end) {
+	return (end[0] - start[0]) * 1000 + (end[1] - start[1]) / 1000000;
+};
+
 export const shuffle = function(arr, seed) {
 	let result = [ ...arr ];
-	if (seed === null) {
-		let t = clock();
-		seed = t[0] * 1000000000 + t[1];
-	}
+	if (seed === null) seed = seed_from_clock();
 	math.srand(seed);
 	for (let i = length(result) - 1; i > 0; i--) {
 		let j = math.rand() % (i + 1);
@@ -72,7 +81,7 @@ export function mkdir_p(path) {
 			continue;
 		}
 		cur = (cur === "" ? "" : (cur === "/" ? "/" : cur + "/")) + part;
-		if (!fs.access(cur, "r") && !fs.mkdir(cur, 493))
+		if (!fs.access(cur, "r") && !fs.mkdir(cur, 493))  // 493 = 0755
 			return false;
 	}
 	return true;

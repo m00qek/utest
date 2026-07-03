@@ -104,10 +104,7 @@ export const ExecutorBase = {
 		// seed internally when passed null but never surfaces it, so a null seed
 		// forwarded to workers makes every run unreproducible.
 		let seed = ctx.seed;
-		if (seed === null) {
-			let t = clock();
-			seed = t[0] * 1000000000 + t[1];
-		}
+		if (seed === null) seed = util.seed_from_clock();
 		return this.run({ ...ctx, seed, files: util.shuffle(ctx.files, seed) });
 	},
 
