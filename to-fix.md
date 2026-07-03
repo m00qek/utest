@@ -32,6 +32,12 @@ three test-coverage additions:
   `{behavior, strict}` ∪ `get_proxy_channels`, so fs's `commands` is accepted).
 - **2.6** `assert.throws` no longer swallows a nested assertion failure or
   property sentinel — rejected unless a supplied pattern matches it.
+- **2.3** `deep_clone` dies cleanly on cyclic data (ancestor-tracking; DAGs
+  still clone). **2.5** uloop timer queue moved to its own `timers` channel.
+- **2.7** combinator pattern rendered as a label, not a serialized object.
+  **2.8** `equals(NaN)` explains NaN never compares equal. **2.9** ambiguous
+  keys rendered as quoted brackets. **2.12** Seed line notes it reproduces the
+  original value. **2.13** shim name emitted as a `%J` literal.
 - **2.10** generator name threaded into `gen.alphanumeric`/`gen.ascii` errors.
 - **3.2** -j2 rendering-contiguity smoke. **3.3** `failures[]` compared in
   verify.uc. **3.5** SKIP/IGNORE smoke tokens.
@@ -47,20 +53,16 @@ three test-coverage additions:
   per consecutive failure (only under fd/EMFILE exhaustion). An iterative retry
   in `pump` removes it. Deferred: delicate hot-path control flow, low payoff.
 
-### Design / robustness concerns (open)
-- **2.2** fs `glob` `**` gives globstar semantics; real fs.glob is glob(3).
-- **2.3** `deep_clone` has no cycle detection — cyclic mock data stack-overflows.
-- **2.4** A proxy leaked out of its inject callback loses the seal after pop.
-- **2.5** uloop mock queue lives at `data['__pending__']`; a user mocking that
-  key collides. A dedicated channel would isolate it.
-- **2.7** `assert.throws` with a combinator pattern prints the serialized
-  combinator object instead of its message.
-- **2.8** `equals(NaN)` unsatisfiable with an identical-lines message.
-- **2.9** `path_str` ambiguity: key `"a.b"` renders like nested a→b.
-- **2.11** Correlated per-case seeds without a persist_id.
-- **2.12** The failure "Seed:" line won't reproduce the *shrunk* value.
-- **2.13** manager.uc shim generation interpolates the module name into
-  single-quoted literals — a name containing `'` breaks the shim.
+### Design / robustness concerns — remaining (each needs a decision)
+- **2.2** fs `glob` `**` gives globstar semantics; real fs.glob is glob(3) where
+  `**` ≈ `*`. Making the mock faithful means dropping globstar — which removes a
+  documented, tested convenience feature. **Fidelity vs feature: needs a call.**
+- **2.4** A proxy leaked out of its inject callback loses the seal after pop
+  (writes fall through to real fs). User misuse; a clean fix needs per-layer
+  identity threaded into the proxy so a stale call can die — moderately invasive.
+- **2.11** Correlated per-case seeds (`base_seed + i` into libc srand). Improving
+  stream independence changes generated sequences → churns every failing-property
+  baseline and risks the reproducibility contract. **Core seeding change.**
 
 ### Carried over (from the first review; unchanged)
 - **shell escaping**: `utest.sh` `json_str` doesn't escape control chars.
