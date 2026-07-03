@@ -80,6 +80,8 @@ export function inject_builtin(name, fn, cb) {
  * mock.global.unpatch('fs');
  */
 export function patch(name, state) {
+	if (type(state) !== 'object' || state === null)
+		die(sprintf("mock.global.patch: state for '%s' must be a non-null object", name));
 	const proxy_channels = engine.get_proxy_channels(name);
 	const real = engine.get_real(name);
 	engine.guard_mock_target('mock.global.patch', name, proxy_channels, real);

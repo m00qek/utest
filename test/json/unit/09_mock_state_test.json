@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 7,
-    "passed": 7,
+    "total": 8,
+    "passed": 8,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -49,11 +49,11 @@
           "name": "Mock State"
         },
         {
-          "id": 7,
-          "name": "mock.reset() discards all active inject() layers"
+          "id": 5,
+          "name": "mock.snapshot() and mock.restore() save and recover global state"
         }
       ],
-      "index": 6
+      "index": 4
     },
     {
       "event": "TEST_RESULT",
@@ -93,11 +93,15 @@
           "name": "Mock State"
         },
         {
-          "id": 5,
-          "name": "mock.snapshot() and mock.restore() save and recover global state"
+          "id": 8,
+          "name": "pre_body_snap is always restored before afterEach runs"
+        },
+        {
+          "id": 9,
+          "name": "patch without unpatch does not leak into afterEach"
         }
       ],
-      "index": 4
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -115,11 +119,11 @@
           "name": "Mock State"
         },
         {
-          "id": 6,
-          "name": "spy(proxy) sees the fresh calls dict after restore()"
+          "id": 7,
+          "name": "mock.reset() discards all active inject() layers"
         }
       ],
-      "index": 5
+      "index": 6
     },
     {
       "event": "TEST_RESULT",
@@ -159,26 +163,42 @@
           "name": "Mock State"
         },
         {
-          "id": 8,
-          "name": "pre_body_snap is always restored before afterEach runs"
-        },
-        {
-          "id": 9,
-          "name": "patch without unpatch does not leak into afterEach"
+          "id": 6,
+          "name": "spy(proxy) sees the fresh calls dict after restore()"
         }
       ],
-      "index": 7
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 10,
+          "name": "mock.global.patch input validation"
+        },
+        {
+          "id": 11,
+          "name": "rejects a null state with a clear message (like mock.inject)"
+        }
+      ],
+      "index": 8
     }
   ],
   "files": [
     "examples/unit/09_mock_state_test.uc"
   ],
-  "duration_ms": 10,
-  "seed": 644215892,
   "bundles": {
     "examples/unit/09_mock_state_test.uc": {
-      "total": 7,
-      "passed": 7,
+      "total": 8,
+      "passed": 8,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

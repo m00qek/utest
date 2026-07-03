@@ -74,3 +74,9 @@ describe('Mock State', () => {
 		});
 	});
 });
+
+describe('mock.global.patch input validation', () => {
+	it('rejects a null state with a clear message (like mock.inject)', () => {
+		assert.throws(() => mock.global.patch('fs', null), /must be a non-null object/);
+	});
+});
