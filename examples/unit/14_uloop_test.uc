@@ -98,6 +98,18 @@ describe('uloop Mocking', () => {
 		assert.match(['outer'], fired, 'inner timer must not appear in outer pending queue');
 	});
 
+	it("a user-mocked data key cannot collide with the internal timer queue", () => {
+		// The timer queue lives in its own channel now, not data['__pending__'], so
+		// a user injecting that data key must not corrupt timer bookkeeping.
+		mock.inject('uloop', { data: { '__pending__': 'unrelated' } }, (m_uloop) => {
+			m_uloop.run();   // no timers armed: a clean no-op despite the user key
+			let fired = false;
+			m_uloop.timer(10, () => { fired = true; });
+			m_uloop.run();
+			assert.match(truthy(), fired);
+		});
+	});
+
 	it('running timers inside an inject does not re-fire an outer-scope timer', () => {
 		// A timer registered at the global scope, then run() inside an inject,
 		// used to fire and then be "cleared" only in the inject layer — leaving

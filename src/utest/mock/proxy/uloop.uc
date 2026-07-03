@@ -1,6 +1,10 @@
 // Loaded via require() in ucode program mode — see proxy_base.uc for why `return` is used here.
 return {
 	api: ['init', 'timer', 'run', 'end'],
+	// The timer queue lives in its own channel, not the 'data' channel, so a user
+	// who mocks a data key (even one literally named '__pending__') can never
+	// collide with the mock's internal timer bookkeeping.
+	channels: ['timers'],
 	create: function(name, real, ctx) {
 		let proxy = ctx.base();
 
@@ -19,16 +23,16 @@ return {
 			ctx.record_call('timer', [ms, cb]);
 			let f = ctx.get_behavior('timer');
 			if (f) return f(ms, cb);
-			const pending = ctx.get_local_data('__pending__');
-			ctx.set_data('__pending__', [...(type(pending) === 'array' ? pending : []), { ms, cb }]);
+			const pending = ctx.get_local('timers', 'queue');
+			ctx.set('timers', 'queue', [...(type(pending) === 'array' ? pending : []), { ms, cb }]);
 		};
 
 		proxy.run = function() {
 			ctx.record_call('run', []);
 			let f = ctx.get_behavior('run');
 			if (f) return f();
-			let pending = ctx.get_local_data('__pending__') || [];
-			ctx.set_data('__pending__', []);
+			let pending = ctx.get_local('timers', 'queue') || [];
+			ctx.set('timers', 'queue', []);
 			// Real uloop fires timers in deadline order, not registration order, so a
 			// deadline-dependent SUT that passes under a naive FIFO mock would fail on
 			// target. Sort by ms, breaking ties on the original registration index

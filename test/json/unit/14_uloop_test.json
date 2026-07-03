@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 10,
-    "passed": 10,
+    "total": 11,
+    "passed": 11,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -28,11 +28,77 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 5,
-          "name": "run() clears the queue so a second run() does nothing"
+          "id": 4,
+          "name": "run() fires equal-deadline timers in registration order"
         }
       ],
-      "index": 4
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 7,
+          "name": "models the io.sleep() pattern without blocking"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 3,
+          "name": "run() fires timers in deadline order, not registration order"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 12,
+          "name": "running timers inside an inject does not re-fire an outer-scope timer"
+        }
+      ],
+      "index": 11
     },
     {
       "event": "TEST_RESULT",
@@ -72,6 +138,50 @@
           "name": "uloop Mocking"
         },
         {
+          "id": 5,
+          "name": "run() clears the queue so a second run() does nothing"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 8,
+          "name": "supports behavior override for run()"
+        }
+      ],
+      "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
           "id": 10,
           "name": "timers registered inside an inner inject() do not leak into the outer scope"
         }
@@ -94,11 +204,11 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 3,
-          "name": "run() fires timers in deadline order, not registration order"
+          "id": 11,
+          "name": "a user-mocked data key cannot collide with the internal timer queue"
         }
       ],
-      "index": 2
+      "index": 10
     },
     {
       "event": "TEST_RESULT",
@@ -143,100 +253,12 @@
         }
       ],
       "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 8,
-          "name": "supports behavior override for run()"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 7,
-          "name": "models the io.sleep() pattern without blocking"
-        }
-      ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 11,
-          "name": "running timers inside an inject does not re-fire an outer-scope timer"
-        }
-      ],
-      "index": 10
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 4,
-          "name": "run() fires equal-deadline timers in registration order"
-        }
-      ],
-      "index": 3
     }
   ],
   "bundles": {
     "examples/unit/14_uloop_test.uc": {
-      "total": 10,
-      "passed": 10,
+      "total": 11,
+      "passed": 11,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
