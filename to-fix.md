@@ -72,12 +72,17 @@ deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
   real-command execution left as-is (an overlay read the author writes
   explicitly; different class).
 
+- **2.4** reserved channel-name validation — **done**: `get_proxy_channels()`
+  now dies if a custom proxy declares a channel named after reserved metadata
+  (fns/strict/calls/proxy/channels). Regression test via a custom-proxy fixture
+  (28_reserved_channel — first exercise of the `mocks:{proxy:...}` path).
+
 **Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
 control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
 1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle shrink goldens),
-remaining §2 (2.3 patch_builtin isolation, 2.4 reserved channel-name
-validation, 2.5–2.12 lesser), and §4 (4.4 combinator-list check, 4.6, 4.9
-architecture overview, 4.11 structural deep-equal paths).
+remaining §2 (2.3 patch_builtin isolation, 2.5 patch state validation, 2.6–2.12
+lesser), and §4 (4.4 combinator-list check, 4.6, 4.9 architecture overview,
+4.11 structural deep-equal paths).
 
 ---
 
