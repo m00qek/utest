@@ -40,7 +40,10 @@ return {
 					if (type(s) !== 'object') return null;
 					// 2-arg get(pkg, sec): real uci returns the section type.
 					if (opt === null) return s['.type'];
-					return s[opt];
+					// Clone: a list-typed option would otherwise be returned by reference,
+					// so SUT push()/mutation would corrupt the layer's store (real uci
+					// returns a fresh value).
+					return ctx.clone(s[opt]);
 				},
 
 				get_all: function(pkg, sec) {
@@ -55,7 +58,11 @@ return {
 					}
 					let s = p[sec];
 					if (type(s) !== 'object') return null;
-					return { ...s, '.name': sec };
+					// Deep-clone (not a shallow spread): nested list-typed options would
+					// otherwise stay shared references into the layer's store.
+					let out = ctx.clone(s);
+					out['.name'] = sec;
+					return out;
 				},
 
 				foreach: function(pkg, type_name, cb) {
@@ -73,7 +80,9 @@ return {
 						// Real uci visits every section when type_name is null; only
 						// filter by type when a type was actually requested.
 						if (type(sec) !== 'object' || (type_name !== null && sec['.type'] !== type_name)) continue;
-						let s = { ...sec };
+						// Deep-clone each visited section (same reference-leak reason as
+						// get_all): the callback must not be able to mutate layer state.
+						let s = ctx.clone(sec);
 						s['.name'] = sec_name;
 						cb(s);
 						matched = true;

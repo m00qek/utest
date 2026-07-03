@@ -178,6 +178,7 @@ const internal_obj = {
 	set_channel:          _channel_set,
 	get_all_channel_keys: _channel_all_keys,
 	has_channel:          _channel_has,
+	deep_clone:           deep_clone,
 
 	get_fn: function(name, fn_name) {
 		const reg = get_registry(name);

@@ -33,6 +33,10 @@ return {
 			has_data:          function(key)      { return __internal__.has_channel(name, 'data', key); },
 			has:               function(ch, key)  { return __internal__.has_channel(name, ch, key); },
 
+			// Deep-copy a value read out of the mock store, so a proxy can hand back a
+			// fresh value the way a real module would (real uci/fs return copies) —
+			// SUT mutation of the result must not corrupt layer state.
+			clone:             function(v)             { return __internal__.deep_clone(v); },
 			get_behavior:      function(fn_name)      { return __internal__.get_fn(name, fn_name); },
 			record_call:       function(fn_name, args){ __internal__.record_call(name, fn_name, args); },
 			is_active:         function()             { return __internal__.is_active(name); },

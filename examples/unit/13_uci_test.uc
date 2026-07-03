@@ -171,3 +171,30 @@ describe('uci strict mode blocks every accessor on an unmocked package', () => {
 		});
 	});
 });
+
+describe('uci reads return fresh copies (no live references into the store)', () => {
+	// A list-typed option returned by reference would let SUT push()/mutation
+	// corrupt the layer's store; real uci returns a fresh value each read.
+	it('mutating a list returned by get() does not corrupt the store', () => {
+		mock.inject('uci', { data: uci_data }, (m) => {
+			push(m.cursor().get('luci-sso', 'admin_role', 'read'), 'injected');
+			assert.match(['*'], m.cursor().get('luci-sso', 'admin_role', 'read'));
+		});
+	});
+
+	it('mutating a list inside a get_all() result does not corrupt the store', () => {
+		mock.inject('uci', { data: uci_data }, (m) => {
+			push(m.cursor().get_all('luci-sso', 'admin_role').read, 'injected');
+			assert.match(['*'], m.cursor().get_all('luci-sso', 'admin_role').read);
+		});
+	});
+
+	it('mutating a section handed to foreach() does not corrupt the store', () => {
+		mock.inject('uci', { data: uci_data }, (m) => {
+			m.cursor().foreach('luci-sso', 'role', (s) => push(s.read, 'injected'));
+			let seen = null;
+			m.cursor().foreach('luci-sso', 'role', (s) => { if (s['.name'] === 'admin_role') seen = s.read; });
+			assert.match(['*'], seen);
+		});
+	});
+});
