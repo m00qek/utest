@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 33,
-    "passed": 33,
+    "total": 34,
+    "passed": 34,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,7 +9,8 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
     {
       "event": "TEST_RESULT",
@@ -27,363 +28,11 @@
           "name": "Combinators"
         },
         {
-          "id": 29,
-          "name": "is_type() checks the runtime type"
-        }
-      ],
-      "index": 28
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 23,
-          "name": "any_order() backtracks when a wildcard steals a specific matcher's element"
-        }
-      ],
-      "index": 22
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 2,
-          "name": "assert.match() with a plain scalar behaves like assert.eq()"
-        }
-      ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 8,
-          "name": "contains() works on strings, arrays, and objects"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 14,
-          "name": "contains() values may be nested combinators"
-        }
-      ],
-      "index": 13
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 30,
-          "name": "truthy() and falsy() check truthiness"
-        }
-      ],
-      "index": 29
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 22,
-          "name": "not() inverts a combinator"
-        }
-      ],
-      "index": 21
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 25,
-          "name": "starts_with() matches string prefixes and array prefixes"
-        }
-      ],
-      "index": 24
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 9,
-          "name": "contains() accepts a combinator as the expected array element"
-        }
-      ],
-      "index": 8
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 4,
-          "name": "assert.match() allows combinators inside a plain object"
-        }
-      ],
-      "index": 3
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 31,
-          "name": "equals() failure key-paths"
-        },
-        {
-          "id": 35,
-          "name": "leaves a top-level scalar mismatch unprefixed"
-        }
-      ],
-      "index": 33
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 28,
-          "name": "between() checks numeric ranges (inclusive)"
-        }
-      ],
-      "index": 27
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 20,
-          "name": "combinators compose into nested structures"
-        }
-      ],
-      "index": 19
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 13,
-          "name": "contains() matches partial objects, ignoring extra keys"
-        }
-      ],
-      "index": 12
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 31,
-          "name": "equals() failure key-paths"
-        },
-        {
-          "id": 32,
-          "name": "names the key path of a nested object mismatch"
-        }
-      ],
-      "index": 30
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 18,
+          "id": 19,
           "name": "regex() tests a string against a regex"
         }
       ],
-      "index": 17
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 31,
-          "name": "equals() failure key-paths"
-        },
-        {
-          "id": 33,
-          "name": "names the index and key path of a nested array mismatch"
-        }
-      ],
-      "index": 31
+      "index": 18
     },
     {
       "event": "TEST_RESULT",
@@ -402,7 +51,7 @@
         },
         {
           "id": 21,
-          "name": "pred() applies a custom predicate function"
+          "name": "combinators compose into nested structures"
         }
       ],
       "index": 20
@@ -423,11 +72,11 @@
           "name": "Combinators"
         },
         {
-          "id": 26,
-          "name": "ends_with() matches string suffixes and array suffixes"
+          "id": 8,
+          "name": "equals() unwraps a top-level combinator instead of matching its shape"
         }
       ],
-      "index": 25
+      "index": 7
     },
     {
       "event": "TEST_RESULT",
@@ -445,11 +94,253 @@
           "name": "Combinators"
         },
         {
-          "id": 15,
+          "id": 29,
+          "name": "between() checks numeric ranges (inclusive)"
+        }
+      ],
+      "index": 28
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 12,
+          "name": "contains() recurses into nested arrays"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 10,
+          "name": "contains() accepts a combinator as the expected array element"
+        }
+      ],
+      "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 16,
           "name": "contains() recurses into plain object values"
         }
       ],
-      "index": 14
+      "index": 15
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 31,
+          "name": "truthy() and falsy() check truthiness"
+        }
+      ],
+      "index": 30
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 17,
+          "name": "any_order() matches an array regardless of element order"
+        }
+      ],
+      "index": 16
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 20,
+          "name": "regex() rejects a non-regexp argument (would otherwise never match)"
+        }
+      ],
+      "index": 19
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 9,
+          "name": "contains() works on strings, arrays, and objects"
+        }
+      ],
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 18,
+          "name": "any() is a wildcard that matches any value"
+        }
+      ],
+      "index": 17
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 32,
+          "name": "equals() failure key-paths"
+        },
+        {
+          "id": 36,
+          "name": "leaves a top-level scalar mismatch unprefixed"
+        }
+      ],
+      "index": 34
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 5,
+          "name": "assert.match() with a plain array requires exact elements in order"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 28,
+          "name": "has_length() checks the length of strings, arrays, and objects"
+        }
+      ],
+      "index": 27
     },
     {
       "event": "TEST_RESULT",
@@ -489,11 +380,11 @@
           "name": "Combinators"
         },
         {
-          "id": 17,
-          "name": "any() is a wildcard that matches any value"
+          "id": 4,
+          "name": "assert.match() allows combinators inside a plain object"
         }
       ],
-      "index": 16
+      "index": 3
     },
     {
       "event": "TEST_RESULT",
@@ -512,7 +403,7 @@
         },
         {
           "id": 24,
-          "name": "contains() on arrays cannot reuse positions and backtracks over wildcards"
+          "name": "any_order() backtracks when a wildcard steals a specific matcher's element"
         }
       ],
       "index": 23
@@ -529,37 +420,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "Combinators"
+          "id": 32,
+          "name": "equals() failure key-paths"
         },
         {
-          "id": 12,
-          "name": "contains() on a string expected fails for non-string actual"
+          "id": 33,
+          "name": "names the key path of a nested object mismatch"
         }
       ],
-      "index": 11
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 6,
-          "name": "assert.match() allows combinators inside a plain array"
-        }
-      ],
-      "index": 5
+      "index": 31
     },
     {
       "event": "TEST_RESULT",
@@ -599,11 +468,11 @@
           "name": "Combinators"
         },
         {
-          "id": 10,
-          "name": "contains() with an array checks for an ordered subsequence"
+          "id": 2,
+          "name": "assert.match() with a plain scalar behaves like assert.eq()"
         }
       ],
-      "index": 9
+      "index": 1
     },
     {
       "event": "TEST_RESULT",
@@ -617,56 +486,12 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 19,
-          "name": "regex() rejects a non-regexp argument (would otherwise never match)"
-        }
-      ],
-      "index": 18
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Combinators"
-        },
-        {
-          "id": 11,
-          "name": "contains() recurses into nested arrays"
-        }
-      ],
-      "index": 10
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/16_combinators_test.uc",
-      "bundle": "examples/unit/16_combinators_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 31,
+          "id": 32,
           "name": "equals() failure key-paths"
         },
         {
           "id": 34,
-          "name": "gives a nested non-structural combinator failure its key path too"
+          "name": "names the index and key path of a nested array mismatch"
         }
       ],
       "index": 32
@@ -687,8 +512,52 @@
           "name": "Combinators"
         },
         {
+          "id": 13,
+          "name": "contains() on a string expected fails for non-string actual"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 15,
+          "name": "contains() values may be nested combinators"
+        }
+      ],
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
           "id": 27,
-          "name": "has_length() checks the length of strings, arrays, and objects"
+          "name": "ends_with() matches string suffixes and array suffixes"
         }
       ],
       "index": 26
@@ -709,11 +578,11 @@
           "name": "Combinators"
         },
         {
-          "id": 16,
-          "name": "any_order() matches an array regardless of element order"
+          "id": 26,
+          "name": "starts_with() matches string prefixes and array prefixes"
         }
       ],
-      "index": 15
+      "index": 25
     },
     {
       "event": "TEST_RESULT",
@@ -731,25 +600,179 @@
           "name": "Combinators"
         },
         {
-          "id": 5,
-          "name": "assert.match() with a plain array requires exact elements in order"
+          "id": 25,
+          "name": "contains() on arrays cannot reuse positions and backtracks over wildcards"
         }
       ],
-      "index": 4
+      "index": 24
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 6,
+          "name": "assert.match() allows combinators inside a plain array"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 14,
+          "name": "contains() matches partial objects, ignoring extra keys"
+        }
+      ],
+      "index": 13
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 11,
+          "name": "contains() with an array checks for an ordered subsequence"
+        }
+      ],
+      "index": 10
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 23,
+          "name": "not() inverts a combinator"
+        }
+      ],
+      "index": 22
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 30,
+          "name": "is_type() checks the runtime type"
+        }
+      ],
+      "index": 29
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Combinators"
+        },
+        {
+          "id": 22,
+          "name": "pred() applies a custom predicate function"
+        }
+      ],
+      "index": 21
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/16_combinators_test.uc",
+      "bundle": "examples/unit/16_combinators_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 32,
+          "name": "equals() failure key-paths"
+        },
+        {
+          "id": 35,
+          "name": "gives a nested non-structural combinator failure its key path too"
+        }
+      ],
+      "index": 33
     }
-  ],
-  "files": [
-    "examples/unit/16_combinators_test.uc"
   ],
   "bundles": {
     "examples/unit/16_combinators_test.uc": {
-      "total": 33,
-      "passed": 33,
+      "total": 34,
+      "passed": 34,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/16_combinators_test.uc"
+  ]
 }

@@ -40,6 +40,14 @@ describe('Combinators', () => {
 		);
 	});
 
+	it('equals() unwraps a top-level combinator instead of matching its shape', () => {
+		// equals(any()) used to structurally compare against the combinator's own
+		// { match } object; it should behave like the combinator itself.
+		assert.match(equals(any()), 42);
+		assert.match(equals(any()), { anything: true });
+		assert.match(equals(contains('host')), 'connected to host');
+	});
+
 	it('contains() works on strings, arrays, and objects', () => {
 		assert.match(contains('24.10'), 'OpenWrt 24.10');
 		assert.match(contains([2]), [1, 2, 3]);

@@ -13,9 +13,10 @@ export function create() {
 				// timer, then wait for the worker.  No `timeout` binary is required (not
 				// available on all OpenWrt targets).  If the watchdog fires, the worker is
 				// SIGTERMed and `wait` exits 143 (128 + 15).  We capture the worker's exit
-				// code, then kill the sleep timer so it does not linger as an orphaned
-				// process (a PID-table leak when many fast tests run in sequence), and
-				// finally re-exit with the worker's code so timeout detection still works.
+				// code, then kill the still-sleeping timer ($_S): otherwise, after a fast
+				// worker exits and its PID ($_P) is recycled to an unrelated process, the
+				// timer's deferred `kill $_P` would fire against that reused PID.  Finally
+				// re-exit with the worker's code so timeout detection still works.
 				let cmd = sprintf(
 					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), timeout);

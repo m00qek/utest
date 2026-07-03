@@ -107,6 +107,11 @@ _normalize_equals = function(expected) {
  * @returns {Combinator<T>} The configured combinator.
  */
 export function equals(expected) {
+	// A combinator passed directly (e.g. equals(any())) is the one entry point the
+	// nested is_combinator checks above don't cover: equals_object would compare
+	// against the combinator's own { match } shape and fail confusingly. Unwrap it,
+	// mirroring assert.match, so equals(any()) behaves like any().
+	if (is_combinator(expected)) return expected;
 	return _normalize_equals(expected);
 };
 
