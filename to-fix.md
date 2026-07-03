@@ -77,12 +77,16 @@ deterministic repro needs a magic seed + brittle shrink goldens (see 3.5).
   (fns/strict/calls/proxy/channels). Regression test via a custom-proxy fixture
   (28_reserved_channel — first exercise of the `mocks:{proxy:...}` path).
 
+- **2.5** `mock.global.patch` state validation — **done**: mirrors inject's
+  non-null-object guard (was crashing with a bare "left-hand side expression is
+  null"). Regression test in 09_mock_state.
+
 **Still open** (Tier 3/4 — need real work or a policy call): 1.9 (shell
 control-char escaping), 1.10/1.11 (process-group kill — shell restructuring),
 1.12/1.13 (bookkeeping/search-order edges), 3.5 (de-brittle shrink goldens),
-remaining §2 (2.3 patch_builtin isolation, 2.5 patch state validation, 2.6–2.12
-lesser), and §4 (4.4 combinator-list check, 4.6, 4.9 architecture overview,
-4.11 structural deep-equal paths).
+remaining §2 (2.3 patch_builtin isolation, 2.6–2.12 lesser), and §4 (4.4
+combinator-list check, 4.6, 4.9 architecture overview, 4.11 structural
+deep-equal paths).
 
 ---
 
