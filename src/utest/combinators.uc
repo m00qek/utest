@@ -361,6 +361,12 @@ export function pred(fn) {
  * @returns {Combinator<string>} The configured combinator.
  */
 export function regex(expected) {
+	// ucode's match(str, "literal") treats a string as a literal, not a pattern,
+	// so a non-regexp argument would silently never match — and, worse, invert
+	// into an always-pass under not(regex(...)). Validate like the siblings.
+	if (type(expected) !== 'regexp')
+		die(sprintf("regex(): expected a regular expression; got %s",
+			is_combinator(expected) ? "combinator" : type(expected)));
 	return comb(function(actual) {
 		if (type(actual) === 'string' && match(actual, expected))
 			return { ok: true };

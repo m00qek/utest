@@ -80,8 +80,13 @@ function try_choices(g, prop_fn, choices) {
 	let value;
 	try { value = g.generate(s); }
 	catch (e) {
-		if (is_property_sentinel(parse_thrown(e).kind)) return { kind: 'invalid' };
-		die(e);
+		// A shrink candidate is a synthetic choice sequence the user never
+		// generated; shrinking drives draws toward 0, so a partial generator can
+		// legitimately die here. Treat ANY generation error on a candidate as an
+		// invalid (skipped) shrink step, not a fatal — dying would discard the
+		// real counterexample and property error we already have. (The original
+		// generation in forall() still dies loudly on a genuine generator bug.)
+		return { kind: 'invalid' };
 	}
 	try { prop_fn(value, NOOP_CTX); return { kind: 'pass' }; }
 	catch (e) {

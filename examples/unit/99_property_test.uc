@@ -60,6 +60,14 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.float(1.0, 0.0), /lo .* must be <= hi/);
 	});
 
+	it("gen.float rejects NaN bounds", () => {
+		assert.throws(() => gen.float(0.0 / 0.0, 1.0), /bounds must be finite/);
+	});
+
+	it("gen.float rejects infinite bounds", () => {
+		assert.throws(() => gen.float(0.0, 1.0 / 0.0), /bounds must be finite/);
+	});
+
 	it("gen.array rejects negative max_len", () => {
 		assert.throws(() => gen.array(gen.int(0, 9), { max_len: -1 }), /max_len \(-1\) must be >= 0/);
 	});

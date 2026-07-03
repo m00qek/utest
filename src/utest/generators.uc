@@ -6,9 +6,16 @@
  * @module utest.generators
  */
 
+import * as math from 'math';
+
 // Thrown by gen.filter when the predicate fails `attempts` times in a row;
 // caught and counted as a discarded case by forall.
 const DISCARD_MSG = sprintf('%J', { __utest__: { kind: 'property_discard' } });
+
+// A float bound is usable only if finite. ucode comparisons can't detect NaN
+// (nan !== nan is false), so reject it via math.isnan; +/-Inf is caught because
+// Inf - Inf is NaN while any finite x - x is 0.
+function is_finite_num(x) { return !math.isnan(x) && !math.isnan(x - x); }
 
 // Capture before export function int() shadows it — float() uses int() to truncate.
 const _int = int;
@@ -94,6 +101,8 @@ export function bool() {
  * @returns {Generator<float>} The configured generator.
  */
 export function float(lo, hi, opts) {
+	if (!is_finite_num(lo) || !is_finite_num(hi))
+		die(sprintf("gen.float: bounds must be finite; got lo (%g), hi (%g)", lo, hi));
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
 	const precision = (opts !== null && opts.precision !== null) ? opts.precision : 10000;
 	if (precision < 1) die(sprintf("gen.float: precision (%d) must be >= 1", precision));

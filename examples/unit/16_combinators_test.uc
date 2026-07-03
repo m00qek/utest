@@ -124,6 +124,13 @@ describe('Combinators', () => {
 		);
 	});
 
+	it('regex() rejects a non-regexp argument (would otherwise never match)', () => {
+		// A string arg makes ucode's match() treat it as a literal, so regex('x')
+		// would silently never match — and not(regex('x')) would always pass.
+		assert.throws(() => regex('^\\d+'), /regular expression/);
+		assert.throws(() => not(regex('^\\d+')), /regular expression/);
+	});
+
 	it('combinators compose into nested structures', () => {
 		const event = {
 			type: 'response',
