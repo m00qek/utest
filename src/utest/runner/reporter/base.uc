@@ -88,7 +88,9 @@ export const ReporterBase = {
 		push(this.results, msg);
 		this.stats.fatals++;
 
-		if (msg.suite && !this._suite_stats[msg.suite]) {
+		// An aggregate FATAL (e.g. the parallel-run interrupt) names a pseudo-suite,
+		// not a real one, so it must not count toward the suite total.
+		if (msg.suite && !msg.aggregate && !this._suite_stats[msg.suite]) {
 			this.stats.suites++;
 			this._suite_stats[msg.suite] = empty_stats();
 		}

@@ -142,7 +142,10 @@ export function create() {
 			// non-zero. (Under -j1 a signal kills the runner outright, so this only
 			// arises for -jN.)
 			if (finished < total)
-				reporter.fatal({ event: "FATAL", suite: "<parallel run>", bundle: bundle_name,
+				// aggregate: this FATAL stands for the whole interrupted run, not a
+				// real suite, so the reporter must not count "<parallel run>" toward
+				// the suite total (it would inflate "Suites:" by one per bundle).
+				reporter.fatal({ event: "FATAL", suite: "<parallel run>", bundle: bundle_name, aggregate: true,
 					error: sprintf("parallel run interrupted before completion: %d of %d suite(s) did not finish",
 						total - finished, total) });
 		}
