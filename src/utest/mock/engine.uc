@@ -7,19 +7,34 @@
 if (!global.__utest_registries) global.__utest_registries = {};
 export const registries = global.__utest_registries;
 
+// `seen` is the stack of ancestor containers on the current recursion path. A
+// child that is identical (same reference) to one of its ancestors is a cycle:
+// cloning it would recurse forever and stack-overflow, so die cleanly instead.
+// Popping after each subtree means a container reachable by two *sibling* paths
+// (a DAG) is cloned twice rather than rejected — only true back-edges are cycles.
+function clone_rec(obj, seen) {
+	const t = type(obj);
+	if (t !== 'array' && t !== 'object')
+		// scalars (string, int, bool, null) and functions are immutable — share the reference
+		return obj;
+	for (let ancestor in seen)
+		if (ancestor === obj)
+			die("[utest] mock deep_clone: cyclic data structure cannot be cloned");
+	push(seen, obj);
+	let r;
+	if (t === 'array') {
+		r = [];
+		for (let v in obj) push(r, clone_rec(v, seen));
+	} else {
+		r = {};
+		for (let k, v in obj) r[k] = clone_rec(v, seen);
+	}
+	pop(seen);
+	return r;
+}
+
 export function deep_clone(obj) {
-	if (type(obj) === 'array') {
-		let r = [];
-		for (let v in obj) push(r, deep_clone(v));
-		return r;
-	}
-	if (type(obj) === 'object') {
-		let r = {};
-		for (let k, v in obj) r[k] = deep_clone(v);
-		return r;
-	}
-	// scalars (string, int, bool, null) and functions are immutable — share the reference
-	return obj;
+	return clone_rec(obj, []);
 };
 
 // Returns the channel list declared by the proxy for `name`, or null if no

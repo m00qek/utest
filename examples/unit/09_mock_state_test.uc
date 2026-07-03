@@ -102,3 +102,21 @@ describe('mock state rejects unknown keys (typo protection)', () => {
 		assert.throws(() => mock.global.patch('fs', { files: {} }), /unknown key 'files'/);
 	});
 });
+
+describe('deep_clone handles cyclic and shared mock data', () => {
+	it('cyclic data dies cleanly instead of stack-overflowing', () => {
+		let cyclic = { a: 1 };
+		cyclic.self = cyclic;
+		assert.throws(() => mock.inject('fs', { data: { '/x': cyclic } }, () => {}),
+		              /cyclic data structure/);
+	});
+
+	it('a shared (non-cyclic) subtree is cloned, not rejected as a cycle', () => {
+		let shared = { v: 1 };
+		// The same object in two sibling positions is a DAG, not a cycle.
+		mock.inject('uci', { data: { pkg: { a: shared, b: shared } } }, (m) => {
+			assert.match(1, m.cursor().get('pkg', 'a', 'v'));
+			assert.match(1, m.cursor().get('pkg', 'b', 'v'));
+		});
+	});
+});

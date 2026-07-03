@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 12,
-    "passed": 12,
+    "total": 14,
+    "passed": 14,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -28,11 +28,11 @@
           "name": "Mock State"
         },
         {
-          "id": 7,
-          "name": "mock.reset() discards all active inject() layers"
+          "id": 3,
+          "name": "mock.global.patch() intercepts the imported module via the shim"
         }
       ],
-      "index": 6
+      "index": 2
     },
     {
       "event": "TEST_RESULT",
@@ -68,37 +68,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "Mock State"
+          "id": 10,
+          "name": "mock.global.patch input validation"
         },
         {
-          "id": 2,
-          "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
+          "id": 11,
+          "name": "rejects a null state with a clear message (like mock.inject)"
         }
       ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/09_mock_state_test.uc",
-      "bundle": "examples/unit/09_mock_state_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "Mock State"
-        },
-        {
-          "id": 3,
-          "name": "mock.global.patch() intercepts the imported module via the shim"
-        }
-      ],
-      "index": 2
+      "index": 8
     },
     {
       "event": "TEST_RESULT",
@@ -134,15 +112,59 @@
           "name": "root"
         },
         {
-          "id": 12,
-          "name": "mock state rejects unknown keys (typo protection)"
+          "id": 1,
+          "name": "Mock State"
         },
         {
-          "id": 16,
-          "name": "global.patch() rejects a misspelled key too"
+          "id": 4,
+          "name": "inject() layer is visible on top of a global patch"
         }
       ],
-      "index": 12
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 17,
+          "name": "deep_clone handles cyclic and shared mock data"
+        },
+        {
+          "id": 19,
+          "name": "a shared (non-cyclic) subtree is cloned, not rejected as a cycle"
+        }
+      ],
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 6,
+          "name": "spy(proxy) sees the fresh calls dict after restore()"
+        }
+      ],
+      "index": 5
     },
     {
       "event": "TEST_RESULT",
@@ -204,37 +226,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "Mock State"
+          "id": 17,
+          "name": "deep_clone handles cyclic and shared mock data"
         },
         {
-          "id": 6,
-          "name": "spy(proxy) sees the fresh calls dict after restore()"
+          "id": 18,
+          "name": "cyclic data dies cleanly instead of stack-overflowing"
         }
       ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/09_mock_state_test.uc",
-      "bundle": "examples/unit/09_mock_state_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 10,
-          "name": "mock.global.patch input validation"
-        },
-        {
-          "id": 11,
-          "name": "rejects a null state with a clear message (like mock.inject)"
-        }
-      ],
-      "index": 8
+      "index": 13
     },
     {
       "event": "TEST_RESULT",
@@ -252,11 +252,55 @@
           "name": "Mock State"
         },
         {
-          "id": 4,
-          "name": "inject() layer is visible on top of a global patch"
+          "id": 2,
+          "name": "mock.inject() scopes data to the callback; the imported module is unaffected"
         }
       ],
-      "index": 3
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 12,
+          "name": "mock state rejects unknown keys (typo protection)"
+        },
+        {
+          "id": 16,
+          "name": "global.patch() rejects a misspelled key too"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/09_mock_state_test.uc",
+      "bundle": "examples/unit/09_mock_state_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Mock State"
+        },
+        {
+          "id": 7,
+          "name": "mock.reset() discards all active inject() layers"
+        }
+      ],
+      "index": 6
     },
     {
       "event": "TEST_RESULT",
@@ -283,8 +327,8 @@
   ],
   "bundles": {
     "examples/unit/09_mock_state_test.uc": {
-      "total": 12,
-      "passed": 12,
+      "total": 14,
+      "passed": 14,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
