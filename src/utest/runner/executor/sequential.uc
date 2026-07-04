@@ -17,6 +17,12 @@ export function create() {
 				// worker exits and its PID ($_P) is recycled to an unrelated process, the
 				// timer's deferred `kill $_P` would fire against that reused PID.  Finally
 				// re-exit with the worker's code so timeout detection still works.
+				// SIGTERM here (vs the parallel executor's SIGKILL) is deliberate: this
+				// path reads the pipe to EOF and needs a distinguishable exit code (143)
+				// to tell a timeout from a crash, and `kill` defaults to TERM. The two
+				// executors send different signals but the outcome is the same — a worker
+				// installs no handler, so either terminates a hung worker, and events are
+				// flushed as they are emitted, so nothing buffered is lost either way.
 				let cmd = sprintf(
 					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), timeout);

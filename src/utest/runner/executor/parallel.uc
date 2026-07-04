@@ -103,6 +103,13 @@ export function create() {
 				// On timeout, kill the worker; its exit callback then finalizes with the
 				// partial output. A SIGKILL exit status is indistinguishable from a clean
 				// 0, so the timed_out flag — not the exit code — drives the diagnostic.
+				// SIGKILL (not the sequential watchdog's SIGTERM) is deliberate: this path
+				// keys the diagnostic on timed_out, so it does not need a distinguishable
+				// exit code, and KILL cannot be caught. The signals differ between the two
+				// executors but the outcome does not — a worker installs no handler, so
+				// either terminates a hung (while(true)) worker identically, and the worker
+				// reporter flushes every event, so partial results are already on disk
+				// before the signal lands. See sequential.uc for the SIGTERM/exit-143 side.
 				worker.timer = uloop.timer(WORKER_TIMEOUT_MS, function() {
 					if (worker.done) return;
 					worker.timed_out = true;
