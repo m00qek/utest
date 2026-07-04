@@ -76,6 +76,12 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.int(1.5, 10), /bounds must be integers/);
 	});
 
+	it("forall rejects a non-positive runs count", () => {
+		// runs: 0 would make the property pass without testing anything (false green).
+		assert.throws(() => forall(gen.int(0, 9), (x) => true, { runs: 0, persist: false }),
+		              /runs must be a positive integer/);
+	});
+
 	it("gen.string / gen.array reject a non-integer size", () => {
 		// A double size slips past the >= 0 checks and yields an off-by-one length
 		// (i < 2.5 admits 0,1,2) or feeds a fractional bound into the draw stream.

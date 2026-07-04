@@ -501,6 +501,11 @@ export function has_length(n) {
  * @returns {Combinator<int|float>} The configured combinator.
  */
 export function between(min, max) {
+	// Reversed bounds can never match, so between(10, 1) would silently fail every
+	// value — and invert into an always-pass under not(). Reject at construction,
+	// matching the vacuity guards on regex()/gen.int.
+	if (min > max)
+		die(sprintf("between: min (%s) must be <= max (%s)", min, max));
 	return comb(function(actual) {
 		if (type(actual) !== 'int' && type(actual) !== 'double')
 			return { ok: false, message: sprintf("Expected a number, got %s", type(actual)) };

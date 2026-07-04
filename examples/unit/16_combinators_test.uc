@@ -262,6 +262,12 @@ describe('Combinators', () => {
 		assert.throws(() => assert.match(between(1, 10), 'x'), /Expected a number/);
 	});
 
+	it('between() rejects reversed bounds at construction', () => {
+		// between(10, 1) could never match, so not(between(10, 1)) would always pass —
+		// a silent vacuity. It must die when built, not match nothing.
+		assert.throws(() => between(10, 1), /min \(10\) must be <= max \(1\)/);
+	});
+
 	it('is_type() checks the runtime type', () => {
 		assert.match(is_type('int'),    42);
 		assert.match(is_type('string'), 'hello');

@@ -136,6 +136,11 @@ export function create() {
 				running = true;
 				rv = uloop.run();
 			}
+			// Release uloop's state (registered fds, timers, signal hooks) now that
+			// this bundle is done, instead of leaving it for process exit. A run spans
+			// multiple bundles, each doing its own init()/run(); pairing every init()
+			// with a done() keeps that lifecycle clean and self-contained.
+			uloop.done();
 
 			// uloop.run() returns either when pump() called uloop.end() (every
 			// worker accounted for) or when libubox caught SIGINT/SIGTERM, set

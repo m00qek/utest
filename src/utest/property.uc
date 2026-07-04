@@ -1,7 +1,7 @@
 import * as math from 'math';
 import * as fs from 'fs';
 import * as dsl from 'utest.dsl';
-import { parse_thrown, fail_envelope, mkdir_p, format_path } from 'utest.util';
+import { parse_thrown, fail_envelope, mkdir_p, format_path, seed_from_clock } from 'utest.util';
 import { stack } from 'utest.runner.worker.registry';
 
 // Host configuration, supplied by the worker via configure() at startup so the
@@ -329,7 +329,10 @@ function report_failure(info, runs) {
 		push(lines, sprintf("  Replayed from:  %s", info.persist_path));
 		if (info.saved_at)
 			push(lines, sprintf("  Saved at:       %d (epoch seconds)", info.saved_at));
-		push(lines, sprintf("  Seed:           %d", info.seed));
+		// The saved seed regenerates the original case; the Value shown is the saved
+		// shrunk minimum (replayed from stored choices), so qualify the seed the same
+		// way the fresh-failure branch below does to avoid misreading it.
+		push(lines, sprintf("  Seed:           %d (regenerates the original value)", info.seed));
 		push(lines, sprintf("  Value:          %J", info.shrunk_value));
 		push(lines, "  Error:          " + indent_continuation(parse_thrown(info.error).message, 18));
 	} else {
@@ -383,13 +386,16 @@ export function forall(generator, prop_fn, opts) {
 	opts ??= {};
 	const runs       = opts.runs       ?? 100;
 	const shrink_max = opts.shrink_max ?? 1000;
+	// A non-positive runs count would make the property pass without testing
+	// anything — a false green. Reject it rather than silently succeeding.
+	if (type(runs) !== 'int' || runs < 1)
+		die(fail_envelope(sprintf("forall: runs must be a positive integer, got %s", runs)));
 	const persist_id = opts.persist_id ?? null;
 	const persist    = (persist_id !== null) && (opts.persist !== false);
-	const t = clock();
 	const id_hash    = (persist_id !== null) ? str_hash(persist_id) : 0;
 	const base_seed  = (opts.seed !== null)
 	                 ? opts.seed
-	                 : (_host.prop_seed !== null ? (_host.prop_seed ^ id_hash) : (t[0] * 1000000000 + t[1]));
+	                 : (_host.prop_seed !== null ? (_host.prop_seed ^ id_hash) : seed_from_clock());
 	const stats = { classifications: {}, discards: 0 };
 	const ctx = make_ctx(stats);
 
