@@ -13,6 +13,16 @@ Beat grades: core library **A-**, mock subsystem **B-**, runner/orchestration
 were probe-confirmed against the real interpreter (seal breach, guard escape,
 musl buffering, and contains() asymmetry re-verified independently by the lead).
 
+## R3.2 LANDED (`00aaa61`) — fs destructive-op seal
+
+The fs mock now seals the six filesystem-mutating ops it does not model — `rmdir`,
+`symlink`, `chown`, `chdir`, `mkdtemp`, `mkstemp` — so a call under an active mock
+dies (both modes) instead of falling through to the real fs, unless a `behavior:`
+override is supplied. Read-only fall-throughs (lstat/readlink/realpath/opendir)
+are left alone (that's R3.6, fidelity not safety). **Follow-up:** uci/ubus have the
+same generic non-strict fall-through-to-real class (an unmocked `cursor().commit()`
+or real `ubus.call()`), lower-frequency and untracked — consider a general stance.
+
 ## Green-light batch LANDED (`eb86d89`..`21cb9b6`, meta-test green)
 
 Mechanical / no-decision fixes, each with a regression test where testable:
@@ -28,12 +38,6 @@ reuse, replayed-report seed qualifier.
 
 ## Still open — HIGH
 
-- **R3.2 the fs seal does not cover un-overridden destructive functions.**
-  fs proxy overrides 13 of 29 real exports; `rmdir`, `symlink`, `chown`,
-  `chdir`, `mkdtemp`, `mkstemp`, `dup2`, `pipe`… fall through to the REAL module
-  in non-strict mode while a mock is active (probe: `m.rmdir()` deleted a real
-  directory), contradicting the seal contract stated in fs.uc. **Needs a
-  decision:** which ops die, and die-vs-strict-guard.
 - **R3.3 the 2.4 scope guard is shallow: second-order objects escape it.**
   `guard_proxy` wraps only top-level proxy methods; `fs.open()` handles,
   `uci.cursor()`, `ubus.connect()`, `uclient.new()` return unguarded objects
