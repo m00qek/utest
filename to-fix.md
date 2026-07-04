@@ -104,12 +104,19 @@ as-is. Negative-tested (missing files / corrupted files / extra key all fail).
   with non-zero exit and no runner stack trace. Complements 22_fatal_setup (the
   later runtime setup-fatal path).
 
-## Still open — LOW
+## R3.15 LANDED (`d376852`, meta-test green) — uloop timer handle
 
-- **R3.15** uloop mock `timer()` returns null; real returns a handle with
-  `set()`/`cancel()` — SUT storing/cancelling its timer crashes only under test.
-  More implementation than decision: emulate a handle whose cancel() removes the
-  pending timer from the queue and set() reschedules.
+The mock's `timer()` returned nothing, so a SUT storing its timer to reschedule
+or cancel it crashed on a null handle, only under test. Now returns a handle
+mirroring the real uloop.timer resource: `remaining()` (the armed deadline, or -1
+once cancelled — the mock has no clock), `cancel()` (marks the handle dead;
+run() skips it), `set(ms)` (re-arms, clearing a prior cancel). The handle is
+stored in the timer queue by reference (channel get/set don't clone), so run()
+filters cancelled handles and sorts on each handle's CURRENT ms — a set() before
+run() reschedules correctly, and the deadline-order + registration tiebreak is
+preserved. Both mutators return the handle for chaining. Single-pass semantics
+unchanged (a callback-armed/re-armed timer still needs another run()). Coverage
+in 14_uloop_test.
 
 ## Still open — NIT
 
