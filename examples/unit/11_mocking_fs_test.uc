@@ -167,7 +167,7 @@ describe('FS Mocking', () => {
 		mock.inject('fs', { data: { '/tmp/data.txt': 'hello' } }, (m_fs) => {
 			let s = m_fs.stat('/tmp/data.txt');
 			assert.match(5, s.size);
-			assert.match('regular', s.type);
+			assert.match('file', s.type);   // real fs.stat().type for a regular file
 			assert.match(null, m_fs.stat('/tmp/missing.txt'));
 		});
 	});

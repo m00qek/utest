@@ -2,6 +2,7 @@ import { describe, it, assert, mock, truthy, falsy } from 'utest';
 import * as uci from 'uci';
 import * as uclient from 'uclient';
 import * as ubus from 'ubus';
+import * as fs from 'fs';
 
 // Regressions covering places where the mock proxies diverged from the real
 // OpenWrt bindings.
@@ -80,6 +81,70 @@ describe('ubus mock fidelity', () => {
 			let conn = m.connect();
 			assert.match('method', conn.call('system', 'board', {}).src);
 			assert.match('object', conn.call('system', 'info', {}).src);
+		});
+	});
+});
+
+describe('fs mock read-side fidelity', () => {
+	// The read-only family (lstat/readlink/realpath/opendir) used to fall through
+	// to the REAL filesystem during an active mock, so a mocked path stat()'d as a
+	// regular file but lstat()'d as null. These lock the family to the same view
+	// the rest of the fs proxy presents.
+	const tree = { data: { '/tmp/d/a.txt': 'hello', '/tmp/d/sub/b.txt': 'x' } };
+
+	it('stat().type uses the real fs vocabulary (file/directory, not regular)', () => {
+		mock.inject('fs', tree, (m) => {
+			assert.match('file', m.stat('/tmp/d/a.txt').type);
+			assert.match('directory', m.stat('/tmp/d').type);
+		});
+	});
+
+	it('lstat mirrors stat for a mocked file and directory', () => {
+		mock.inject('fs', tree, (m) => {
+			let l = m.lstat('/tmp/d/a.txt');
+			assert.match('file', l.type);
+			assert.match(5, l.size);
+			assert.match('directory', m.lstat('/tmp/d').type);
+			assert.match(null, m.lstat('/tmp/d/missing.txt'));
+		});
+	});
+
+	it('readlink reports a known path as a non-symlink (null)', () => {
+		mock.inject('fs', tree, (m) => {
+			assert.match(null, m.readlink('/tmp/d/a.txt'));
+			assert.match(null, m.readlink('/tmp/d'));
+		});
+	});
+
+	it('realpath canonicalizes . and .. and confirms existence', () => {
+		mock.inject('fs', tree, (m) => {
+			assert.match('/tmp/d/a.txt', m.realpath('/tmp/d/./a.txt'));
+			assert.match('/tmp/d/a.txt', m.realpath('/tmp/d/sub/../a.txt'));
+			assert.match('/tmp/d', m.realpath('/tmp/d'));
+		});
+	});
+
+	it('opendir cursors the merged listing and rewinds with seek', () => {
+		mock.inject('fs', tree, (m) => {
+			let dh = m.opendir('/tmp/d');
+			let first = [];
+			let e;
+			while ((e = dh.read()) !== null) push(first, e);
+			assert.match(truthy(), length(first) >= 2);   // a.txt + sub
+			dh.seek(0);
+			assert.match(first[0], dh.read());
+			dh.close();
+			// A file is not a directory: opendir returns null, like the real fs.
+			assert.match(null, m.opendir('/tmp/d/a.txt'));
+		});
+	});
+
+	it('strict mode dies on an unmocked read-side op, like stat/readfile', () => {
+		mock.inject('fs', { strict: true, data: { '/tmp/d/a.txt': 'x' } }, (m) => {
+			assert.throws(() => m.lstat('/tmp/nope'), /unmocked path/);
+			assert.throws(() => m.readlink('/tmp/nope'), /unmocked path/);
+			assert.throws(() => m.realpath('/tmp/nope'), /unmocked path/);
+			assert.match('file', m.lstat('/tmp/d/a.txt').type);
 		});
 	});
 });

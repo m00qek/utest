@@ -63,15 +63,121 @@ function glob_to_regex(pattern) {
 	return out + "$";
 }
 
+// A unique marker returned by stat_of() when the mock has no opinion about a path
+// (neither a stored file nor a directory inferred from descendants), so the caller
+// can fall through to strict-die / the real fs just like the other read ops.
+const UNKNOWN = {};
+
+// Canonicalize a path the way fs.realpath() does — collapse '.', '..' and
+// redundant slashes — so realpath() returns a canonical key and matches a path
+// stored under its canonical form. Purely lexical: the mock has no symlinks to
+// resolve, which is consistent with how it models the filesystem.
+function normalize_path(path) {
+	let absolute = substr(path, 0, 1) === "/";
+	let stack = [];
+	for (let p in split(path, "/")) {
+		if (p === "" || p === ".") continue;
+		if (p === "..") {
+			if (length(stack) > 0 && stack[length(stack) - 1] !== "..")
+				stack = slice(stack, 0, length(stack) - 1);
+			else if (!absolute)
+				push(stack, "..");
+			continue;
+		}
+		push(stack, p);
+	}
+	let joined = join("/", stack);
+	return absolute ? "/" + joined : (length(joined) ? joined : ".");
+}
+
+// Shared file/directory metadata behind stat()/lstat()/readlink()/realpath(): a
+// stored non-null value is a regular file; a path that is a strict prefix of any
+// stored key is an inferred directory; a stored null is a tombstoned (deleted)
+// path. Returns the stat dict, null for a deleted path, or UNKNOWN when the mock
+// has never heard of the path. `type` uses the real fs vocabulary ('file' /
+// 'directory'), so a SUT that switches on stat().type behaves the same as live.
+function stat_of(ctx, path) {
+	if (ctx.has_data(path)) {
+		let v = ctx.get_data(path);
+		if (v === null) return null;
+		let size = (type(v) === 'string') ? length(v) : 0;
+		return { size, mtime: 0, type: 'file' };
+	}
+	let prefix = dir_prefix(path);
+	for (let vp in ctx.get_all_data_keys()) {
+		if (ctx.get_data(vp) !== null && substr(vp, 0, length(prefix)) === prefix)
+			return { size: 0, mtime: 0, type: 'directory' };
+	}
+	return UNKNOWN;
+}
+
+// The merged (real ∪ mock) directory listing shared by lsdir() and opendir().
+// Returns an array of entry names (possibly empty when the directory exists but
+// is empty) or null when the directory does not exist. `op` names the caller for
+// the strict-mode die. In strict mode the real filesystem is suppressed.
+function list_dir(ctx, op, path) {
+	let real_entries = ctx.is_strict() ? null : ctx.real_call('lsdir', [path], null);
+	let virtual_paths = ctx.get_all_data_keys();
+	let entries = {};
+	if (type(real_entries) === "array") {
+		for (let e in real_entries) entries[e] = true;
+	}
+	let prefix = dir_prefix(path);
+	let saw_descendant = false;
+	for (let vp in virtual_paths) {
+		if (substr(vp, 0, length(prefix)) !== prefix) continue;
+		let relative = substr(vp, length(prefix));
+		let parts = split(relative, "/");
+		if (length(parts) === 0 || parts[0] === "") continue;
+		// Any path placed under this prefix — even a since-tombstoned one — means
+		// the directory is known to the mock.
+		saw_descendant = true;
+		// A deleted (null) direct child removes the entry even if it exists on the
+		// real filesystem; a non-null path (direct or nested) adds its top-level
+		// component.
+		if (length(parts) === 1 && ctx.get_data(vp) === null)
+			delete entries[parts[0]];
+		else if (ctx.get_data(vp) !== null)
+			entries[parts[0]] = true;
+	}
+	let result = keys(entries);
+	if (length(result) > 0) return result;
+	// The directory is empty. Distinguish "exists but empty" from ENOENT: real fs
+	// returns [] for the former, null for the latter. It exists if the real dir was
+	// listable or the mock has any path under it.
+	let dir_exists = (type(real_entries) === "array") || saw_descendant;
+	// Under strict, real results are suppressed, so an unknown directory (no mock
+	// paths under it) is a typo like an unmocked readfile — die loudly rather than
+	// silently return null. A known-but-emptied dir still returns [].
+	if (ctx.is_strict() && !dir_exists)
+		die(sprintf("strict mock: 'fs.%s' called with unmocked path: %s", op, path));
+	return dir_exists ? [] : null;
+}
+
+// A cursor over a directory listing, exposing the subset of the fs.dir resource
+// the mock models: sequential read() (null past the end), tell()/seek() for the
+// position, and no-op close()/error(). Real fs.dir order is filesystem-defined;
+// the mock serves its merged listing in the computed order (deterministic per test).
+function make_dir_handle(entries) {
+	let pos = 0;
+	return {
+		read:  function()    { return (pos < length(entries)) ? entries[pos++] : null; },
+		tell:  function()    { return pos; },
+		seek:  function(off) { pos = (off ?? 0); return true; },
+		close: function()    { },
+		error: function()    { return null; }
+	};
+}
+
 // Filesystem-mutating functions the mock does not model. Left to fall through (as
 // ctx.base() does for any un-overridden function in non-strict mode), they would
 // hit the REAL filesystem during an active mock — e.g. rmdir deleting a real
 // directory — silently defeating the seal. Each is sealed below to record the
 // call, honour a behavior: override when the test supplies one, and otherwise die
-// with an actionable message rather than leak the side effect. Read-only
-// fall-throughs (lstat/readlink/realpath/opendir) are a separate fidelity concern,
-// not a safety breach, and are left alone. chdir is included because it leaks a
-// process-global cwd change into later tests.
+// with an actionable message rather than leak the side effect. The read-only
+// family (lstat/readlink/realpath/opendir) is modeled directly below against the
+// same store as stat/lsdir, so it no longer leaks to the real fs. chdir is
+// included because it leaks a process-global cwd change into later tests.
 const SEALED_OPS = ['rmdir', 'symlink', 'chown', 'chdir', 'mkdtemp', 'mkstemp'];
 function seal_op(ctx, op) {
 	return function(...args) {
@@ -207,20 +313,54 @@ return {
 			ctx.record_call('stat', [path]);
 			let f = ctx.get_behavior('stat');
 			if (f) return f(path);
-			if (ctx.has_data(path)) {
-				let v = ctx.get_data(path);
-				if (v === null) return null;
-				let size = (type(v) === 'string') ? length(v) : 0;
-				return { size, mtime: 0, type: 'regular' };
-			}
-			let prefix = dir_prefix(path);
-			for (let vp in ctx.get_all_data_keys()) {
-				if (ctx.get_data(vp) !== null && substr(vp, 0, length(prefix)) === prefix)
-					return { size: 0, mtime: 0, type: 'directory' };
-			}
+			let s = stat_of(ctx, path);
+			if (s !== UNKNOWN) return s;
 			if (ctx.is_strict())
 				die("strict mock: 'fs.stat' called with unmocked path: " + path);
 			return ctx.real_call('stat', [path], null);
+		};
+
+		proxy.lstat = function(path) {
+			ctx.record_call('lstat', [path]);
+			let f = ctx.get_behavior('lstat');
+			if (f) return f(path);
+			// The mock models no symlinks (fs.symlink is sealed), so a path it knows
+			// is never a link — lstat is identical to stat for every mocked path.
+			let s = stat_of(ctx, path);
+			if (s !== UNKNOWN) return s;
+			if (ctx.is_strict())
+				die("strict mock: 'fs.lstat' called with unmocked path: " + path);
+			return ctx.real_call('lstat', [path], null);
+		};
+
+		proxy.readlink = function(path) {
+			ctx.record_call('readlink', [path]);
+			let f = ctx.get_behavior('readlink');
+			if (f) return f(path);
+			// No symlinks in the mock: a known path is a regular file or directory, so
+			// readlink reports "not a symlink" (null) exactly as the real fs does for a
+			// non-link. Only a wholly unknown path falls through.
+			let s = stat_of(ctx, path);
+			if (s !== UNKNOWN) return null;
+			if (ctx.is_strict())
+				die("strict mock: 'fs.readlink' called with unmocked path: " + path);
+			return ctx.real_call('readlink', [path], null);
+		};
+
+		proxy.realpath = function(path) {
+			ctx.record_call('realpath', [path]);
+			let f = ctx.get_behavior('realpath');
+			if (f) return f(path);
+			// realpath requires the path to exist; canonicalize first so a path given
+			// with '.'/'..' matches its stored key, then confirm the mock knows it.
+			let canon = normalize_path(path);
+			let s = stat_of(ctx, canon);
+			if (s === UNKNOWN) {
+				if (ctx.is_strict())
+					die("strict mock: 'fs.realpath' called with unmocked path: " + path);
+				return ctx.real_call('realpath', [path], null);
+			}
+			return (s === null) ? null : canon;   // null: a tombstoned (deleted) path
 		};
 
 		proxy.rename = function(old_path, new_path) {
@@ -303,42 +443,19 @@ return {
 			ctx.record_call('lsdir', [path]);
 			let f = ctx.get_behavior('lsdir');
 			if (f) return f(path);
-			let real_entries = ctx.is_strict() ? null : ctx.real_call('lsdir', [path], null);
-			let virtual_paths = ctx.get_all_data_keys();
-			let entries = {};
-			if (type(real_entries) === "array") {
-				for (let e in real_entries) entries[e] = true;
-			}
-			let prefix = dir_prefix(path);
-			let saw_descendant = false;
-			for (let vp in virtual_paths) {
-				if (substr(vp, 0, length(prefix)) !== prefix) continue;
-				let relative = substr(vp, length(prefix));
-				let parts = split(relative, "/");
-				if (length(parts) === 0 || parts[0] === "") continue;
-				// Any path placed under this prefix — even a since-tombstoned one —
-				// means the directory is known to the mock.
-				saw_descendant = true;
-				// A deleted (null) direct child removes the entry even if it exists on
-				// the real filesystem; a non-null path (direct or nested) adds its
-				// top-level component.
-				if (length(parts) === 1 && ctx.get_data(vp) === null)
-					delete entries[parts[0]];
-				else if (ctx.get_data(vp) !== null)
-					entries[parts[0]] = true;
-			}
-			let result = keys(entries);
-			if (length(result) > 0) return result;
-			// The directory is empty. Distinguish "exists but empty" from ENOENT:
-			// real fs returns [] for the former, null for the latter. It exists if the
-			// real dir was listable or the mock has any path under it.
-			let dir_exists = (type(real_entries) === "array") || saw_descendant;
-			// Under strict, real results are suppressed, so an unknown directory (no
-			// mock paths under it) is a typo like an unmocked readfile — die loudly
-			// rather than silently return null. A known-but-emptied dir still returns [].
-			if (ctx.is_strict() && !dir_exists)
-				die("strict mock: 'fs.lsdir' called with unmocked path: " + path);
-			return dir_exists ? [] : null;
+			return list_dir(ctx, 'lsdir', path);
+		};
+
+		proxy.opendir = function(path) {
+			ctx.record_call('opendir', [path]);
+			let f = ctx.get_behavior('opendir');
+			if (f) return f(path);
+			// Serve the same merged listing as lsdir() through a cursor handle. A
+			// non-array result (a file, or a nonexistent path) opens as null, exactly
+			// as the real fs.opendir returns null for ENOENT / ENOTDIR.
+			let entries = list_dir(ctx, 'opendir', path);
+			if (type(entries) !== 'array') return null;
+			return make_dir_handle(entries);
 		};
 
 		proxy.glob = function(pattern) {

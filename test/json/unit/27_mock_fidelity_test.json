@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 7,
-    "passed": 7,
+    "total": 13,
+    "passed": 13,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,7 +9,8 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
     {
       "event": "TEST_RESULT",
@@ -23,15 +24,15 @@
           "name": "root"
         },
         {
-          "id": 7,
-          "name": "ubus mock fidelity"
+          "id": 11,
+          "name": "fs mock read-side fidelity"
         },
         {
-          "id": 10,
-          "name": "a method-level mock takes precedence over an object-level mock"
+          "id": 13,
+          "name": "lstat mirrors stat for a mocked file and directory"
         }
       ],
-      "index": 7
+      "index": 9
     },
     {
       "event": "TEST_RESULT",
@@ -45,15 +46,15 @@
           "name": "root"
         },
         {
-          "id": 5,
-          "name": "uclient mock fidelity"
+          "id": 11,
+          "name": "fs mock read-side fidelity"
         },
         {
-          "id": 6,
-          "name": "a URL mocked to null returns false instead of tripping strict mode"
+          "id": 16,
+          "name": "opendir cursors the merged listing and rewinds with seek"
         }
       ],
-      "index": 4
+      "index": 12
     },
     {
       "event": "TEST_RESULT",
@@ -93,11 +94,55 @@
           "name": "uci mock fidelity"
         },
         {
+          "id": 4,
+          "name": "2-arg get(pkg, sec) returns the section type (like real uci)"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci mock fidelity"
+        },
+        {
           "id": 2,
           "name": "foreach() with a null type visits every section (like real uci)"
         }
       ],
       "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 11,
+          "name": "fs mock read-side fidelity"
+        },
+        {
+          "id": 17,
+          "name": "strict mode dies on an unmocked read-side op, like stat/readfile"
+        }
+      ],
+      "index": 13
     },
     {
       "event": "TEST_RESULT",
@@ -133,15 +178,37 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "uci mock fidelity"
+          "id": 5,
+          "name": "uclient mock fidelity"
         },
         {
-          "id": 4,
-          "name": "2-arg get(pkg, sec) returns the section type (like real uci)"
+          "id": 6,
+          "name": "a URL mocked to null returns false instead of tripping strict mode"
         }
       ],
-      "index": 3
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 11,
+          "name": "fs mock read-side fidelity"
+        },
+        {
+          "id": 15,
+          "name": "realpath canonicalizes . and .. and confirms existence"
+        }
+      ],
+      "index": 11
     },
     {
       "event": "TEST_RESULT",
@@ -164,20 +231,86 @@
         }
       ],
       "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 7,
+          "name": "ubus mock fidelity"
+        },
+        {
+          "id": 10,
+          "name": "a method-level mock takes precedence over an object-level mock"
+        }
+      ],
+      "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 11,
+          "name": "fs mock read-side fidelity"
+        },
+        {
+          "id": 14,
+          "name": "readlink reports a known path as a non-symlink (null)"
+        }
+      ],
+      "index": 10
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/27_mock_fidelity_test.uc",
+      "bundle": "examples/unit/27_mock_fidelity_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 11,
+          "name": "fs mock read-side fidelity"
+        },
+        {
+          "id": 12,
+          "name": "stat().type uses the real fs vocabulary (file/directory, not regular)"
+        }
+      ],
+      "index": 8
     }
-  ],
-  "files": [
-    "examples/unit/27_mock_fidelity_test.uc"
   ],
   "bundles": {
     "examples/unit/27_mock_fidelity_test.uc": {
-      "total": 7,
-      "passed": 7,
+      "total": 13,
+      "passed": 13,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/27_mock_fidelity_test.uc"
+  ]
 }
