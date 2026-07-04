@@ -196,24 +196,37 @@ return {
 		// Build a file handle backed by a string.  on_close(written), if provided,
 		// is called with everything that was write()n when close() is called.
 		function make_handle(content, on_close) {
-			let remaining = content ?? '';
+			// Track an absolute position into the full content rather than a shrinking
+			// tail, so the handle can also answer tell()/seek() the way the real
+			// fs.file resource does. read() still advances sequentially from pos.
+			let full = content ?? '';
+			let pos = 0;
 			let written = '';
 			return {
 				read: function(n) {
-					if (n === 'all') { let r = remaining; remaining = ''; return r; }
+					if (n === 'all') { let r = substr(full, pos); pos = length(full); return r; }
 					if (n === 'line') {
-						let i = index(remaining, '\n');
-						if (i < 0) { let r = remaining; remaining = ''; return length(r) ? r : null; }
-						let r = substr(remaining, 0, i + 1);
-						remaining = substr(remaining, i + 1);
+						let rest = substr(full, pos);
+						let i = index(rest, '\n');
+						if (i < 0) { pos = length(full); return length(rest) ? rest : null; }
+						let r = substr(rest, 0, i + 1);
+						pos += i + 1;
 						return r;
 					}
-					let cnt = +n;
-					let r = substr(remaining, 0, cnt);
-					remaining = substr(remaining, cnt);
+					let r = substr(full, pos, +n);
+					pos += length(r);
 					return r;
 				},
-				write: function(data) { written += data; return length(data); },
+				// The mock's write handle always appends (its on_close hook receives the
+				// whole buffer); pos advances so tell() reports bytes written, matching
+				// the common write-then-tell pattern. Random-access writes (r+/w+) are
+				// not modeled — see the fs write-mode note in the proxy docs.
+				write: function(data) { written += data; pos += length(data); return length(data); },
+				// Real fs.file exposes seek/tell/flush; a SUT that repositions a read
+				// handle would otherwise crash on a missing method under the mock.
+				seek:  function(off) { pos = (off ?? 0); return true; },
+				tell:  function() { return pos; },
+				flush: function() { return true; },
 				close: function() { if (on_close) on_close(written); },
 				error: function() { return null; }
 			};
@@ -274,14 +287,21 @@ return {
 			return ctx.real_call('popen', [cmd, mode], null);
 		};
 
-		proxy.readfile = function(path) {
-			ctx.record_call('readfile', [path]);
+		proxy.readfile = function(path, size) {
+			// Record [path] when called with no size so existing single-arg
+			// expectations hold; include size only when the caller passed one.
+			ctx.record_call('readfile', size === null ? [path] : [path, size]);
 			let f = ctx.get_behavior('readfile');
-			if (f) return f(path);
-			if (ctx.has_data(path)) return ctx.get_data(path);
+			if (f) return f(path, size);
+			if (ctx.has_data(path)) {
+				let v = ctx.get_data(path);
+				// Real fs.readfile(path, size) reads at most `size` bytes from the start.
+				if (size !== null && type(v) === 'string') return substr(v, 0, size);
+				return v;
+			}
 			if (ctx.is_strict())
 				die("strict mock: 'fs.readfile' called with unmocked path: " + path);
-			return ctx.real_call('readfile', [path], null);
+			return ctx.real_call('readfile', size === null ? [path] : [path, size], null);
 		};
 
 		proxy.writefile = function(path, data) {

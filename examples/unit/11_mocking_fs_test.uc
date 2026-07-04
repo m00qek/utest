@@ -529,4 +529,23 @@ describe('lsdir strict mode and empty directories', () => {
 			assert.match([], m_fs.lsdir('/tmp/emptied'));
 		});
 	});
+
+	it('readfile() honors the size argument (reads at most N bytes)', () => {
+		mock.inject('fs', { data: { '/tmp/big.txt': 'hello world' } }, (m_fs) => {
+			assert.match('hello', m_fs.readfile('/tmp/big.txt', 5));
+			assert.match('hello world', m_fs.readfile('/tmp/big.txt'));   // no size: whole file
+		});
+	});
+
+	it('a read handle supports tell()/seek()/flush() like the real fs.file', () => {
+		mock.inject('fs', { data: { '/tmp/h.txt': 'abcdef' } }, (m_fs) => {
+			let h = m_fs.open('/tmp/h.txt', 'r');
+			assert.match('ab', h.read(2));
+			assert.match(2, h.tell());
+			h.seek(0);
+			assert.match('abc', h.read(3));
+			assert.match(truthy(), h.flush());
+			h.close();
+		});
+	});
 });
