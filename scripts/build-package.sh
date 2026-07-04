@@ -19,6 +19,10 @@ trap "rm -rf $TMPDIR" EXIT
 sed "s/^PKG_VERSION:=.*/PKG_VERSION:=${PKG_VERSION}~${GIT_COMMIT}/" "$PKG_MAKEFILE" > "$TMPDIR/Makefile"
 
 mkdir -p "$ROOT/bin"
+# The openwrt/sdk container below writes the built package into bin/ (mounted at
+# /builder/bin) as its own build user, whose uid does not match the host user, so
+# the directory must be group/other-writable for the build to drop its output.
+# Scoped to this one throwaway output dir, not a broad permission change.
 chmod 777 "$ROOT/bin"
 
 docker run --rm \
