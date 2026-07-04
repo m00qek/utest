@@ -62,11 +62,24 @@ reuse, replayed-report seed qualifier.
 - **R3.20** (decision: add both) — public `assert.fail(msg)` (FAIL-classified) and
   umbrella `is_combinator` re-export.
 
+## R3.6 LANDED (`9412711`, meta-test green) — fs read-side family
+
+`lstat`/`readlink`/`realpath`/`opendir` were never overridden, so `ctx.base()`
+wrapped them with `make_behavior_fn`: during an active mock they fell through to
+the REAL fs (non-strict) or died "not mocked" even for a known path (strict) — a
+mocked path stat'd as a file but lstat'd as null. Now modeled against the same
+data channel as stat/lsdir: lstat==stat (no symlinks; symlink is sealed), readlink
+returns null for any known path, realpath canonicalizes `.`/`..` (new
+`normalize_path`) and confirms existence, opendir serves the merged listing via a
+cursor handle (read/tell/seek/close/error). `stat_of()`/`list_dir()` factor the
+shared logic; each honours a `behavior:` override, records for spy(), and
+strict-dies on a wholly unknown path. Also fixed `stat().type` to the real fs
+vocabulary (`'file'`, not `'regular'`) so a SUT switching on it matches live —
+11_mocking_fs updated (the value isn't embedded in the PASS baseline, so no regen),
+fidelity coverage added to 27_mock_fidelity.
+
 ## Still open — MEDIUM
 
-- **R3.6 fs read-side fall-throughs contradict the mocked view**: `lstat`,
-  `readlink`, `realpath`, `opendir` hit the real fs, so a mocked path stats as
-  regular via `stat` but null via `lstat`. Probe-confirmed. Implement the family.
 - **R3.10 verify.uc doesn't pin the top-level JSON schema** (`files`,
   run-level `duration_ms`/`seed`); committed baselines have already drifted
   into three schema vintages without detection. Clear fix, but regenerates all
