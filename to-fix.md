@@ -118,20 +118,40 @@ preserved. Both mutators return the handle for chaining. Single-pass semantics
 unchanged (a callback-armed/re-armed timer still needs another run()). Coverage
 in 14_uloop_test.
 
-## Still open — NIT
+## NIT sweep LANDED (`954c88e`..`f1ecf8b`, meta-test green)
 
-- manager.uc shim gen: exported names assumed to be valid identifiers
-  (`export const delete = …` won't compile); dotted module names with `..`
-  escape run_dir (PLAUSIBLE, robustness not security).
-- fs write-mode edges: `open(p,'w')` truncates only at close; `r+`/`w+` writes
-  discarded; `readfile(p, size)` ignores size; handles lack seek/tell/flush.
-  Negated-class trailing `-` escape wrongly excludes `\` (backslash filenames).
-  `mkdir()` returns true but leaves no stat-able trace; uci `delete()` of a
-  missing section returns true.
-- `elapsed_ms` int division (name implies float — left as-is; ms integers are
-  fine, changing the format is debatable). busybox "Terminated" noise in -j1
-  timeout output; slow1/slow2 burn 4s of sleep per meta-test; build-package.sh
-  `chmod 777`.
+**Fixed:**
+- **fs `readfile(path, size)`** now reads at most `size` bytes (was ignored).
+- **fs handles** expose `seek`/`tell`/`flush` (make_handle tracks an absolute
+  position); a SUT repositioning a handle no longer crashes on a missing method.
+- **uci `delete()`** returns `null` for a missing package/section/option (was
+  `true`), matching real uci and no longer masking SUT bugs.
+- **shim gen (A1)** skips a non-identifier module export fail-soft (warn +
+  continue) instead of emitting an uncompilable `export const <reserved>` that
+  would break the whole shim. No standard module is affected.
+
+**Resolved as non-issues / deliberate boundaries (documented in code):**
+- **Shim `..` traversal (A2)** — not exploitable: `module_path` replaces *all*
+  dots with `/`, so a `..` becomes `//` and can never form a parent-dir segment;
+  the output stays within run_dir. No guard added (a strict regex would wrongly
+  reject legitimate hyphenated module names).
+- **fs write-mode edges (B1/B2)** — `open(p,'w')` writes on close and `r+`/`w+`
+  random-access writes are unmodeled; the string-backed handle appends via its
+  on_close hook. Documented at make_handle; matching full POSIX fd semantics is
+  out of proportion for a content-map mock.
+- **glob negated-class trailing `-`/backslash (B5)** — an edge only reachable with
+  backslash filenames, effectively never on OpenWrt; left as-is to avoid
+  destabilising glob_to_regex.
+- **`mkdir()` leaves no stat-able trace (B6)** — the mock infers directories from
+  file descendants, so an empty mkdir'd dir isn't visible; a modeling gap, not a
+  correctness bug (write a file under it to make it appear).
+- **`elapsed_ms` int division (C1)** — deliberate; ms integers are fine.
+- **busybox "Terminated" noise (C2)** — emitted by the shell/kernel on SIGTERM in
+  -j1 timeout output; can't be suppressed without hiding real stderr.
+- **slow1/slow2 4s sleep (C3)** — integration timing fidelity; trimming risks
+  flakiness.
+- **build-package `chmod 777` (C4)** — scoped to the throwaway bin/ output dir the
+  SDK container writes as its own uid; now carries a comment explaining why.
 
 ## Panel verdicts on the standing questions
 
