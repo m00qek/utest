@@ -45,12 +45,21 @@ function generate_standard_shim(name, shim_dir) {
 	// The module name is interpolated into the generated source, so emit it as a
 	// %J (JSON) string literal rather than a bare single-quoted one — a name
 	// containing a quote would otherwise break the literal and the shim wouldn't
-	// compile. Function names come from the real module's keys and are safe idents.
+	// compile.
 	let lines = [
 		sprintf("import * as _real from %J;", "real_" + name),
 		"import { __internal__ } from 'utest.mock.engine';"
 	];
 	for (let fn_name in (real ? keys(real) : [])) {
+		// Each name becomes `export const <fn_name>` in the generated source, so a
+		// name that isn't a valid identifier (a reserved word, or an exotic native
+		// export) would make the whole shim fail to compile — taking every other
+		// member down with it. Skip it fail-soft: that one member is not
+		// interceptable, but the rest of the module still mocks.
+		if (!match(fn_name, /^[A-Za-z_][A-Za-z0-9_]*$/)) {
+			warn(sprintf("[utest] warning: '%s' export '%s' is not a valid identifier; omitted from the shim\n", name, fn_name));
+			continue;
+		}
 		if (type(real[fn_name]) === 'function') {
 			push(lines, sprintf(
 				"export const %s = function(...args) { let p = __internal__.get_proxy_global(%J); return p ? p.%s(...args) : _real.%s(...args); };",
