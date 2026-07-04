@@ -38,6 +38,17 @@ function get_test_path(test) {
     return format_path(test.path);
 }
 
+// The stable top-level schema: every run-level key except the two volatile ones
+// (duration_ms/seed) that `normalize` scrubs from every comparison. Used to pin
+// the JSON shape so an added/dropped/renamed run-level key — or a baseline missing
+// one, e.g. `files` — is caught rather than silently ignored.
+function schema_keys(obj) {
+    let ks = [];
+    for (let k in keys(obj))
+        if (k !== "duration_ms" && k !== "seed") push(ks, k);
+    return sort(ks);
+}
+
 // Sort by (suite, index) for stable comparison across FATAL events (no index)
 // and multi-bundle runs (duplicate indices from independent workers).
 function cmp_results(a, b) {
@@ -107,6 +118,34 @@ function main() {
         all_pass = false;
     }
 
+    // 3c. Pin the top-level schema. Nothing compared the run-level key *set*, so
+    // baselines drifted into vintages (some carry duration_ms/seed, some don't) and
+    // a dropped/renamed key — or a `files` gone missing — would pass unnoticed.
+    // Compared on the scrubbed key set (schema_keys), so the volatile duration_ms/
+    // seed values never participate; their presence is asserted separately below.
+    let a_schema = schema_keys(actual_json);
+    let e_schema = schema_keys(expected_json);
+    if (deep_equal(a_schema, e_schema)) {
+        print(sprintf("  [PASS] %s (Schema keys)\n", example_file));
+    } else {
+        print(sprintf("  [FAIL] %s (Schema keys)\n", example_file));
+        print(sprintf("         Expected: %J\n         Actual:   %J\n", e_schema, a_schema));
+        all_pass = false;
+    }
+
+    // 3d. The run always reports its metadata (duration_ms, seed) even though the
+    // values are scrubbed from every comparison. Assert they are still emitted so a
+    // reporter regression that drops them is caught. Checked on the live output
+    // only — historic baselines predate a uniform strip and need not carry them.
+    for (let meta in ["duration_ms", "seed"]) {
+        if (exists(actual_json, meta)) {
+            print(sprintf("  [PASS] %s (Run metadata: %s)\n", example_file, meta));
+        } else {
+            print(sprintf("  [FAIL] %s (Run metadata: %s missing)\n", example_file, meta));
+            all_pass = false;
+        }
+    }
+
     // 4. Verify EVERY individual test result
     let a_results = normalize(actual_json.results || []);
     let e_results = normalize(expected_json.results || []);
@@ -146,6 +185,21 @@ function main() {
     } else {
         print(sprintf("  [FAIL] %s (Failures Mismatch)\n", example_file));
         print(sprintf("         Expected: %J\n         Actual:   %J\n", e_failures, a_failures));
+        all_pass = false;
+    }
+
+    // 4c. Verify the discovered file list (`files`). Nothing compared it, so a
+    // discovery regression that dropped or duplicated a file would go unnoticed.
+    // Sort first: `files` is emitted in shuffled (seed-dependent) order, like results.
+    let a_files = normalize(actual_json.files || []);
+    let e_files = normalize(expected_json.files || []);
+    sort(a_files);
+    sort(e_files);
+    if (deep_equal(a_files, e_files)) {
+        print(sprintf("  [PASS] %s (Files)\n", example_file));
+    } else {
+        print(sprintf("  [FAIL] %s (Files Mismatch)\n", example_file));
+        print(sprintf("         Expected: %J\n         Actual:   %J\n", e_files, a_files));
         all_pass = false;
     }
 
