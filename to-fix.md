@@ -23,9 +23,8 @@ into ctx (`build_proxy`/`context` take `is_live`) and every state-touching ctx
 method is gated, so any use after scope-end dies. Both guards share one predicate
 per scope — inject reuses the live cell; global.patch keys on proxy identity
 (late-bound), which survives snapshot()/restore() (restore preserves the proxy
-ref) where a reg.global-identity check would not. **R3.16 (spy-on-stale) is NOT
-auto-fixed** — spy() reads `__utest__` directly, not ctx, so a stale spy() still
-returns current-scope calls; a fix would gate spy on the same liveness.
+ref) where a reg.global-identity check would not. spy()-on-stale was the one gap
+this didn't auto-close (spy reads `__utest__` directly, not ctx) — see R3.16.
 
 ## R3.2 LANDED (`00aaa61`) — fs destructive-op seal
 
@@ -73,18 +72,27 @@ reuse, replayed-report seed qualifier.
   into three schema vintages without detection. Clear fix, but regenerates all
   baselines.
 
+## R3.16 / R3.19 LANDED (`816c768`, `840ef9d`, meta-test green)
+
+- **R3.16** (spy-on-stale) — `guard_proxy` now carries the scope-liveness
+  predicate on `__utest__`, and `spy()` gates its live registry lookup on it: a
+  proxy used past its inject()/patch() scope dies with "used outside its scope"
+  instead of silently reporting the current (empty global) layer's calls. Inner
+  objects and unguarded proxies are unaffected (no `is_live`). Test in
+  17_spy_test.uc covers both a leaked inject proxy and a post-unpatch proxy.
+- **R3.19** (error-path coverage) — meta-test now pins two gaps: `assert_cli_error`
+  also checks an unknown flag (`-Z`) and a missing `-c` config; and a new
+  `examples/loadfail/broken_import.uc` fixture (outside the `*_test.uc` discovery
+  glob, so no baseline) verifies a compile/load failure surfaces as a clean FATAL
+  with non-zero exit and no runner stack trace. Complements 22_fatal_setup (the
+  later runtime setup-fatal path).
+
 ## Still open — LOW
 
 - **R3.15** uloop mock `timer()` returns null; real returns a handle with
   `set()`/`cancel()` — SUT storing/cancelling its timer crashes only under test.
   More implementation than decision: emulate a handle whose cancel() removes the
   pending timer from the queue and set() reschedules.
-- **R3.16** `spy()` on a stale proxy silently reports current-scope calls (empty
-  global) instead of dying — NOT closed by R3.3 (spy reads `__utest__` directly,
-  not ctx). Fix: gate spy() on the same scope liveness.
-- **R3.19** module-load-failure FATAL path unpinned by meta-test;
-  `assert_cli_error` covers only -j/-s/-r (unknown flag, broken -c untested).
-  Clear, but new fixtures + baselines.
 
 ## Still open — NIT
 
