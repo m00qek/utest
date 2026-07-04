@@ -218,6 +218,11 @@ assert_cli_error "bad-seed"     "expected an integer"         -s xyz \
     || failed_tests="$failed_tests cli_bad_seed"
 assert_cli_error "bad-reporter" "expected one of"             -r bogus \
     || failed_tests="$failed_tests cli_bad_reporter"
+# An unknown flag and a nonexistent config must fail loudly, not be ignored.
+assert_cli_error "unknown-flag"  "Unknown option"             -Z \
+    || failed_tests="$failed_tests cli_unknown_flag"
+assert_cli_error "missing-config" "Configuration file not found" -c /no/such/config.uc \
+    || failed_tests="$failed_tests cli_missing_config"
 
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
@@ -230,6 +235,15 @@ for rep in compact detailed; do
     smoke_reporter "$rep" examples/unit/01_assertions_test.uc 0 "Summary" \
         || failed_tests="$failed_tests reporter_${rep}_pass"
 done
+
+# Module-load failure: a test file that fails to COMPILE (here, a bad import) must
+# surface as a FATAL with a non-zero exit — not vanish silently, and not spill a
+# raw runner stack trace. 22_fatal_setup covers a *runtime* setup fatal; this is
+# the earlier compile/load path. The fixture is named without the _test.uc suffix
+# so the main discovery loop skips it (it has, and needs, no JSON baseline).
+smoke_reporter detailed examples/loadfail/broken_import.uc 1 \
+    "Unable to compile source file" "Fatals:  1" \
+    || failed_tests="$failed_tests reporter_load_fatal"
 
 # SKIP / IGNORE rendering (3.5): the smoke set above covers PASS/FAIL/ERROR/FATAL
 # but not skipped or ignored tests in either reporter. Detailed labels them
