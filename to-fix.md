@@ -13,6 +13,20 @@ Beat grades: core library **A-**, mock subsystem **B-**, runner/orchestration
 were probe-confirmed against the real interpreter (seal breach, guard escape,
 musl buffering, and contains() asymmetry re-verified independently by the lead).
 
+## R3.3 LANDED (`7eb8d43`) — second-order object guard
+
+The 2.4 guard covered only a proxy's own top-level methods; the objects those
+methods return (fs open() handles, uci cursors, ubus connections, uclient
+handles) close over the raw ctx and were unguarded, so a leaked handle's close()
+polluted reg.global. Fixed at the chokepoint they all share: liveness is threaded
+into ctx (`build_proxy`/`context` take `is_live`) and every state-touching ctx
+method is gated, so any use after scope-end dies. Both guards share one predicate
+per scope — inject reuses the live cell; global.patch keys on proxy identity
+(late-bound), which survives snapshot()/restore() (restore preserves the proxy
+ref) where a reg.global-identity check would not. **R3.16 (spy-on-stale) is NOT
+auto-fixed** — spy() reads `__utest__` directly, not ctx, so a stale spy() still
+returns current-scope calls; a fix would gate spy on the same liveness.
+
 ## R3.2 LANDED (`00aaa61`) — fs destructive-op seal
 
 The fs mock now seals the six filesystem-mutating ops it does not model — `rmdir`,
@@ -35,18 +49,6 @@ budget cap honoured. **R3.13** integer size/count generator options validated.
 **R3.21** mkdocs nav orphans + stale doc/comment refs. Plus nits: between()
 reversed-bounds guard, forall runs>=1, uloop.done() per bundle, seed_from_clock
 reuse, replayed-report seed qualifier.
-
-## Still open — HIGH
-
-- **R3.3 the 2.4 scope guard is shallow: second-order objects escape it.**
-  `guard_proxy` wraps only top-level proxy methods; `fs.open()` handles,
-  `uci.cursor()`, `ubus.connect()`, `uclient.new()` return unguarded objects
-  closed over ctx. After the layer pops, their writes hit `reg.global` — a
-  leaked handle silently POLLUTES GLOBAL MOCK STATE instead of dying (probe:
-  leaked `fh.write()`/`close()` made `/leak` visible to later injects).
-  **Invasive:** proper fix is a liveness check at the ctx/engine level
-  (`record_call`/`set_channel`/`real_call`), closing the class not the instances.
-  R3.16 (spy-on-stale) rides on this.
 
 ## Still open — MEDIUM
 
@@ -71,8 +73,9 @@ reuse, replayed-report seed qualifier.
 - **R3.15** uloop mock `timer()` returns null; real returns a handle with
   `set()`/`cancel()` — SUT storing/cancelling its timer crashes only under test.
   **Needs a decision:** how much of the handle surface to emulate.
-- **R3.16** `spy()` on a stale proxy silently reports current-scope calls — rides
-  on R3.3.
+- **R3.16** `spy()` on a stale proxy silently reports current-scope calls (empty
+  global) instead of dying — NOT closed by R3.3 (spy reads `__utest__` directly,
+  not ctx). Fix: gate spy() on the same scope liveness.
 - **R3.18** timeout signal asymmetry: -j1 SIGTERM vs -jN SIGKILL. **Needs a
   decision:** TERM everywhere vs TERM-then-KILL.
 - **R3.19** module-load-failure FATAL path unpinned by meta-test;
