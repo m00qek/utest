@@ -297,14 +297,18 @@ function guarded_method(name, fn, key, is_live, guarded) {
 // filesystem after its inject() callback returned). `is_live(guarded)` reports
 // whether the wrapping scope is still active; it receives the wrapper so a
 // global-patch proxy can check it is still the registered proxy (robust to
-// unpatch/restore/re-patch). Non-function properties (e.g. __utest__ for spy())
-// pass through unchanged.
+// unpatch/restore/re-patch). Non-function properties pass through unchanged, save
+// __utest__: spy() does a live registry lookup rather than call a guarded method,
+// so it would otherwise report the current scope's calls for a stale proxy — carry
+// is_live on __utest__ so spy() can die too.
 export function guard_proxy(name, proxy, is_live) {
 	let guarded = {};
 	for (let k, v in proxy) {
 		if (type(v) !== 'function') { guarded[k] = v; continue; }
 		guarded[k] = guarded_method(name, v, k, is_live, guarded);
 	}
+	if (type(guarded.__utest__) === 'object')
+		guarded.__utest__ = { ...guarded.__utest__, is_live: is_live };
 	return guarded;
 };
 

@@ -60,6 +60,19 @@ describe('spy()', () => {
 			mock.global.unpatch('fs');
 		});
 
+		it('spy() on a proxy leaked out of its scope dies rather than misreport', () => {
+			// spy() does a live registry lookup, so a proxy captured out of inject()
+			// would otherwise report the current (empty global) scope's calls. Both an
+			// inject proxy after its callback and a patch proxy after unpatch must die.
+			let leaked;
+			mock.inject('fs', { data: {} }, (m_fs) => { leaked = m_fs; m_fs.readfile('/x'); });
+			assert.throws(() => spy(leaked), /used outside its scope/);
+
+			const m_fs = mock.global.patch('fs', {});
+			mock.global.unpatch('fs');
+			assert.throws(() => spy(m_fs), /used outside its scope/);
+		});
+
 		it('resets call records on successive global patches', () => {
 			mock.global.patch('fs', { data: { '/a': 'x' } });
 			fs.readfile('/a');
