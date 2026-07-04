@@ -107,7 +107,17 @@ while read f; do
     json_path="test/json/${rel_path%.uc}.json"
     
     if [ ! -f "$json_path" ]; then
-        echo "  [SKIP] $f (No baseline)"
+        # envprobe/, multi/, and timeout/ carry no per-file baseline on purpose —
+        # they are verified by the dedicated blocks below. Any OTHER file without a
+        # baseline is a regression (a deleted baseline, or a test renamed without
+        # renaming its baseline) and must fail, not silently drop from the run.
+        case "$rel_path" in
+            envprobe/*|multi/*|timeout/*)
+                echo "  [SKIP] $f (verified in a dedicated block)" ;;
+            *)
+                echo "  [FAIL] $f (missing baseline: $json_path)"
+                failed_tests="$failed_tests $f" ;;
+        esac
         continue
     fi
 
@@ -117,7 +127,7 @@ while read f; do
         bundle_arg="MyBundle:$f"
     fi
 
-    # Detect companion config file (e.g. 09_config.uc alongside 09_standard_shim_test.uc)
+    # Detect companion config file (e.g. 10_standard_shim_config.uc alongside 10_standard_shim_test.uc)
     config_flags=""
     companion_config="examples/${rel_path%_test.uc}_config.uc"
     if [ -f "$companion_config" ]; then
