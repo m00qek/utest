@@ -33,7 +33,10 @@ return {
 						return null;
 					}
 
-					return (type(val) === 'function') ? val(args) : val;
+					// Deep-clone a stored reply so a caller mutating the result cannot
+					// corrupt the mock store for the next call (real ubus returns a fresh
+					// object per call). A data-as-function reply owns its own return value.
+					return (type(val) === 'function') ? val(args) : ctx.clone(val);
 				},
 				disconnect: function() {
 					push(conn_calls.disconnect, []);

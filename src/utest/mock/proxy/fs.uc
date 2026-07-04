@@ -345,7 +345,11 @@ return {
 				if (ctx.get_data(vp) === null) delete files[vp];
 				else files[vp] = true;
 			}
-			return length(keys(files)) > 0 ? keys(files) : null;
+			// Real fs.glob returns lexically sorted paths; without this, merged results
+			// would list real matches first, then virtual ones in key order, so a SUT
+			// that relies on conf.d/priority ordering would behave differently under mock.
+			let out = keys(files);
+			return length(out) > 0 ? sort(out) : null;
 		};
 
 		return proxy;

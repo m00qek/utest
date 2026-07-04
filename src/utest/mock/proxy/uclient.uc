@@ -78,7 +78,10 @@ return {
 				let f = ctx.get_behavior('get_headers');
 				if (f) return f();
 				let response = ctx.get_data(url);
-				return (response && response.headers) ? response.headers : {};
+				// Clone so a caller mutating the headers dict cannot corrupt the mock
+				// store seen by a later get_headers() (real uclient hands back a fresh
+				// object). Cloning a scalar body below is a harmless no-op.
+				return (response && response.headers) ? ctx.clone(response.headers) : {};
 			};
 
 			u.status = function() {
@@ -96,7 +99,7 @@ return {
 				if (_body_served) return null;
 				_body_served = true;
 				let response = ctx.get_data(url);
-				return (response && response.body !== null) ? response.body : null;
+				return (response && response.body !== null) ? ctx.clone(response.body) : null;
 			};
 
 			u.disconnect = function() {

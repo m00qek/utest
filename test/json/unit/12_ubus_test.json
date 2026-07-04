@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 10,
-    "passed": 10,
+    "total": 11,
+    "passed": 11,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,7 +9,8 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
     {
       "event": "TEST_RESULT",
@@ -27,8 +28,30 @@
           "name": "ubus Mocking"
         },
         {
+          "id": 6,
+          "name": "supports function values for dynamic responses"
+        }
+      ],
+      "index": 5
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/12_ubus_test.uc",
+      "bundle": "examples/unit/12_ubus_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "ubus Mocking"
+        },
+        {
           "id": 8,
-          "name": "disconnect() is a no-op"
+          "name": "supports nesting mock.inject()"
         }
       ],
       "index": 7
@@ -49,8 +72,30 @@
           "name": "ubus Mocking"
         },
         {
+          "id": 9,
+          "name": "disconnect() is a no-op"
+        }
+      ],
+      "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/12_ubus_test.uc",
+      "bundle": "examples/unit/12_ubus_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "ubus Mocking"
+        },
+        {
           "id": 11,
-          "name": "patches global state via mock.global.patch()"
+          "name": "strict mode dies on unmocked calls"
         }
       ],
       "index": 10
@@ -71,11 +116,33 @@
           "name": "ubus Mocking"
         },
         {
-          "id": 4,
+          "id": 3,
+          "name": "call() returns a fresh copy — mutating it does not corrupt the store"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/12_ubus_test.uc",
+      "bundle": "examples/unit/12_ubus_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "ubus Mocking"
+        },
+        {
+          "id": 5,
           "name": "returns null for unmocked calls in non-strict mode"
         }
       ],
-      "index": 3
+      "index": 4
     },
     {
       "event": "TEST_RESULT",
@@ -94,10 +161,54 @@
         },
         {
           "id": 10,
-          "name": "strict mode dies on unmocked calls"
+          "name": "disconnect() is recorded in connection call history"
         }
       ],
       "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/12_ubus_test.uc",
+      "bundle": "examples/unit/12_ubus_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "ubus Mocking"
+        },
+        {
+          "id": 7,
+          "name": "supports behavior override for call"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/12_ubus_test.uc",
+      "bundle": "examples/unit/12_ubus_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "ubus Mocking"
+        },
+        {
+          "id": 4,
+          "name": "falls back to object key for any method"
+        }
+      ],
+      "index": 3
     },
     {
       "event": "TEST_RESULT",
@@ -137,115 +248,25 @@
           "name": "ubus Mocking"
         },
         {
-          "id": 9,
-          "name": "disconnect() is recorded in connection call history"
+          "id": 12,
+          "name": "patches global state via mock.global.patch()"
         }
       ],
-      "index": 8
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/12_ubus_test.uc",
-      "bundle": "examples/unit/12_ubus_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "ubus Mocking"
-        },
-        {
-          "id": 5,
-          "name": "supports function values for dynamic responses"
-        }
-      ],
-      "index": 4
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/12_ubus_test.uc",
-      "bundle": "examples/unit/12_ubus_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "ubus Mocking"
-        },
-        {
-          "id": 7,
-          "name": "supports nesting mock.inject()"
-        }
-      ],
-      "index": 6
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/12_ubus_test.uc",
-      "bundle": "examples/unit/12_ubus_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "ubus Mocking"
-        },
-        {
-          "id": 6,
-          "name": "supports behavior override for call"
-        }
-      ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/12_ubus_test.uc",
-      "bundle": "examples/unit/12_ubus_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "ubus Mocking"
-        },
-        {
-          "id": 3,
-          "name": "falls back to object key for any method"
-        }
-      ],
-      "index": 2
+      "index": 11
     }
   ],
-  "files": [
-    "examples/unit/12_ubus_test.uc"
-  ],
-  "duration_ms": 6,
-  "seed": 629020337,
   "bundles": {
     "examples/unit/12_ubus_test.uc": {
-      "total": 10,
-      "passed": 10,
+      "total": 11,
+      "passed": 11,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/12_ubus_test.uc"
+  ]
 }

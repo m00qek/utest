@@ -12,6 +12,18 @@ describe('uclient Mocking', () => {
 		});
 	});
 
+	it('get_headers() returns a fresh copy — mutating it does not corrupt the store', () => {
+		const url = 'http://api.example.com/hdrs';
+		mock.inject('uclient', {
+			data: { [url]: { status: 200, headers: { 'x-a': '1' }, body: '' } }
+		}, (m_uclient) => {
+			let u = m_uclient.new(url, null, {});
+			u.request('GET', {});
+			u.get_headers()['x-a'] = 'mutated';
+			assert.match('1', u.get_headers()['x-a']);
+		});
+	});
+
 	it('request() fires header_done, data_read, data_eof in order', () => {
 		const url = 'http://api.example.com/items';
 		mock.inject('uclient', {

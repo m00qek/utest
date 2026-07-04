@@ -112,6 +112,20 @@ describe('FS Mocking', () => {
 		mock.global.unpatch('fs');
 	});
 
+	it('glob() returns matches lexically sorted like real fs.glob', () => {
+		// Keys inserted out of order: real fs.glob sorts its results, so the mock
+		// must too, or a conf.d/priority-ordering SUT diverges under mock. No manual
+		// sort() here — that is exactly what is under test.
+		mock.inject('fs', { data: {
+			'/etc/conf.d/30-c': 'c',
+			'/etc/conf.d/10-a': 'a',
+			'/etc/conf.d/20-b': 'b'
+		}}, (m_fs) => {
+			assert.match(['/etc/conf.d/10-a', '/etc/conf.d/20-b', '/etc/conf.d/30-c'],
+			             m_fs.glob('/etc/conf.d/*'));
+		});
+	});
+
 	it('supports writing to pre-registered virtual files', () => {
 		const m_fs = mock.global.patch('fs', { data: { '/tmp/writable.txt': 'initial' } });
 		m_fs.writefile('/tmp/writable.txt', 'updated');

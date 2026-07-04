@@ -13,6 +13,16 @@ describe('ubus Mocking', () => {
 		});
 	});
 
+	it('call() returns a fresh copy — mutating it does not corrupt the store', () => {
+		// Real ubus builds a new reply per call; a live reference would let a caller
+		// that mutates the result poison the next call (same defect class as uci 1.8).
+		mock.inject('ubus', { data: { 'system:board': { hostname: 'orig' } } }, (m_ubus) => {
+			let conn = m_ubus.connect();
+			conn.call('system', 'board', {}).hostname = 'mutated';
+			assert.match('orig', conn.call('system', 'board', {}).hostname);
+		});
+	});
+
 	it('falls back to object key for any method', () => {
 		mock.inject('ubus', {
 			data: { 'network': { up: true } }
