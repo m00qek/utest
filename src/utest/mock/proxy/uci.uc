@@ -127,11 +127,15 @@ return {
 					let p = ctx.get_data(pkg);
 					if (type(p) !== 'object') {
 						if (ctx.is_strict()) die(sprintf("strict mock: uci package '%s' is not mocked", pkg));
-						return false;
+						return null;
 					}
+					// Real uci.delete returns null ("Entry not found") when the target
+					// section or option does not exist — only an actual removal returns
+					// true. Reporting true for a missing entry masks SUT bugs.
+					if (type(p[sec]) !== 'object') return null;
 					p = { ...p };
 					if (opt !== null) {
-						if (type(p[sec]) !== 'object') return false;
+						if (!exists(p[sec], opt)) return null;
 						p[sec] = { ...p[sec] };
 						delete p[sec][opt];
 					} else {

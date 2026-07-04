@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 20,
-    "passed": 20,
+    "total": 21,
+    "passed": 21,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -50,94 +50,6 @@
           "name": "uci Mocking"
         },
         {
-          "id": 5,
-          "name": "foreach() iterates sections matching a type in insertion order"
-        }
-      ],
-      "index": 4
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 6,
-          "name": "foreach() injects .name and exposes all options"
-        }
-      ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 15,
-          "name": "uci strict mode blocks every accessor on an unmocked package"
-        },
-        {
-          "id": 16,
-          "name": "get_all() dies for an unmocked package but still serves the mocked one"
-        }
-      ],
-      "index": 14
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 2,
-          "name": "get() reads a single option"
-        }
-      ],
-      "index": 1
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
           "id": 11,
           "name": "delete() removes a single option"
         }
@@ -156,213 +68,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 4,
-          "name": "get_all() returns the full section object including .name"
-        }
-      ],
-      "index": 3
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 15,
-          "name": "uci strict mode blocks every accessor on an unmocked package"
-        },
-        {
-          "id": 17,
-          "name": "delete() dies for an unmocked package"
-        }
-      ],
-      "index": 15
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 8,
-          "name": "load() is recorded in cursor call history"
-        }
-      ],
-      "index": 7
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 19,
+          "id": 20,
           "name": "uci reads return fresh copies (no live references into the store)"
         },
         {
           "id": 22,
-          "name": "mutating a section handed to foreach() does not corrupt the store"
-        }
-      ],
-      "index": 19
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 19,
-          "name": "uci reads return fresh copies (no live references into the store)"
-        },
-        {
-          "id": 23,
-          "name": "a cursor leaked out of mock.inject() dies instead of touching global state"
-        }
-      ],
-      "index": 20
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 19,
-          "name": "uci reads return fresh copies (no live references into the store)"
-        },
-        {
-          "id": 20,
-          "name": "mutating a list returned by get() does not corrupt the store"
-        }
-      ],
-      "index": 17
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 19,
-          "name": "uci reads return fresh copies (no live references into the store)"
-        },
-        {
-          "id": 21,
           "name": "mutating a list inside a get_all() result does not corrupt the store"
         }
       ],
-      "index": 18
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 14,
-          "name": "patches global state via mock.global.patch()"
-        }
-      ],
-      "index": 13
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 10,
-          "name": "commit() is a no-op returning true"
-        }
-      ],
-      "index": 9
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/13_uci_test.uc",
-      "bundle": "examples/unit/13_uci_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uci Mocking"
-        },
-        {
-          "id": 7,
-          "name": "load() is a no-op returning true"
-        }
-      ],
-      "index": 6
+      "index": 19
     },
     {
       "event": "TEST_RESULT",
@@ -403,7 +117,7 @@
         },
         {
           "id": 13,
-          "name": "strict mode dies on unmocked package access"
+          "name": "delete() returns null for a missing section or option (like real uci)"
         }
       ],
       "index": 12
@@ -420,15 +134,103 @@
           "name": "root"
         },
         {
-          "id": 15,
+          "id": 20,
+          "name": "uci reads return fresh copies (no live references into the store)"
+        },
+        {
+          "id": 24,
+          "name": "a cursor leaked out of mock.inject() dies instead of touching global state"
+        }
+      ],
+      "index": 21
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 10,
+          "name": "commit() is a no-op returning true"
+        }
+      ],
+      "index": 9
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 20,
+          "name": "uci reads return fresh copies (no live references into the store)"
+        },
+        {
+          "id": 23,
+          "name": "mutating a section handed to foreach() does not corrupt the store"
+        }
+      ],
+      "index": 20
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 20,
+          "name": "uci reads return fresh copies (no live references into the store)"
+        },
+        {
+          "id": 21,
+          "name": "mutating a list returned by get() does not corrupt the store"
+        }
+      ],
+      "index": 18
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 16,
           "name": "uci strict mode blocks every accessor on an unmocked package"
         },
         {
-          "id": 18,
+          "id": 19,
           "name": "load() returns false for an unmocked package (like real uci), true for the mocked one"
         }
       ],
-      "index": 16
+      "index": 17
     },
     {
       "event": "TEST_RESULT",
@@ -451,12 +253,232 @@
         }
       ],
       "index": 8
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 8,
+          "name": "load() is recorded in cursor call history"
+        }
+      ],
+      "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 16,
+          "name": "uci strict mode blocks every accessor on an unmocked package"
+        },
+        {
+          "id": 18,
+          "name": "delete() dies for an unmocked package"
+        }
+      ],
+      "index": 16
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 15,
+          "name": "patches global state via mock.global.patch()"
+        }
+      ],
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 16,
+          "name": "uci strict mode blocks every accessor on an unmocked package"
+        },
+        {
+          "id": 17,
+          "name": "get_all() dies for an unmocked package but still serves the mocked one"
+        }
+      ],
+      "index": 15
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 2,
+          "name": "get() reads a single option"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 4,
+          "name": "get_all() returns the full section object including .name"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 7,
+          "name": "load() is a no-op returning true"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 14,
+          "name": "strict mode dies on unmocked package access"
+        }
+      ],
+      "index": 13
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 5,
+          "name": "foreach() iterates sections matching a type in insertion order"
+        }
+      ],
+      "index": 4
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/13_uci_test.uc",
+      "bundle": "examples/unit/13_uci_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uci Mocking"
+        },
+        {
+          "id": 6,
+          "name": "foreach() injects .name and exposes all options"
+        }
+      ],
+      "index": 5
     }
   ],
   "bundles": {
     "examples/unit/13_uci_test.uc": {
-      "total": 20,
-      "passed": 20,
+      "total": 21,
+      "passed": 21,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

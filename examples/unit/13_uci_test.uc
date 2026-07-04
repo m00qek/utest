@@ -125,6 +125,17 @@ describe('uci Mocking', () => {
 		});
 	});
 
+	it('delete() returns null for a missing section or option (like real uci)', () => {
+		mock.inject('uci', { data: {
+			'luci-sso': { 'default': { '.type': 'oidc', 'enabled': '1' } }
+		}}, (m_uci) => {
+			let c = m_uci.cursor();
+			assert.match(null, c.delete('luci-sso', 'no-such-section'));
+			assert.match(null, c.delete('luci-sso', 'default', 'no-such-option'));
+			assert.match('1', c.get('luci-sso', 'default', 'enabled'), 'real entries untouched');
+		});
+	});
+
 	it('strict mode dies on unmocked package access', () => {
 		assert.throws(() => {
 			mock.inject('uci', { strict: true, data: {} }, (m_uci) => {
