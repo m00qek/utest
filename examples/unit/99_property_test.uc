@@ -290,6 +290,25 @@ describe("Regression tests", () => {
 		assert.match(true, length(keys(diffs)) >= 8,
 		             "consecutive-case values must not step in lockstep (correlated seeds)");
 	});
+
+	it("shrinking never exceeds the shrink_max evaluation budget", () => {
+		// A shrink-heavy failing property with a deliberately small budget. Before
+		// the fix, the deletion and redistribution loops missed the !ctx.capped
+		// guard, so extra property evaluations ran after the cap tripped mid-pass
+		// ("Shrink evals: 1080" for a 1000 budget). The reported count must now stay
+		// within budget. Deterministic under the fixed seed.
+		const shrink_max = 20;
+		let msg = "";
+		try {
+			forall(gen.array(gen.int(0, 9), { max_len: 8 }),
+			       (xs) => { for (let x in xs) assert.match(true, x != 3); },
+			       { seed: 1, runs: 100, shrink_max, persist: false });
+		} catch (e) { msg = "" + e; }
+		const m = match(msg, /Shrink evals:[ ]*([0-9]+)/);
+		assert.match(true, m != null, "property was expected to fail and report shrink evals");
+		assert.match(true, int(m[1]) <= shrink_max,
+		             "shrink evals " + m[1] + " must not exceed budget " + shrink_max);
+	});
 });
 
 describe("Failing properties (demonstrate shrinking output)", () => {

@@ -132,6 +132,9 @@ function lex_smaller(a, b) {
 
 // Tries a shrink candidate; returns true and updates ctx if it became the new minimum.
 function shrink_step(g, prop_fn, ctx, cand) {
+	// Honour the eval budget on entry so an inner loop that reaches shrink_step
+	// after the cap tripped mid-pass cannot run one more property evaluation.
+	if (ctx.capped) return false;
 	if (!lex_smaller(cand, ctx.cur)) return false;
 	const r = try_choices(g, prop_fn, cand);
 	ctx.evals++;
@@ -166,7 +169,7 @@ function shrink(g, prop_fn, failing, max_evals) {
 		// (1) deletions: try larger spans first, then singles.
 		// span /= 2 in ucode is integer division, so span reaches 0 and the loop exits.
 		for (let span = length(ctx.cur); span >= 1 && !progress && !ctx.capped; span /= 2) {
-			for (let i = 0; i + span <= length(ctx.cur) && !progress; i++) {
+			for (let i = 0; i + span <= length(ctx.cur) && !progress && !ctx.capped; i++) {
 				if (shrink_step(g, prop_fn, ctx, without_range(ctx.cur, i, span))) progress = true;
 			}
 		}
@@ -220,7 +223,7 @@ function shrink(g, prop_fn, failing, max_evals) {
 		for (let i = 0; i < length(ctx.cur) - 1 && !progress && !ctx.capped; i++) {
 			if (ctx.cur[i] === 0) continue;
 			for (let j = i + 1; j < length(ctx.cur) && !progress && !ctx.capped; j++) {
-				for (let k = 1; k <= ctx.cur[i] && !progress; k *= 2) {
+				for (let k = 1; k <= ctx.cur[i] && !progress && !ctx.capped; k *= 2) {
 					const cand = [...ctx.cur];
 					cand[i] -= k; cand[j] += k;
 					if (shrink_step(g, prop_fn, ctx, cand)) progress = true;
@@ -275,7 +278,13 @@ function load_example(test_name) {
 		if (!f) return null;
 		const content = f.read("all");
 		f.close();
-		return json(content);
+		const saved = json(content);
+		// The filename is a 31-bit hash of the id, so two properties can collide on
+		// one file. The full id is persisted as `test`; if it does not match, this
+		// file belongs to a different property — treat it as absent rather than
+		// replaying the wrong property's counterexample.
+		if (type(saved) !== 'object' || saved.test !== test_name) return null;
+		return saved;
 	} catch (_) { return null; }
 }
 
