@@ -78,12 +78,16 @@ vocabulary (`'file'`, not `'regular'`) so a SUT switching on it matches live —
 11_mocking_fs updated (the value isn't embedded in the PASS baseline, so no regen),
 fidelity coverage added to 27_mock_fidelity.
 
-## Still open — MEDIUM
+## R3.10 LANDED (`bd0755b`, meta-test green) — top-level schema pin
 
-- **R3.10 verify.uc doesn't pin the top-level JSON schema** (`files`,
-  run-level `duration_ms`/`seed`); committed baselines have already drifted
-  into three schema vintages without detection. Clear fix, but regenerates all
-  baselines.
+verify.uc compared stats/results/failures/bundles but never the run-level key
+*set* or `files[]`, so baselines drifted into three vintages (with/without
+duration_ms/seed) undetected and a dropped/renamed top-level key would pass
+silently. Added three checks: Schema keys (scrubbed top-level key set matches),
+Run metadata (duration_ms + seed still emitted — asserted on live output only),
+and Files (discovered list, sorted). **No baseline churn:** the key set is
+compared after `normalize` scrubs duration_ms/seed, so all three vintages pass
+as-is. Negative-tested (missing files / corrupted files / extra key all fail).
 
 ## R3.16 / R3.19 LANDED (`816c768`, `840ef9d`, meta-test green)
 
