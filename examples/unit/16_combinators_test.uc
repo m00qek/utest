@@ -117,6 +117,17 @@ describe('Combinators', () => {
 		assert.match(contains({ body: { status: 'ok' } }), response);
 	});
 
+	it('contains() matches a nested array value as a subsequence (consistent with the array side)', () => {
+		// An array value inside a contains() object is a partial subsequence, the
+		// same as at the top level — contains() means subset containment at every
+		// level. Wrap in equals() to demand the exact array.
+		assert.match(contains({ tags: ['a', 'c'] }), { tags: ['a', 'b', 'c'], id: 1 });
+		assert.throws(() => assert.match(contains({ tags: ['a', 'z'] }), { tags: ['a', 'b', 'c'] }),
+		              /subsequence/);
+		assert.throws(() => assert.match(contains({ tags: equals(['a', 'c']) }), { tags: ['a', 'b', 'c'] }),
+		              /Expected/);
+	});
+
 	it('any_order() matches an array regardless of element order', () => {
 		assert.match(any_order([1, 2, 3]), [3, 1, 2]);
 		assert.match(any_order([contains({ id: 1 }), contains({ id: 2 })]),[{ id: 2 }, { id: 1 }]);

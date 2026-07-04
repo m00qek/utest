@@ -136,12 +136,25 @@ export function equals(expected) {
 
 // ─── contains ────────────────────────────────────────────────────────────────
 
+// Forward-declared because contains_object and contains_array are mutually
+// recursive (an object value may be an array and vice versa) and ucode does not
+// hoist module-scope function declarations — a name is only visible after its
+// definition. The binding exists here; the assignment below fills it before any
+// contains() runs.
+let contains_array;
+
 function contains_object(expected) {
 	const matchers = {};
 	for (let k in keys(expected)) {
 		const v = expected[k];
 		if (is_combinator(v))
 			matchers[k] = v;
+		else if (type(v) === 'array')
+			// A nested array value is matched as an ordered subsequence, the same as
+			// on the array side (contains_array) — so contains() means partial/subset
+			// containment consistently at every level, whether the container is an
+			// object or an array. Wrap in equals() to demand an exact array.
+			matchers[k] = contains_array(v);
 		else if (type(v) === 'object')
 			matchers[k] = contains_object(v);
 		else
@@ -176,7 +189,7 @@ function contains_string(expected) {
 	});
 }
 
-function contains_array(expected) {
+contains_array = function(expected) {
 	const matchers = [];
 	for (let el in expected) {
 		if (is_combinator(el))        push(matchers, el);
@@ -206,12 +219,16 @@ function contains_array(expected) {
 			return { ok: false, message: sprintf("Expected %J to contain %J as a subsequence", actual, expected) };
 		return { ok: true };
 	});
-}
+};
 
 /**
  * Asserts that a string, array, or object contains the expected value(s).
  * For strings: substring match. For arrays: ordered subsequence (with backtracking).
  * For objects: subset of keys (deep, combinators allowed as values).
+ *
+ * Containment is consistent at every level: a nested array is matched as a
+ * subsequence and a nested object as a key-subset, whether it sits inside an array
+ * or an object value. Wrap a value in `equals(...)` to demand an exact match.
  *
  * @example
  * assert.match(contains("error"), "fatal error: permission denied");
