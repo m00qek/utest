@@ -4,6 +4,105 @@ The second full review (four-reviewer panel at `ff86ebc`; full report in git
 history at commit `32509c5`) is mostly landed. This file now tracks only what
 remains open. **Suite health:** `make meta-test` fully green — 451 PASS / 0 FAIL.
 
+---
+
+# Third review (2026-07-04, four-reviewer panel @ `1b04b7c`)
+
+Beat grades: core library **A-**, mock subsystem **B-**, runner/orchestration
+**B+**, tests/infra **A-**. Overall **B+**. All HIGHs and the headline MEDIUMs
+were probe-confirmed against the real interpreter (seal breach, guard escape,
+musl buffering, and contains() asymmetry re-verified independently by the lead).
+
+## Green-light batch LANDED (`eb86d89`..`21cb9b6`, meta-test green)
+
+Mechanical / no-decision fixes, each with a regression test where testable:
+**R3.1** worker reporter flushes stdout per event (partial results survive the
+timeout kill; pinned via the hang fixture + `-s 7`). **R3.5** ubus/uclient replies
+deep-cloned. **R3.7** mock glob sorted. **R3.8** unexpected missing baseline now
+fails meta-test. **R3.9** meta-test.sh cd's to PROJECT_ROOT. **R3.11** shrink
+budget cap honoured. **R3.13** integer size/count generator options validated.
+**R3.14** persist id-mismatch guard. **R3.17** utest.sh traps INT/TERM/HUP.
+**R3.21** mkdocs nav orphans + stale doc/comment refs. Plus nits: between()
+reversed-bounds guard, forall runs>=1, uloop.done() per bundle, seed_from_clock
+reuse, replayed-report seed qualifier.
+
+## Still open — HIGH
+
+- **R3.2 the fs seal does not cover un-overridden destructive functions.**
+  fs proxy overrides 13 of 29 real exports; `rmdir`, `symlink`, `chown`,
+  `chdir`, `mkdtemp`, `mkstemp`, `dup2`, `pipe`… fall through to the REAL module
+  in non-strict mode while a mock is active (probe: `m.rmdir()` deleted a real
+  directory), contradicting the seal contract stated in fs.uc. **Needs a
+  decision:** which ops die, and die-vs-strict-guard.
+- **R3.3 the 2.4 scope guard is shallow: second-order objects escape it.**
+  `guard_proxy` wraps only top-level proxy methods; `fs.open()` handles,
+  `uci.cursor()`, `ubus.connect()`, `uclient.new()` return unguarded objects
+  closed over ctx. After the layer pops, their writes hit `reg.global` — a
+  leaked handle silently POLLUTES GLOBAL MOCK STATE instead of dying (probe:
+  leaked `fh.write()`/`close()` made `/leak` visible to later injects).
+  **Invasive:** proper fix is a liveness check at the ctx/engine level
+  (`record_call`/`set_channel`/`real_call`), closing the class not the instances.
+  R3.16 (spy-on-stale) rides on this.
+
+## Still open — MEDIUM
+
+- **R3.4 `contains()` nested-array semantics are asymmetric.** Inside arrays a
+  plain-array element matches as SUBSEQUENCE (`contains([["a","c"]])` passes
+  against `[["a","b","c"]]`) but inside objects as EXACT (same data fails).
+  Probe-confirmed. **Needs a decision:** make array side exact, object side
+  subsequence, or document.
+- **R3.6 fs read-side fall-throughs contradict the mocked view**: `lstat`,
+  `readlink`, `realpath`, `opendir` hit the real fs, so a mocked path stats as
+  regular via `stat` but null via `lstat`. Probe-confirmed. Implement the family.
+- **R3.10 verify.uc doesn't pin the top-level JSON schema** (`files`,
+  run-level `duration_ms`/`seed`); committed baselines have already drifted
+  into three schema vintages without detection. Clear fix, but regenerates all
+  baselines.
+
+## Still open — LOW
+
+- **R3.12** `it("todo")` / `beforeEach(42)` accepted at declaration, explode at
+  run time as opaque "left-hand side is not a function" ERROR (setup/teardown
+  already validate). **Needs a decision:** pending-skip vs declaration error.
+- **R3.15** uloop mock `timer()` returns null; real returns a handle with
+  `set()`/`cancel()` — SUT storing/cancelling its timer crashes only under test.
+  **Needs a decision:** how much of the handle surface to emulate.
+- **R3.16** `spy()` on a stale proxy silently reports current-scope calls — rides
+  on R3.3.
+- **R3.18** timeout signal asymmetry: -j1 SIGTERM vs -jN SIGKILL. **Needs a
+  decision:** TERM everywhere vs TERM-then-KILL.
+- **R3.19** module-load-failure FATAL path unpinned by meta-test;
+  `assert_cli_error` covers only -j/-s/-r (unknown flag, broken -c untested).
+  Clear, but new fixtures + baselines.
+- **R3.20** no public `assert.fail`; `is_combinator` not re-exported by the
+  umbrella though contributor docs encourage custom combinators. **Needs a
+  decision** on assert.fail's FAIL-vs-ERROR classification.
+
+## Still open — NIT
+
+- manager.uc shim gen: exported names assumed to be valid identifiers
+  (`export const delete = …` won't compile); dotted module names with `..`
+  escape run_dir (PLAUSIBLE, robustness not security).
+- fs write-mode edges: `open(p,'w')` truncates only at close; `r+`/`w+` writes
+  discarded; `readfile(p, size)` ignores size; handles lack seek/tell/flush.
+  Negated-class trailing `-` escape wrongly excludes `\` (backslash filenames).
+  `mkdir()` returns true but leaves no stat-able trace; uci `delete()` of a
+  missing section returns true.
+- `elapsed_ms` int division (name implies float — left as-is; ms integers are
+  fine, changing the format is debatable). busybox "Terminated" noise in -j1
+  timeout output; slow1/slow2 burn 4s of sleep per meta-test; build-package.sh
+  `chmod 777`.
+
+## Panel verdicts on the standing questions
+
+- **Performance**: measured ~8.7 ms/suite at -j1 in-container; -jN scales
+  near-linearly to 8 workers (209→33 ms over 24 suites); file-redirect I/O
+  design sound; no perf defects found.
+- **uloop**: keep the split. Parallel uloop usage is idiomatic (init/process/
+  timer/end lifecycle traced clean); -j1 without uloop keeps the module a soft
+  dependency (works on minimal images) and provides live streaming. Converge
+  semantics (flush R3.1, signal R3.18), not machinery.
+
 ## Landed in this batch (12 commits, `6fd8ff2`..`d0f2188`)
 
 All §1 correctness defects except the 1.15 nit, plus the readability sweep and
