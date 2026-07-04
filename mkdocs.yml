@@ -63,7 +63,9 @@ nav:
           - Reproduce a failing property: how-to/property-reproduce.md
       - Mocking:
           - Mock a module with inject(): how-to/mock-inject.md
+          - Mock multiple modules at once: how-to/mock-inject-all.md
           - Patch global state: how-to/mock-global-patch.md
+          - Save and restore mock state: how-to/snapshot-restore.md
           - Mock the filesystem: how-to/mock-fs.md
           - Mock a built-in global: how-to/mock-builtin.md
           - Mock UCI configuration: how-to/mock-uci.md

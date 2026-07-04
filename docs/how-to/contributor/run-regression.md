@@ -33,7 +33,7 @@ SUCCESS: All features verified.
 Output on failure:
 
 ```
-FAILURE: Regressions found in: examples/unit/05_diagnostics_test.uc
+FAILURE: Regressions found in: examples/unit/06_diagnostics_test.uc
 ```
 
 ---

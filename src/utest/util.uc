@@ -4,7 +4,7 @@ import * as fs from 'fs';
 export const q = (s) => "'" + replace(s, "'", "'\\''") + "'";
 
 // Serialize a utest-controlled failure into the die() envelope that
-// parse_thrown() below recognizes. Used by assert.fail() and the property
+// parse_thrown() below recognizes. Used by assert.uc's fail() and the property
 // engine so the wire shape lives in exactly one place.
 export const fail_envelope = function(message) {
 	return sprintf('%J', { __utest__: { kind: 'fail', message } });
