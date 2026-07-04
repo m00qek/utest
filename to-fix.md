@@ -50,13 +50,21 @@ budget cap honoured. **R3.13** integer size/count generator options validated.
 reversed-bounds guard, forall runs>=1, uloop.done() per bundle, seed_from_clock
 reuse, replayed-report seed qualifier.
 
+## Simple-decisions batch LANDED (`4c6fff7`..`22e2718`, meta-test green)
+
+- **R3.4** (decision: subsequence everywhere) — `contains()` now matches a nested
+  array as a subsequence and a nested object as a key-subset at every level,
+  whether inside an array or an object; wrap in `equals()` for exact.
+  `contains_array` forward-declared for the mutual recursion.
+- **R3.12** (decision: die at declaration) — it/describe/beforeEach/afterEach
+  validate the callback is a function at declaration (it points at skip()).
+- **R3.18** (decision: leave documented) — cross-referenced comments at both kill
+  sites explain the SIGKILL(-jN)/SIGTERM+143(-j1) split; no behavior change.
+- **R3.20** (decision: add both) — public `assert.fail(msg)` (FAIL-classified) and
+  umbrella `is_combinator` re-export.
+
 ## Still open — MEDIUM
 
-- **R3.4 `contains()` nested-array semantics are asymmetric.** Inside arrays a
-  plain-array element matches as SUBSEQUENCE (`contains([["a","c"]])` passes
-  against `[["a","b","c"]]`) but inside objects as EXACT (same data fails).
-  Probe-confirmed. **Needs a decision:** make array side exact, object side
-  subsequence, or document.
 - **R3.6 fs read-side fall-throughs contradict the mocked view**: `lstat`,
   `readlink`, `realpath`, `opendir` hit the real fs, so a mocked path stats as
   regular via `stat` but null via `lstat`. Probe-confirmed. Implement the family.
@@ -67,23 +75,16 @@ reuse, replayed-report seed qualifier.
 
 ## Still open — LOW
 
-- **R3.12** `it("todo")` / `beforeEach(42)` accepted at declaration, explode at
-  run time as opaque "left-hand side is not a function" ERROR (setup/teardown
-  already validate). **Needs a decision:** pending-skip vs declaration error.
 - **R3.15** uloop mock `timer()` returns null; real returns a handle with
   `set()`/`cancel()` — SUT storing/cancelling its timer crashes only under test.
-  **Needs a decision:** how much of the handle surface to emulate.
+  More implementation than decision: emulate a handle whose cancel() removes the
+  pending timer from the queue and set() reschedules.
 - **R3.16** `spy()` on a stale proxy silently reports current-scope calls (empty
   global) instead of dying — NOT closed by R3.3 (spy reads `__utest__` directly,
   not ctx). Fix: gate spy() on the same scope liveness.
-- **R3.18** timeout signal asymmetry: -j1 SIGTERM vs -jN SIGKILL. **Needs a
-  decision:** TERM everywhere vs TERM-then-KILL.
 - **R3.19** module-load-failure FATAL path unpinned by meta-test;
   `assert_cli_error` covers only -j/-s/-r (unknown flag, broken -c untested).
   Clear, but new fixtures + baselines.
-- **R3.20** no public `assert.fail`; `is_combinator` not re-exported by the
-  umbrella though contributor docs encourage custom combinators. **Needs a
-  decision** on assert.fail's FAIL-vs-ERROR classification.
 
 ## Still open — NIT
 
