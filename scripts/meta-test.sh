@@ -157,9 +157,13 @@ fi
 # killed by the configured timeout (2s, via the companion config), reported as a
 # FATAL, while a sibling bundle's worker passes. Exercises the uloop executor's
 # per-worker timeout path and deterministic "worker timed out after Ns" message.
+# The hang fixture runs three quick checks before hanging, so the baseline also
+# pins that their results survive the timeout kill — the worker reporter flushes
+# each event, so partial results reach the parent before SIGKILL/SIGTERM. `-s 7`
+# fixes the shuffle so the hang always lands last and the captured trio is stable.
 # The two files have no individual baselines so the main loop skips them.
 timeout_arg="Pass:examples/timeout/01_pass_test.uc Hang:examples/timeout/02_hang_test.uc"
-if run_verify "$timeout_arg" "test/json/timeout/timeout_test.json" "-j 2 -c examples/timeout/timeout.config.uc"; then
+if run_verify "$timeout_arg" "test/json/timeout/timeout_test.json" "-j 2 -s 7 -c examples/timeout/timeout.config.uc"; then
     :
 else
     failed_tests="$failed_tests timeout_test"
@@ -168,7 +172,7 @@ fi
 # Same timeout scenario under -j 1: exercises the SEQUENTIAL executor's shell
 # watchdog (sleep-kill -> SIGTERM -> exit 143) and its exact-143 timeout
 # detection, which the parallel (uloop) path above does not cover.
-if run_verify "$timeout_arg" "test/json/timeout/timeout_seq_test.json" "-j 1 -c examples/timeout/timeout.config.uc"; then
+if run_verify "$timeout_arg" "test/json/timeout/timeout_seq_test.json" "-j 1 -s 7 -c examples/timeout/timeout.config.uc"; then
     :
 else
     failed_tests="$failed_tests timeout_seq_test"

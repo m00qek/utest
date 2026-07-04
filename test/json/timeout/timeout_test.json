@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 1,
-    "passed": 1,
+    "total": 4,
+    "passed": 4,
     "failed": 0,
     "errors": 0,
     "fatals": 1,
@@ -41,15 +41,77 @@
       "index": 1
     },
     {
+      "event": "TEST_RESULT",
+      "suite": "examples/timeout/02_hang_test.uc",
+      "bundle": "Hang",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Hanging suite"
+        },
+        {
+          "id": 4,
+          "name": "third quick check"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/timeout/02_hang_test.uc",
+      "bundle": "Hang",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Hanging suite"
+        },
+        {
+          "id": 2,
+          "name": "first quick check"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/timeout/02_hang_test.uc",
+      "bundle": "Hang",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Hanging suite"
+        },
+        {
+          "id": 3,
+          "name": "second quick check"
+        }
+      ],
+      "index": 2
+    },
+    {
       "event": "FATAL",
       "suite": "examples/timeout/02_hang_test.uc",
       "bundle": "Hang",
       "error": "worker timed out after 2s (partial results above)"
     }
-  ],
-  "files": [
-    "examples/timeout/01_pass_test.uc",
-    "examples/timeout/02_hang_test.uc"
   ],
   "bundles": {
     "Pass": {
@@ -62,13 +124,17 @@
       "ignored": 0
     },
     "Hang": {
-      "total": 0,
-      "passed": 0,
+      "total": 3,
+      "passed": 3,
       "failed": 0,
       "errors": 0,
       "fatals": 1,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/timeout/01_pass_test.uc",
+    "examples/timeout/02_hang_test.uc"
+  ]
 }
