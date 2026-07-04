@@ -63,6 +63,25 @@ function glob_to_regex(pattern) {
 	return out + "$";
 }
 
+// Filesystem-mutating functions the mock does not model. Left to fall through (as
+// ctx.base() does for any un-overridden function in non-strict mode), they would
+// hit the REAL filesystem during an active mock — e.g. rmdir deleting a real
+// directory — silently defeating the seal. Each is sealed below to record the
+// call, honour a behavior: override when the test supplies one, and otherwise die
+// with an actionable message rather than leak the side effect. Read-only
+// fall-throughs (lstat/readlink/realpath/opendir) are a separate fidelity concern,
+// not a safety breach, and are left alone. chdir is included because it leaks a
+// process-global cwd change into later tests.
+const SEALED_OPS = ['rmdir', 'symlink', 'chown', 'chdir', 'mkdtemp', 'mkstemp'];
+function seal_op(ctx, op) {
+	return function(...args) {
+		ctx.record_call(op, args);
+		const override = ctx.get_behavior(op);
+		if (override) return override(...args);
+		die(sprintf("[utest] fs mock: fs.%s() is not implemented by the mock and would mutate the real filesystem; pass behavior: { %s: ... } to handle it", op, op));
+	};
+}
+
 return {
 	channels: ['commands'],
 	create: function(name, real, ctx) {
@@ -351,6 +370,12 @@ return {
 			let out = keys(files);
 			return length(out) > 0 ? sort(out) : null;
 		};
+
+		// Seal the filesystem-mutating functions the mock does not implement so a
+		// call cannot fall through to the real fs (see seal_op / SEALED_OPS). seal_op
+		// takes op as a parameter, so the per-iteration binding is captured correctly.
+		for (let op in SEALED_OPS)
+			proxy[op] = seal_op(ctx, op);
 
 		return proxy;
 	}

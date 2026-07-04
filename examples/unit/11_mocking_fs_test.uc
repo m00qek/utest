@@ -1,4 +1,4 @@
-import { describe, it, assert, mock, truthy, regex } from 'utest';
+import { describe, it, assert, mock, spy, truthy, regex } from 'utest';
 import * as fs from 'fs';
 
 // Filesystem mock: demonstrates data/behavior injection, strict mode, global.patch, and virtual file operations.
@@ -468,6 +468,31 @@ describe('destructive ops are sealed from the real filesystem', () => {
 		});
 		assert.match('real-', fs.readfile(path), 'real file must survive a mocked append');
 		fs.unlink(path);
+	});
+
+	it('an un-implemented destructive op dies instead of hitting the real fs', () => {
+		// rmdir/symlink/chown/chdir/mkdtemp/mkstemp are not modelled by the mock;
+		// left to fall through they would mutate the real filesystem during an active
+		// mock. They must die (in non-strict mode too), not silently succeed.
+		const dir = '/tmp/utest_seal_rmdir';
+		fs.mkdir(dir);
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.throws(() => m_fs.rmdir(dir), /not implemented by the mock/);
+			assert.throws(() => m_fs.symlink('t', '/tmp/utest_seal_link'), /would mutate the real filesystem/);
+		});
+		assert.match(true, !!fs.access(dir), 'real directory must survive a mocked rmdir');
+		fs.rmdir(dir);
+	});
+
+	it('a behavior override handles an otherwise-sealed destructive op', () => {
+		// The seal is an escape hatch, not a wall: supplying behavior lets a test
+		// drive the op explicitly, and the call is still recorded for spy().
+		let removed = null;
+		mock.inject('fs', { behavior: { rmdir: (p) => { removed = p; return true; } } }, (m_fs) => {
+			assert.match(true, m_fs.rmdir('/virtual/only'));
+			assert.match([['/virtual/only']], spy(m_fs).calls.rmdir);
+		});
+		assert.match('/virtual/only', removed);
 	});
 });
 
