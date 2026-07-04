@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 3,
-    "passed": 3,
+    "total": 6,
+    "passed": 6,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -9,8 +9,53 @@
     "ignored": 0,
     "suites": 1
   },
-  "failures": [],
+  "failures": [
+  ],
   "results": [
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/02_lifecycle_test.uc",
+      "bundle": "examples/unit/02_lifecycle_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "Lifecycle Hooks"
+        },
+        {
+          "id": 2,
+          "name": "sees the value from beforeEach"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/02_lifecycle_test.uc",
+      "bundle": "examples/unit/02_lifecycle_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 5,
+          "name": "declaration-time validation"
+        },
+        {
+          "id": 8,
+          "name": "describe() with a non-function body dies"
+        }
+      ],
+      "index": 6
+    },
     {
       "event": "TEST_RESULT",
       "suite": "examples/unit/02_lifecycle_test.uc",
@@ -32,6 +77,28 @@
         }
       ],
       "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/02_lifecycle_test.uc",
+      "bundle": "examples/unit/02_lifecycle_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 5,
+          "name": "declaration-time validation"
+        },
+        {
+          "id": 7,
+          "name": "it() with a non-function body dies"
+        }
+      ],
+      "index": 5
     },
     {
       "event": "TEST_RESULT",
@@ -67,30 +134,29 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "Lifecycle Hooks"
+          "id": 5,
+          "name": "declaration-time validation"
         },
         {
-          "id": 2,
-          "name": "sees the value from beforeEach"
+          "id": 6,
+          "name": "it() with no body dies pointing at skip()"
         }
       ],
-      "index": 1
+      "index": 4
     }
   ],
-  "files": [
-    "examples/unit/02_lifecycle_test.uc"
-  ],
-  "duration_ms": 3,
   "bundles": {
     "examples/unit/02_lifecycle_test.uc": {
-      "total": 3,
-      "passed": 3,
+      "total": 6,
+      "passed": 6,
       "failed": 0,
       "errors": 0,
       "fatals": 0,
       "skipped": 0,
       "ignored": 0
     }
-  }
+  },
+  "files": [
+    "examples/unit/02_lifecycle_test.uc"
+  ]
 }

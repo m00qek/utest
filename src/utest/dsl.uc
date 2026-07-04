@@ -61,7 +61,11 @@ function define_test(name, fn, skipped) {
  * @param {string} name - The name of the test suite.
  * @param {TestCallback} fn - The callback containing the test suite definition.
  */
-export function describe(name, fn) { define_group(name, fn, is_currently_skipped()); };
+export function describe(name, fn) {
+	if (type(fn) !== 'function')
+		die(sprintf("describe(%J) requires a function argument", name));
+	define_group(name, fn, is_currently_skipped());
+};
 
 /**
  * Defines a single test case.
@@ -69,7 +73,15 @@ export function describe(name, fn) { define_group(name, fn, is_currently_skipped
  * @param {string} name - The name of the test.
  * @param {TestCallback} fn - The test logic to execute.
  */
-export function it(name, fn) { define_test(name, fn, is_currently_skipped()); };
+export function it(name, fn) {
+	// A missing/non-function body would otherwise register fine and only explode at
+	// run time as an opaque "left-hand side is not a function". Fail at declaration,
+	// pointing at skip() for a deliberately pending test — the one case where a body
+	// is legitimately absent (skip()/xit go through define_test directly, not here).
+	if (type(fn) !== 'function')
+		die(sprintf("it(%J) needs a function body — use skip() for a pending test", name));
+	define_test(name, fn, is_currently_skipped());
+};
 
 /**
  * Unconditionally skips a test case.
@@ -128,6 +140,8 @@ export function teardown(fn) {
  */
 export function beforeEach(fn) {
 	guard();
+	if (type(fn) !== 'function')
+		die("beforeEach() requires a function argument");
 	push(stack[length(stack)-1].beforeEach, fn);
 };
 
@@ -138,5 +152,7 @@ export function beforeEach(fn) {
  */
 export function afterEach(fn) {
 	guard();
+	if (type(fn) !== 'function')
+		die("afterEach() requires a function argument");
 	push(stack[length(stack)-1].afterEach, fn);
 };

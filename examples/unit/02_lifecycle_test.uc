@@ -43,3 +43,22 @@ describe("Lifecycle Hooks", () => {
 		assert.match("GLOBAL_SETUP", state[0]);
 	});
 });
+
+describe("declaration-time validation", () => {
+	// it()/describe() validate their body at declaration (before it can register),
+	// so a missing/non-function body fails clearly instead of exploding at run time
+	// as an opaque "left-hand side is not a function". The dying calls abort before
+	// touching the suite tree, so exercising them here is safe. (beforeEach/afterEach
+	// validate the same way, but guard() blocks calling them during a run.)
+	it("it() with no body dies pointing at skip()", () => {
+		assert.throws(() => it("pending"), /needs a function body/);
+	});
+
+	it("it() with a non-function body dies", () => {
+		assert.throws(() => it("bad", 42), /needs a function body/);
+	});
+
+	it("describe() with a non-function body dies", () => {
+		assert.throws(() => describe("bad", 42), /requires a function argument/);
+	});
+});
