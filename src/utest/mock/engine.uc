@@ -308,9 +308,12 @@ export function guard_proxy(name, proxy, is_live) {
 	return guarded;
 };
 
-export function build_proxy(name, real) {
+export function build_proxy(name, real, is_live) {
 	const proxy_base = require('utest.mock.proxy_base');
-	const ctx = proxy_base.context(name, real);
+	// is_live threads the owning scope's liveness into the ctx that every
+	// second-order object (handles/cursors/connections) closes over, so a use
+	// after the scope ends dies instead of hitting reg.global (see proxy_base).
+	const ctx = proxy_base.context(name, real, is_live);
 
 	// Module-specific proxy factory (e.g. utest/mock/proxy/fs.uc), via the same
 	// memoized lookup get_proxy_channels() uses.

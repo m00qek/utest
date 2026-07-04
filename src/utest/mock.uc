@@ -142,10 +142,11 @@ export function inject(name, state, cb) {
 	// would otherwise fall through to the real module. Guard it against use once
 	// this scope ends.
 	let live = { active: true };
+	const is_live = () => live.active;
 	let err, had_err = false;
 	let result;
 	try {
-		let proxy = engine.guard_proxy(name, engine.build_proxy(name, real), () => live.active);
+		let proxy = engine.guard_proxy(name, engine.build_proxy(name, real, is_live), is_live);
 		result = cb(proxy);
 	} catch (e) {
 		err = e; had_err = true;
@@ -202,6 +203,7 @@ export function inject_all(states, cb) {
 	// All proxies are valid only for cb's duration; one shared cell invalidates
 	// every one of them the moment cb returns (see guard_proxy).
 	let live = { active: true };
+	const is_live = () => live.active;
 	let err, had_err = false;
 	let result;
 	try {
@@ -213,7 +215,7 @@ export function inject_all(states, cb) {
 		}
 		const deps = {};
 		for (let name in names)
-			deps[name] = engine.guard_proxy(name, engine.build_proxy(name, reals[name]), () => live.active);
+			deps[name] = engine.guard_proxy(name, engine.build_proxy(name, reals[name], is_live), is_live);
 		result = cb(deps);
 	} catch (e) {
 		err = e; had_err = true;

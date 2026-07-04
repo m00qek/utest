@@ -199,4 +199,12 @@ describe('uci reads return fresh copies (no live references into the store)', ()
 			assert.match(['*'], seen);
 		});
 	});
+
+	it('a cursor leaked out of mock.inject() dies instead of touching global state', () => {
+		// cursor() is a second-order object closed over the scope; using it after the
+		// callback returned must die, not fall through to reg.global (or real uci).
+		let cursor;
+		mock.inject('uci', { data: uci_data }, (m) => { cursor = m.cursor(); });
+		assert.throws(() => cursor.get('luci-sso', 'admin_role', 'read'), /used outside its scope/);
+	});
 });

@@ -39,6 +39,22 @@ describe('FS Mocking', () => {
 		assert.throws(() => leaked.readfile('/tmp/scoped'), /used outside its scope/);
 	});
 
+	it('a file handle leaked out of mock.inject() dies instead of polluting global state', () => {
+		// The proxy's own methods are guarded, but so must be the second-order objects
+		// it returns: an open() handle closes over the same scope, and its close()
+		// would otherwise write to reg.global after the layer popped.
+		let handle;
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			handle = m_fs.open('/tmp/leaked_handle', 'w');
+			handle.write('inside');
+		});
+		assert.throws(() => handle.close(), /used outside its scope/);
+		// The leaked write must not have reached global state.
+		mock.inject('fs', { data: {} }, (m_fs) => {
+			assert.match(null, m_fs.readfile('/tmp/leaked_handle'), 'leaked handle must not pollute global mock state');
+		});
+	});
+
 	it('supports nesting mock.inject()', () => {
 		mock.inject('fs', { data: { '/a': '1' } }, (m_fs) => {
 			assert.match('1', m_fs.readfile('/a'));

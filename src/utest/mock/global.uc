@@ -104,13 +104,21 @@ export function patch(name, state) {
 	reg.global = new_global;
 	let err, had_err = false;
 	let proxy;
+	// Late-bound so the predicate — captured by both the top-level guard and the
+	// ctx (for second-order objects) — can compare against the guarded proxy, which
+	// does not exist until guard_proxy() returns.
+	let self_ref = { proxy: null };
 	try {
-		// A global-patch proxy persists until unpatch/restore/re-patch; guard it so a
-		// call after it is no longer the registered proxy dies rather than falling
-		// through to the real module. The identity check needs no extra bookkeeping
-		// in unpatch/restore — they already swap reg.global.proxy.
-		proxy = engine.guard_proxy(name, engine.build_proxy(name, real),
-			(self) => engine.__internal__.get_proxy_global(name) === self);
+		// A global-patch proxy (and every object it hands out) persists until
+		// unpatch/restore/re-patch; guard it so a use after it is no longer the
+		// registered global dies rather than falling through to the real module.
+		// Liveness = "this proxy is still the registered global proxy": unpatch
+		// installs a blank global and re-patch installs a new proxy, while
+		// snapshot()/restore() swap reg.global but PRESERVE the proxy reference — so
+		// an identity check on the proxy (not on reg.global) is what survives a
+		// restore. No extra bookkeeping is needed in unpatch/restore.
+		const is_live = () => engine.__internal__.get_proxy_global(name) === self_ref.proxy;
+		proxy = engine.guard_proxy(name, engine.build_proxy(name, real, is_live), is_live);
 	} catch(e) {
 		err = e; had_err = true;
 	}
@@ -119,6 +127,7 @@ export function patch(name, state) {
 		die(err);
 	}
 	new_global.proxy = proxy;
+	self_ref.proxy = proxy;
 	return proxy;
 };
 
