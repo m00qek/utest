@@ -1,7 +1,12 @@
 #!/bin/sh
 
-# Find the absolute path of the project root
+# Find the absolute path of the project root, then run from it. The baseline
+# discovery (`find examples`), the `[ -f "$json_path" ]` checks, and companion
+# config detection all resolve against the cwd, while the docker mounts use
+# $PROJECT_ROOT; without this cd, running the script from another directory would
+# silently find no baselines and still print SUCCESS from the hardcoded blocks.
 PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$PROJECT_ROOT" || exit 1
 
 # Test rootfs image must include ucode with the uloop module (the parallel
 # executor requires it; there is no polling fallback). Newer rootfs tags use the

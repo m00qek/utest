@@ -3,7 +3,12 @@
 UTEST_SRC=/usr/share/ucode
 UTEST_RUN_DIR=$(mktemp -d /tmp/utest_XXXXXX)
 cleanup() { rm -rf "$UTEST_RUN_DIR"; }
-trap cleanup EXIT
+# Trap the fatal signals too, not just EXIT: busybox ash does not run the EXIT
+# trap when killed by an untrapped signal, so a ^C (INT) or a kill (TERM/HUP)
+# would otherwise leave the run dir (shims + worker output files) behind. Safe
+# under -jN: the shell waits for the foreground ucode, which survives ^C via
+# uloop and prints the summary, before this trap fires.
+trap cleanup EXIT INT TERM HUP
 
 usage() {
     cat <<'EOF'
