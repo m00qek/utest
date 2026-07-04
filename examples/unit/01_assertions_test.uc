@@ -1,6 +1,18 @@
-import { describe, it, assert, contains } from 'utest';
+import { describe, it, assert, contains, is_combinator, equals } from 'utest';
 
 describe("Assertions", () => {
+	it("assert.fail() raises a catchable FAIL", () => {
+		// Reports as FAIL (not ERROR like a bare die); assert.throws with a matching
+		// pattern is the explicit opt-in to catch a utest failure.
+		assert.throws(() => assert.fail("unreachable branch"), /unreachable branch/);
+		assert.throws(() => assert.fail(), /assert.fail/);
+	});
+
+	it("is_combinator is exported from the umbrella", () => {
+		assert.match(true, is_combinator(equals(1)));
+		assert.match(false, is_combinator(42));
+	});
+
 	it("assert.match() passes for deeply equal values", () => {
 		assert.match({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
 		assert.throws(() => assert.match(2, 1), /Expected/);

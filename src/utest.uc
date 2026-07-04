@@ -42,6 +42,9 @@ export const ends_with = _combinators.ends_with;
 export const has_length = _combinators.has_length;
 export const between = _combinators.between;
 export const is_type = _combinators.is_type;
+// Re-exported alongside is_generator so a custom-combinator author (see the
+// contributor docs) can type-check without reaching into utest.combinators.
+export const is_combinator = _combinators.is_combinator;
 
 export const prop = _property.prop;
 export const forall = _property.forall;

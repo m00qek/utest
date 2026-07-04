@@ -7,9 +7,18 @@
 import { parse_thrown, fail_envelope } from 'utest.util';
 import { is_combinator, equals, regex as _regex, contains, path_str } from 'utest.combinators';
 
-function fail(msg) {
-	die(fail_envelope(msg));
-}
+/**
+ * Unconditionally raises an assertion failure. Reports as FAIL (like any other
+ * assert.*), not as an ERROR the way a bare `die()` would — use it for an
+ * unreachable branch or a bespoke check the built-in assertions don't cover.
+ *
+ * @param {string} [msg] - The failure message.
+ * @example
+ * if (state !== 'ready') assert.fail("expected ready, got " + state);
+ */
+export function fail(msg) {
+	die(fail_envelope(msg ?? "assert.fail() called"));
+};
 
 /**
  * Asserts that a function throws an exception, optionally matching a pattern.
