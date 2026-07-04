@@ -1,7 +1,7 @@
 {
   "stats": {
-    "total": 11,
-    "passed": 11,
+    "total": 17,
+    "passed": 17,
     "failed": 0,
     "errors": 0,
     "fatals": 0,
@@ -28,11 +28,11 @@
           "name": "uloop Mocking"
         },
         {
-          "id": 4,
-          "name": "run() fires equal-deadline timers in registration order"
+          "id": 6,
+          "name": "end() is a no-op and can be called freely from inside callbacks"
         }
       ],
-      "index": 3
+      "index": 5
     },
     {
       "event": "TEST_RESULT",
@@ -46,15 +46,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "uloop Mocking"
+          "id": 13,
+          "name": "uloop timer handle"
         },
         {
-          "id": 7,
-          "name": "models the io.sleep() pattern without blocking"
+          "id": 18,
+          "name": "set() re-arms a cancelled timer"
         }
       ],
-      "index": 6
+      "index": 16
     },
     {
       "event": "TEST_RESULT",
@@ -68,59 +68,15 @@
           "name": "root"
         },
         {
-          "id": 1,
-          "name": "uloop Mocking"
+          "id": 13,
+          "name": "uloop timer handle"
         },
         {
-          "id": 3,
-          "name": "run() fires timers in deadline order, not registration order"
+          "id": 17,
+          "name": "set() reschedules the deadline before run(), changing fire order"
         }
       ],
-      "index": 2
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 12,
-          "name": "running timers inside an inject does not re-fire an outer-scope timer"
-        }
-      ],
-      "index": 11
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 9,
-          "name": "patches global state via mock.global.patch()"
-        }
-      ],
-      "index": 8
+      "index": 15
     },
     {
       "event": "TEST_RESULT",
@@ -160,11 +116,143 @@
           "name": "uloop Mocking"
         },
         {
+          "id": 2,
+          "name": "run() fires registered timer callbacks synchronously"
+        }
+      ],
+      "index": 1
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 13,
+          "name": "uloop timer handle"
+        },
+        {
+          "id": 14,
+          "name": "timer() returns a handle exposing set/remaining/cancel"
+        }
+      ],
+      "index": 12
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
           "id": 8,
           "name": "supports behavior override for run()"
         }
       ],
       "index": 7
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 7,
+          "name": "models the io.sleep() pattern without blocking"
+        }
+      ],
+      "index": 6
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 4,
+          "name": "run() fires equal-deadline timers in registration order"
+        }
+      ],
+      "index": 3
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 13,
+          "name": "uloop timer handle"
+        },
+        {
+          "id": 15,
+          "name": "cancel() stops a timer from firing and reports remaining() as -1"
+        }
+      ],
+      "index": 13
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 9,
+          "name": "patches global state via mock.global.patch()"
+        }
+      ],
+      "index": 8
     },
     {
       "event": "TEST_RESULT",
@@ -200,6 +288,94 @@
           "name": "root"
         },
         {
+          "id": 13,
+          "name": "uloop timer handle"
+        },
+        {
+          "id": 19,
+          "name": "cancel() and set() return the handle so calls can chain"
+        }
+      ],
+      "index": 17
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 3,
+          "name": "run() fires timers in deadline order, not registration order"
+        }
+      ],
+      "index": 2
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 13,
+          "name": "uloop timer handle"
+        },
+        {
+          "id": 16,
+          "name": "cancelling one timer leaves the rest firing in deadline order"
+        }
+      ],
+      "index": 14
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
+          "id": 1,
+          "name": "uloop Mocking"
+        },
+        {
+          "id": 12,
+          "name": "running timers inside an inject does not re-fire an outer-scope timer"
+        }
+      ],
+      "index": 11
+    },
+    {
+      "event": "TEST_RESULT",
+      "suite": "examples/unit/14_uloop_test.uc",
+      "bundle": "examples/unit/14_uloop_test.uc",
+      "status": "PASS",
+      "error": null,
+      "path": [
+        {
+          "id": 0,
+          "name": "root"
+        },
+        {
           "id": 1,
           "name": "uloop Mocking"
         },
@@ -209,56 +385,12 @@
         }
       ],
       "index": 10
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 6,
-          "name": "end() is a no-op and can be called freely from inside callbacks"
-        }
-      ],
-      "index": 5
-    },
-    {
-      "event": "TEST_RESULT",
-      "suite": "examples/unit/14_uloop_test.uc",
-      "bundle": "examples/unit/14_uloop_test.uc",
-      "status": "PASS",
-      "error": null,
-      "path": [
-        {
-          "id": 0,
-          "name": "root"
-        },
-        {
-          "id": 1,
-          "name": "uloop Mocking"
-        },
-        {
-          "id": 2,
-          "name": "run() fires registered timer callbacks synchronously"
-        }
-      ],
-      "index": 1
     }
   ],
   "bundles": {
     "examples/unit/14_uloop_test.uc": {
-      "total": 11,
-      "passed": 11,
+      "total": 17,
+      "passed": 17,
       "failed": 0,
       "errors": 0,
       "fatals": 0,

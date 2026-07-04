@@ -125,3 +125,73 @@ describe('uloop Mocking', () => {
 		assert.match(1, count, 'global timer must fire exactly once');
 	});
 });
+
+describe('uloop timer handle', () => {
+	// timer() returns a handle mirroring the real uloop.timer resource, so a SUT
+	// that stores its timer to reschedule or cancel it works under the mock
+	// instead of tripping over a null return.
+	it('timer() returns a handle exposing set/remaining/cancel', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let t = m_uloop.timer(1000, () => {});
+			assert.match('function', type(t.set));
+			assert.match('function', type(t.cancel));
+			assert.match('function', type(t.remaining));
+			assert.match(1000, t.remaining(), 'remaining() is the armed deadline');
+		});
+	});
+
+	it('cancel() stops a timer from firing and reports remaining() as -1', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let fired = false;
+			let t = m_uloop.timer(100, () => { fired = true; });
+			t.cancel();
+			assert.match(-1, t.remaining());
+			m_uloop.run();
+			assert.match(falsy(), fired, 'a cancelled timer must not fire');
+		});
+	});
+
+	it('cancelling one timer leaves the rest firing in deadline order', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let order = [];
+			m_uloop.timer(100, () => push(order, 'a'));
+			let tb = m_uloop.timer(200, () => push(order, 'b'));
+			m_uloop.timer(300, () => push(order, 'c'));
+			tb.cancel();
+			m_uloop.run();
+			assert.match(['a', 'c'], order);
+		});
+	});
+
+	it('set() reschedules the deadline before run(), changing fire order', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let order = [];
+			let ta = m_uloop.timer(100, () => push(order, 'a'));
+			m_uloop.timer(200, () => push(order, 'b'));
+			ta.set(500);   // a now fires after b
+			assert.match(500, ta.remaining());
+			m_uloop.run();
+			assert.match(['b', 'a'], order);
+		});
+	});
+
+	it('set() re-arms a cancelled timer', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let fired = false;
+			let t = m_uloop.timer(100, () => { fired = true; });
+			t.cancel();
+			t.set(50);
+			assert.match(50, t.remaining());
+			m_uloop.run();
+			assert.match(truthy(), fired);
+		});
+	});
+
+	it('cancel() and set() return the handle so calls can chain', () => {
+		mock.inject('uloop', {}, (m_uloop) => {
+			let t = m_uloop.timer(100, () => {});
+			assert.match(t, t.set(10));
+			assert.match(t, t.cancel());
+		});
+	});
+});
