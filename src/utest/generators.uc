@@ -119,6 +119,8 @@ export function float(lo, hi, opts) {
 		die(sprintf("gen.float: bounds must be finite; got lo (%g), hi (%g)", lo, hi));
 	if (lo > hi) die(sprintf("gen.float: lo (%g) must be <= hi (%g)", lo, hi));
 	const precision = (opts !== null && opts.precision !== null) ? opts.precision : 10000;
+	if (type(precision) !== 'int')
+		die(sprintf("gen.float: precision must be an integer, got %s", type(precision)));
 	if (precision < 1) die(sprintf("gen.float: precision (%d) must be >= 1", precision));
 	// Force double arithmetic so an all-int range (e.g. gen.float(3, 3)) still
 	// yields a double. Otherwise a degenerate range returns zp unchanged as an int,
@@ -169,6 +171,12 @@ function size_from_opts(opts, name) {
 	const len     = opts.len     ?? null;
 	const min_len = opts.min_len ?? null;
 	const max_len = opts.max_len ?? null;
+	// Reject non-integer sizes before the comparisons below: a double like 2.5
+	// otherwise slips through `< 0` / `< min_val` and yields an off-by-one length
+	// (i < 2.5 admits i = 0,1,2) or feeds a fractional bound into the draw stream.
+	for (let pair in [["len", len], ["min_len", min_len], ["max_len", max_len]])
+		if (pair[1] !== null && type(pair[1]) !== 'int')
+			die(sprintf("%s: %s must be an integer, got %s", name, pair[0], type(pair[1])));
 	if (len !== null) {
 		if (min_len !== null || max_len !== null)
 			die(name + ": cannot combine 'len' with 'min_len' / 'max_len'");
@@ -519,6 +527,8 @@ export function bind(generator, fn) {
  */
 export function filter(generator, pred, opts) {
 	const attempts = (opts !== null && opts.attempts !== null) ? opts.attempts : 32;
+	if (type(attempts) !== 'int')
+		die(sprintf("gen.filter: attempts must be an integer, got %s", type(attempts)));
 	if (attempts < 1) die(sprintf("gen.filter: attempts (%d) must be >= 1", attempts));
 	return gen_from(function(source) {
 		for (let i = 0; i < attempts; i++) {

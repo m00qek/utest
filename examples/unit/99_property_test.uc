@@ -76,6 +76,18 @@ describe("Generator validation", () => {
 		assert.throws(() => gen.int(1.5, 10), /bounds must be integers/);
 	});
 
+	it("gen.string / gen.array reject a non-integer size", () => {
+		// A double size slips past the >= 0 checks and yields an off-by-one length
+		// (i < 2.5 admits 0,1,2) or feeds a fractional bound into the draw stream.
+		assert.throws(() => gen.string({ len: 2.5 }), /len must be an integer/);
+		assert.throws(() => gen.array(gen.int(0, 9), { max_len: 2.5 }), /max_len must be an integer/);
+	});
+
+	it("gen.float / gen.filter reject a non-integer count option", () => {
+		assert.throws(() => gen.float(0.0, 1.0, { precision: 2.5 }), /precision must be an integer/);
+		assert.throws(() => gen.filter(gen.int(0, 9), (x) => true, { attempts: 2.5 }), /attempts must be an integer/);
+	});
+
 	it("gen.float rejects lo > hi", () => {
 		assert.throws(() => gen.float(1.0, 0.0), /lo .* must be <= hi/);
 	});
