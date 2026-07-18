@@ -29,7 +29,7 @@ export function build_response(code, body) {
         id:        sprintf('%08x', rand() & 0xffffffff),  // random hex string
         timestamp: time()                                  // current epoch second
     };
-}
+};
 
 export function fetch_pages() {
     let pages = [
@@ -39,7 +39,7 @@ export function fetch_pages() {
     ];
     // Sort by the randomly-generated id — order varies between runs.
     return sort(pages, (a, b) => a.id < b.id ? -1 : 1);
-}
+};
 ```
 
 ---

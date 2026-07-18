@@ -66,7 +66,7 @@ const fs = require('fs');              // captured once, before any patch
 
 export function read_config() {
     return fs.readfile('/etc/config'); // always calls real fs — patch has no effect
-}
+};
 ```
 
 Code that calls `require()` lazily, inside the function that uses it, is intercepted correctly:
@@ -75,7 +75,7 @@ Code that calls `require()` lazily, inside the function that uses it, is interce
 // production code — lazy require inside function body
 export function read_config() {
     return require('fs').readfile('/etc/config'); // re-evaluated on each call — patch works
-}
+};
 ```
 
 This constraint does not apply to `import` statements, because the shim is resolved once at compile time to a shim that checks for the proxy on every call — the import binding is always live.

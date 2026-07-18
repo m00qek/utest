@@ -81,7 +81,7 @@ return { mocks: { uci: null } };
 // production code (uses require, not import)
 export function get_hostname(uci_mod) {
     return (uci_mod || require('uci')).cursor().get('system', '@system[0]', 'hostname');
-}
+};
 ```
 
 ```js

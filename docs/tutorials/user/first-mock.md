@@ -23,7 +23,7 @@ Write `src/banner.uc`:
 ```js
 export function get_banner(fs) {
     return fs.readfile('/etc/banner');
-}
+};
 ```
 
 `get_banner` receives `fs` as a parameter instead of importing it directly. In production it is called with the real `fs` module; in tests we will pass a mock proxy.

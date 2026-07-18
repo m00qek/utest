@@ -26,7 +26,7 @@ export function clamp(value, lo, hi) {
     if (value < lo) return lo;
     if (value > hi) return hi;
     return value;
-}
+};
 ```
 
 `clamp` returns `value` pinned to the range `[lo, hi]`.
@@ -72,7 +72,7 @@ Replace `clamp` with a broken version that handles only the lower bound:
 export function clamp(value, lo, hi) {
     if (value < lo) return lo;
     return value;   // bug: missing upper-bound check
-}
+};
 ```
 
 Run the tests again. You will see output like:
@@ -105,7 +105,7 @@ export function clamp(value, lo, hi) {
     if (value < lo) return lo;
     if (value > hi) return hi;
     return value;
-}
+};
 ```
 
 Run again. All 100 cases pass.
