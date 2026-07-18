@@ -77,19 +77,21 @@ utest -f '^FS Mocking >'
 
 ## Understand IGNORE in the output
 
-Tests that do not match the filter are reported as `[IGNORE]`. They are not counted as failures, passes, or skips — they simply do not contribute to the summary counts:
+Tests that do not match the filter are reported as `[IGNORE]`. They are counted in `Total` and shown on their own `Ignored` line, but never as passes, failures, or errors — so they never affect the exit code:
 
 ```
   [PASS] creates a new user
   [PASS] prevents duplicate emails
   [IGNORE] allows admins to delete users
 Summary:
-  Total:  2
-  Passed: 2
-  Failed: 0
+  Total:   3
+  Passed:  2
+  Failed:  0
+  Errors:  0
+  Ignored: 1
 ```
 
-This makes `-f` safe to use in any environment, including CI, without affecting the exit code for unrelated tests.
+This makes `-f` safe to use in any environment, including CI: filtered-out tests are recorded as ignored, not failed, so the exit code reflects only the tests that actually ran.
 
 ---
 

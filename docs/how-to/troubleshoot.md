@@ -73,13 +73,13 @@ return { timeout: 120 };
 
 **Possible causes and fixes**:
 
-**Non-deterministic test ordering**: By default, utest shuffles tests. The seed is printed in the summary. Reproduce the CI failure locally by fixing the seed in `utest.config.uc`:
+**Non-deterministic test ordering**: By default, utest shuffles tests. The seed is printed in the summary. Reproduce the CI failure locally by passing that seed with `-s`:
 
-```js
-return { seed: 1234567890 };
+```bash
+utest -s 1234567890 test/unit
 ```
 
-Remove the line once you have diagnosed the problem.
+The seed is set only on the command line — there is no `seed` config key. `-s` fixes both the test-file shuffle order and the default seed for property tests.
 
 **Parallel race condition**: Tests that share mutable global state can interfere when run concurrently. Set `jobs: 1` in `utest.config.uc` to confirm the failure is order-dependent:
 
@@ -115,11 +115,11 @@ assert.match(pred(x => x == 5), actual, 'expected 5 (any type)');
 
 ---
 
-## `could not create pipes directory` error
+## `could not create ... directory` error
 
-**Symptom**: The runner exits immediately with `[utest] error: could not create pipes directory: /tmp/utest-XXXXX/pipes`.
+**Symptom**: The runner exits immediately with an error such as `[utest] error: could not create worker output directory: ...` (or `... shim directory: ...`).
 
-**Cause**: The temporary run directory could not be created, usually because `/tmp` is full, read-only, or the process lacks write permission.
+**Cause**: utest creates a temporary run directory under `/tmp` (via `mktemp`) and writes shims and per-worker output files into it. One of those directories could not be created, usually because `/tmp` is full, read-only, or the process lacks write permission.
 
 **Fix**: Check available space and permissions:
 
