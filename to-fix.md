@@ -225,11 +225,29 @@ three test-coverage additions:
 
 ### Carried over (from the first review; unchanged)
 - **shell escaping**: `utest.sh` `json_str` doesn't escape control chars.
-- **process-group kill**: timeout kill targets the worker PID only;
-  grandchildren survive; sequential read can hang past timeout.
 - **dup-file across bundles** corrupts per-suite bookkeeping; **test-dir require
   templates** shadow shim paths. Both contrived.
 - **2.3-prev** patch_builtin outside snapshot/restore (documented manual cleanup).
+
+## process-group kill LANDED — timeout kill now signals the whole group
+
+Both executors' timeout kill targeted only the worker PID, so a worker that
+forked a child (e.g. a popen'd daemon) left it running after the kill:
+`sequential.uc`'s blocking pipe read never saw EOF while the child held the
+write end open (a real, if bounded-by-the-child's-own-lifetime, hang past the
+timeout); `parallel.uc`'s SIGKILL left it as an orphan. Fixed by making the
+worker the leader of its own process group (`setsid`, which execs in place —
+pid tracking is unaffected) and signaling the *negative* pid instead: `kill
+-TERM -$_P` in the sequential watchdog, `kill -9 -<pid>` in the parallel
+timer. `examples/timeout/03_grandchild_test.uc` (a worker that backgrounds a
+`sleep 30` inheriting its stdout, then hangs) pins both directions in
+meta-test.sh's `process-group-kill` check: elapsed wall time stays ~3s under
+both `-j1`/`-j2` (verified to regress to a genuine ~30s stall under -j1
+without the fix) and a `pgrep -f '^sleep 30'` after the run finds nothing
+(verified to find the orphan under -j2 without the fix). JSON-diffing alone
+can't catch this — the "timed out" diagnostic is decided before the read
+unblocks — hence the dedicated wall-clock + pgrep check, wrapped in an outer
+`timeout 40` as a CI safety net rather than the mechanism under test.
 
 ### Test gaps still open
 - **3.4** Parallel-interrupt branch (1.3/1.11) has no automated test — needs
