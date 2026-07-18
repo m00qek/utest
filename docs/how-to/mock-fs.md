@@ -79,24 +79,29 @@ mock.inject('fs', { data: {
 });
 ```
 
+Character classes work as in real `glob(3)` — `[abc]`, ranges like `[0-9]`, and negation with `[!...]` or `[^...]`:
+
 ```js
-// ** matches across directory boundaries
+// [12] matches either digit; the .log file and cfg3 are excluded
 mock.inject('fs', { data: {
-    '/etc/init/a/main.cfg': 'a',
-    '/etc/init/a/sub/extra.cfg': 'b',
-    '/etc/other.txt': 'c'
+    '/etc/cfg1.conf': 'a',
+    '/etc/cfg2.conf': 'b',
+    '/etc/cfg3.conf': 'c',
+    '/etc/notes.log': 'd'
 }}, (m_fs) => {
-    const files = m_fs.glob('/etc/init/**/*.cfg');
+    const files = m_fs.glob('/etc/cfg[12].conf');
     sort(files);
-    assert.match(['/etc/init/a/main.cfg', '/etc/init/a/sub/extra.cfg'], files);
+    assert.match(['/etc/cfg1.conf', '/etc/cfg2.conf'], files);
 });
 ```
+
+`**` is **not** a globstar — it matches within a single directory level like `*`, so name each level explicitly to reach nested files (`/a/*/*.cfg`).
 
 ---
 
 ## Check whether a path exists or get its metadata
 
-`access()` returns `true` for any virtual file or any directory that contains one, `null` for everything else. `stat()` returns `{ size, mtime, type }` for virtual files (`type: 'regular'`, size in bytes), `{ size: 0, mtime: 0, type: 'directory' }` for virtual directories, or `null` for absent paths:
+`access()` returns `true` for any virtual file or any directory that contains one, `null` for everything else. `stat()` returns `{ size, mtime, type }` for virtual files (`type: 'file'`, size in bytes), `{ size: 0, mtime: 0, type: 'directory' }` for virtual directories, or `null` for absent paths:
 
 ```js
 mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
@@ -104,7 +109,7 @@ mock.inject('fs', { data: { '/tmp/dir/data.txt': 'hello' } }, (m_fs) => {
     assert.match(truthy(), m_fs.access('/tmp/dir/data.txt'));
     let s = m_fs.stat('/tmp/dir/data.txt');
     assert.match(5, s.size);
-    assert.match('regular', s.type);
+    assert.match('file', s.type);
 
     // virtual directory — inferred from the file path above
     assert.match(truthy(), m_fs.access('/tmp/dir'));

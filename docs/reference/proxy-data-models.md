@@ -28,7 +28,7 @@ Filesystem paths are the keys. `lsdir`, `glob`, `access`, `stat`, `readfile`,
 
 `writefile` stores the written content under the path key. `unlink` sets the path to `null`. `rename` moves content from one key to another. `mkdir` and `chmod` are no-ops that return `true`. `error` returns `null` by default. `lsdir` and `glob` merge virtual paths with real filesystem entries (unless `strict` is set, in which case only virtual paths are used).
 
-`stat` on a virtual path returns `{ size: <byte length>, mtime: 0, type: 'regular' }`.
+`stat` on a virtual path returns `{ size: <byte length>, mtime: 0, type: 'file' }` (the `type` uses the real `fs` vocabulary — `'file'`, not `'regular'`).
 
 `open(path, mode)` uses the path as a data key. In read mode (`'r'`), a seeded path returns a handle supporting `read('all')`, `read('line')`, and `read(n)`; an unmocked path returns `null` in non-strict mode or dies in strict mode. In write mode (`'w'`) and append mode (`'a'`), a writable handle is always returned; content is stored back into the data channel when `close()` is called. `error()` on any handle always returns `null`.
 
@@ -46,13 +46,20 @@ Keeping commands in a separate channel ensures that command strings are invisibl
 
 **`glob` wildcard syntax:**
 
+The mock matches real `glob(3)`. All wildcards operate within a single path
+component (they do not cross `/`):
+
 | Wildcard | Matches |
 | :--- | :--- |
 | `*` | Any sequence of characters within one path component |
 | `?` | Any single character within one path component |
-| `**` | Any sequence of characters including path separators |
+| `[abc]`, `[a-z]` | Any one character in the set or range |
+| `[!abc]`, `[^abc]` | Any one character *not* in the set or range |
 
-Character classes (`[abc]`, `[0-9]`) are not supported.
+`**` is **not** a globstar: between two slashes it matches a single path
+component, exactly like `*`. Name each directory level explicitly to reach
+nested files — `/etc/*/*.cfg` matches `/etc/init/a.cfg` (one level deep) but
+not `/etc/init/sub/b.cfg` (two levels deep).
 
 **`behavior` overrides:** `readfile`, `writefile`, `open`, `popen`, `access`, `stat`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`.
 
@@ -73,7 +80,7 @@ mock.inject('fs', {
     m_fs.readfile('/etc/banner');           // → 'OpenWrt'
     m_fs.access('/tmp/config.txt');         // → true
     m_fs.access('/tmp/deleted.txt');        // → null (absent)
-    m_fs.stat('/tmp/config.txt');           // → { size: 9, mtime: 0, type: 'regular' }
+    m_fs.stat('/tmp/config.txt');           // → { size: 9, mtime: 0, type: 'file' }
     m_fs.lsdir('/tmp/dir');                 // → ['a.txt', 'b.txt']
     m_fs.glob('/tmp/dir/*.txt');            // → ['/tmp/dir/a.txt', '/tmp/dir/b.txt']
     m_fs.writefile('/tmp/new.txt', 'hi');   // stores content, returns 2
