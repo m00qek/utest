@@ -44,9 +44,13 @@ try {
 		let real_dir = fs.realpath(test_dir) || test_dir;
 		// REQUIRE_SEARCH_PATH entries are glob templates (the '*' is replaced
 		// with the module name); a bare directory never matches, so a test could
-		// not require() a helper sitting next to it. Prepend proper templates.
-		unshift(REQUIRE_SEARCH_PATH, real_dir + "/*.so");
-		unshift(REQUIRE_SEARCH_PATH, real_dir + "/*.uc");
+		// not require() a helper sitting next to it. Append (not unshift) the
+		// templates: the test's own directory must rank below every fixed tier
+		// (shims, framework source, lib_paths) — the same tier as the project
+		// root — so a coincidentally same-named sibling file (e.g. a stray
+		// fs.uc) cannot silently outrank the shim and defeat a mock.
+		push(REQUIRE_SEARCH_PATH, real_dir + "/*.uc");
+		push(REQUIRE_SEARCH_PATH, real_dir + "/*.so");
 	}
 
 	let test_fn = loadfile(test_file);
