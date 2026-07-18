@@ -248,6 +248,10 @@ messages and the session memory.
   (`e61def3`).
 - **`dispatch` de-exported** — was `export const`, referenced only in-file
   (4.6-prev, `e61def3`).
+- **warning paths asserted** — meta-test's `warns[...]` block pins the framework
+  warnings that two fixtures (`21_inject_all`, `28_reserved_channel`) emit as
+  byproducts, so a dropped/reworded warning is now caught instead of silently
+  leaking to stderr.
 - **docs** — a full Diátaxis pass realigned the docs with the code and closed
   several latent breakages (see `to-fix.docs.md`; all batches landed).
 
@@ -273,7 +277,6 @@ messages and the session memory.
 - **3.4** Parallel-interrupt branch (^C mid multi-bundle run; 1.3 / 1.11) has
   no automated test — needs mid-run signaling; verified by construction only.
   (Hard, acknowledged.)
-- A few framework warning paths leak into meta output unasserted.
 
 ### Readability / docs
 - **4.9-prev** No single architecture-overview doc. Largely addressed by the

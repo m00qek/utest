@@ -345,6 +345,40 @@ check_seed_reproducibility() {
 }
 check_seed_reproducibility || failed_tests="$failed_tests seed_reproducibility"
 
+# Framework warning paths: a few example fixtures exercise warning branches as a
+# byproduct (an unconfigured/unknown proxy name; a custom proxy whose module is
+# absent and declares no api list). Their JSON baselines pin the visible test
+# results but say nothing about the stderr warning, so those warning strings
+# used to leak into meta output unasserted — a regression that dropped or
+# reworded them would go unnoticed. Assert the expected warning text is emitted.
+#   assert_warns <label> <config> <test-file> <expected-substring>...
+assert_warns() {
+    label=$1; cfg=$2; testfile=$3; shift 3
+    out=$(docker run --rm --user "$(id -u):$(id -g)" --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -c "$cfg" "$testfile" 2>&1)
+    ok=1
+    for exp in "$@"; do
+        printf '%s\n' "$out" | grep -qF "$exp" \
+            || { echo "  [FAIL] warns[$label] (missing warning: $exp)"; ok=0; }
+    done
+    [ "$ok" -eq 1 ] && echo "  [PASS] warns[$label] (expected framework warning emitted)"
+    return $(( ! ok ))
+}
+assert_warns "inject-unconfigured-proxy" \
+    examples/unit/21_inject_all_config.uc examples/unit/21_inject_all_test.uc \
+    "could not load module 'no_such'" \
+    "could not load module 'no_such_proxy'" \
+    || failed_tests="$failed_tests warns_inject_all"
+assert_warns "custom-proxy-no-shim" \
+    examples/unit/28_reserved_channel_config.uc examples/unit/28_reserved_channel_test.uc \
+    "no shim created for 'widget'" \
+    || failed_tests="$failed_tests warns_widget"
+
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
 # otherwise ship silently — the class of bug fixed in the decoder guard).
