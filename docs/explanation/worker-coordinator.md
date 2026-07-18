@@ -84,51 +84,67 @@ reads lines from the pipe synchronously, closes the pipe before starting the
 next worker. Output arrives in the order tests run. No temporary files are
 involved.
 
-**Parallel** (`jobs: N`): launches up to N workers simultaneously using shell
-background jobs. Each worker's stdout is redirected to a temporary file in
-`$run_dir/pipes/`. The coordinator polls those files in a loop, advancing a
-byte offset as new complete lines appear. A `done` sentinel file signals that a
-worker has exited. The coordinator enforces a per-worker wall-clock timeout
-(default 60 seconds, configurable via `timeout` in `utest.config.uc`); a worker
-that exceeds it is killed with `SIGKILL` and a synthetic FATAL event is emitted.
+**Parallel** (`jobs: N`): drives the whole worker fleet through the ucode
+`uloop` event loop — there is no polling loop and no fixed wake interval. It
+starts up to N workers with `uloop.process`, and each worker's stdout is
+redirected to its own file under `$run_dir/workers/`. When a worker exits,
+uloop invokes its process callback; the coordinator reads that worker's file
+**once, in full**, feeds it to the shared decoder, then starts the next queued
+file. Because a worker's entire output is decoded in a single callback, one
+suite's events never interleave with another's. A per-worker `uloop.timer`
+enforces the wall-clock timeout (default 60 seconds, configurable via `timeout`
+in `utest.config.uc`); on expiry the worker is killed and its exit callback
+finalizes with whatever partial output reached the file.
 
-The trade-off: sequential is simpler and produces interleaved output in a single
-stream; parallel reduces total wall time for slow test suites but requires
-polling and temporary storage.
+Because the parallel executor is built entirely on `uloop`, `jobs > 1` requires
+the ucode `uloop` module to be present — there is no polling fallback. Running
+`-j 1` (the default) never touches `uloop`, so the module stays a soft
+dependency for minimal images.
+
+The trade-off: sequential is simpler, streams output live line-by-line, and
+needs no `uloop`; parallel reduces total wall time for slow suites but decodes
+each suite only at worker exit (so its output is contiguous-per-suite rather
+than live-per-line).
 
 ---
 
-## Why the parallel executor polls at a fixed 50 ms interval
+## Why the timeout kill targets the process group
 
-The coordinator wakes every 50 ms to read new output from active workers. The
-interval was chosen to balance two constraints: below ~100 ms, reporter output
-feels live to a human watching the terminal; above ~5 ms per wake, polling
-overhead is negligible on the low-power embedded hardware utest targets. An
-event-driven alternative (inotify, FIFOs) would require either a native C
-extension or a significantly different worker spawn strategy — both introduce
-maintenance cost that the 50 ms interval avoids without any practical
-performance difference for realistic test suites.
+A hung worker is killed on timeout, but a test may have spawned children of its
+own (a popen'd daemon, a background `system(... &)`). Killing only the worker
+PID would leave those children alive: under the sequential executor a surviving
+child holds the read pipe's write end open, so the blocking read never sees EOF
+and the run stalls; under the parallel executor the child simply lingers as an
+orphan.
+
+To prevent this, each worker is made the leader of its own process group with
+`setsid`, and the timeout kill signals the **negative** PID — the whole group,
+not just the worker. The sequential watchdog sends `SIGTERM` (its `wait` then
+reports exit 143, which the executor matches exactly to distinguish a timeout
+from a crash); the parallel executor sends `SIGKILL` (it keys the diagnostic on
+a `timed_out` flag, so it does not need a distinguishable exit code). The
+signals differ but the outcome is identical: a worker installs no handler, and
+its whole subtree is terminated.
 
 ```mermaid
 flowchart TD
     A["executor.uc"] -->|"jobs: 1 (default)"| B["Sequential executor"]
-    A -->|"jobs: N"| C["Parallel executor"]
+    A -->|"jobs: N"| C["Parallel executor (uloop)"]
 
-    B --> B1["fs.popen(worker)"]
-    B1 --> B2["read lines synchronously"]
-    B2 --> B3["close pipe"]
+    B --> B1["fs.popen(setsid worker)"]
+    B1 --> B2["read lines synchronously\n(shell watchdog: sleep → SIGTERM -PGID)"]
+    B2 --> B3["close pipe · exit 143 ⇒ timeout"]
     B3 --> B4{"more files?"}
     B4 -->|yes| B1
     B4 -->|no| DONE["done"]
 
-    C --> C1["spawn up to N workers\n(shell background jobs)"]
-    C1 --> C2["poll temp files\nfor new lines"]
-    C2 --> C3{"done sentinel\nappeared?"}
-    C3 -->|no| C4{"per-worker\ntimeout exceeded?"}
-    C4 -->|no| C2
-    C4 -->|yes| C5["SIGKILL worker\nsynthesize FATAL"]
-    C5 --> C6{"more files?"}
-    C3 -->|yes| C6
+    C --> C1["uloop.process(setsid worker)\nstdout → workers/out.N\n+ per-worker uloop.timer"]
+    C1 --> C2["uloop.run()\n(event loop, no polling)"]
+    C2 --> C3{"worker exit\ncallback?"}
+    C3 -->|"timer fired first"| C5["SIGKILL -PGID\nset timed_out"]
+    C5 --> C3
+    C3 -->|yes| C4["read worker file once\nfeed decoder · finalize"]
+    C4 --> C6{"more queued?"}
     C6 -->|yes| C1
     C6 -->|no| DONE
 ```
@@ -138,21 +154,25 @@ flowchart TD
 ## The FATAL event
 
 FATAL is the "something went catastrophically wrong" signal. It can originate
-from three places:
+from four places:
 
 - **The worker itself** (`bootstrap.uc`): if `loadfile()` fails, or if the test
   file throws an uncaught exception during the module-level evaluation phase, or
   if `setup()` / `teardown()` throws. The worker prints the FATAL JSON line and
   exits with code 1.
-- **Timeout** (parallel executor, coordinator side): if a worker exceeds its
-  wall-clock timeout, the coordinator kills it with `SIGKILL` and synthesises a
-  FATAL event.
-- **Spawn failure** (parallel executor, coordinator side): if the worker process
-  exits without having produced any valid JSON output — for example because
-  `ucode` was not found on `PATH`, or because the worker binary crashed before
-  writing anything — the coordinator reads whatever the shell wrote to
-  `out_file` and reports it as a FATAL. This distinguishes a spawn failure (zero
-  output) from a test file that runs and reports results normally.
+- **Timeout** (either executor, coordinator side): a worker that exceeds its
+  wall-clock timeout is killed (its process group — see above) and a FATAL is
+  synthesised from the shared `terminal_fatal` logic.
+- **Spawn failure** (coordinator side): if a worker exits without having
+  produced any valid protocol output — for example because `ucode` was not
+  found on `PATH`, or the worker crashed before writing anything — the
+  coordinator reports whatever landed in the worker's output file as a FATAL.
+  This distinguishes a spawn failure (no events) from a suite that ran and
+  reported normally.
+- **Run interrupted** (parallel executor, coordinator side): if the whole run
+  is cut short (e.g. `^C`) before every worker finished, the executor emits one
+  `aggregate` FATAL standing for the truncation, so the summary is honest and
+  the exit code is non-zero.
 
 After a FATAL, that suite produces no TEST_RESULT or SUITE_END events. Reporters
 count fatals separately from errors and failures, and the run exits with a
