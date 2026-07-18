@@ -287,6 +287,32 @@ assert_cli_error "unknown-flag"  "Unknown option"             -Z \
 assert_cli_error "missing-config" "Configuration file not found" -c /no/such/config.uc \
     || failed_tests="$failed_tests cli_missing_config"
 
+# -l flag with a RELATIVE path: a `-l` argument arrives relative to the
+# invocation cwd, but the worker runs from a different cwd, so a relative `-L`
+# never resolved there — the flag only worked with an absolute path. cli.uc now
+# makes each `-l` path absolute against the cwd. Reuse the config-lib-paths
+# helper (a `greeting` module) but supply it via the flag, not the config, so
+# the module resolves ONLY if the relative `-l` path was made absolute. The
+# tutorials (`utest -l src ...`) depend on this working.
+check_lib_flag() {
+    out=$(docker run --rm --user "$(id -u):$(id -g)" --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -r json -l examples/unit/config_lib_paths_helper \
+            examples/unit/20_config_lib_paths_test.uc 2>&1)
+    ec=$?
+    ok=1
+    [ "$ec" -eq 0 ] || { echo "  [FAIL] lib-flag[-l relative] (exit $ec)"; ok=0; }
+    printf '%s\n' "$out" | grep -q '"failed": 0' && printf '%s\n' "$out" | grep -q '"passed": 1' \
+        || { echo "  [FAIL] lib-flag[-l relative] (greeting module did not resolve via relative -l)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] lib-flag[-l relative] (relative -l path resolves against cwd)"
+    return $(( ! ok ))
+}
+check_lib_flag || failed_tests="$failed_tests lib_flag_relative"
+
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
 # otherwise ship silently — the class of bug fixed in the decoder guard).

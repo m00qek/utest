@@ -87,7 +87,6 @@ function main() {
 	if (file_config.data.reporter !== null && !match(file_config.data.reporter, VALID_REPORTERS))
 		die(sprintf("Invalid config reporter '%s': expected one of: detailed, compact, json.\n", file_config.data.reporter));
 
-	let lib_paths = opts.lib_paths || [];
 	const config_dir = file_config.path ? replace(file_config.path, /\/[^\/]+$/, "") : null;
 
 	// Resolve a config-relative path against the config file's directory.
@@ -95,6 +94,14 @@ function main() {
 		if (!config_dir || !p || match(p, /^\//)) return p;
 		return fs.realpath(config_dir + "/" + p) || config_dir + "/" + p;
 	}
+
+	// A `-l` path arrives relative to the invocation cwd, but the worker is
+	// spawned with a different working directory, so a relative `-L` never
+	// resolves there. Make each absolute against the cwd here (config lib_paths
+	// get the config-dir treatment just below). Absolute paths pass through.
+	let lib_paths = [];
+	for (let p in (opts.lib_paths || []))
+		push(lib_paths, (p && !match(p, /^\//)) ? (fs.realpath(p) || p) : p);
 
 	for (let p in (file_config.data.lib_paths || []))
 		push(lib_paths, resolve_rel(p));
