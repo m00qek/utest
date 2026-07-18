@@ -1,8 +1,9 @@
 # Open items — after the clear-path batch on the 2026-07-03 (ff86ebc) review
 
 The second full review (four-reviewer panel at `ff86ebc`; full report in git
-history at commit `32509c5`) is mostly landed. This file now tracks only what
-remains open. **Suite health:** `make meta-test` fully green — 451 PASS / 0 FAIL.
+history at commit `32509c5`) is mostly landed. This file tracks what remains
+open (see the "Still open" section at the end for the current, short list).
+**Suite health:** `make meta-test` fully green.
 
 ---
 
@@ -221,88 +222,61 @@ three test-coverage additions:
 
 ---
 
+## Landed 2026-07-18 (detail in git history + auto-memory)
+
+Everything from the third review's "Still open" list except the deliberately-
+deferred boundaries below. One-line summaries; full write-ups are in the commit
+messages and the session memory.
+
+- **shell escaping** — `utest.sh` `json_str` now escapes tab/CR/newline
+  (`66d9e0f`). Pinned by meta-test's `json-str-escaping` check.
+- **process-group kill** — the timeout kill signals the worker's whole process
+  group (`setsid` + negative pid), so a forked grandchild dies with it
+  (`09c026e`). Pinned by `process-group-kill`.
+- **dup-file-across-bundles** — suite stats and detailed-reporter headers are
+  nested by (bundle, file), not keyed on file alone (`b9b1c69`). Pinned by
+  `dup-file-across-bundles`.
+- **test-dir-require-shadowing** — the test file's own directory is appended
+  (not unshifted) onto `REQUIRE_SEARCH_PATH`, so a same-named sibling can't
+  outrank a configured module via `require()` (`86f43e4`). Fixture in
+  `examples/requireshadow/`.
+- **`-l` relative flag** — `cli.uc` resolves a relative `-l` path against the
+  cwd; it was silently unresolved on the worker (`cbef856`). Pinned by
+  `lib-flag`.
+- **seed reproducibility** — meta-test's `seed-reproducibility` block asserts
+  the same `-s` reproduces the run order and a different `-s` changes it
+  (`e61def3`).
+- **`dispatch` de-exported** — was `export const`, referenced only in-file
+  (4.6-prev, `e61def3`).
+- **docs** — a full Diátaxis pass realigned the docs with the code and closed
+  several latent breakages (see `to-fix.docs.md`; all batches landed).
+
+---
+
 ## Still open
 
-### Carried over (from the first review; unchanged)
-- **2.3-prev** patch_builtin outside snapshot/restore (documented manual cleanup).
-
-## dup-file-across-bundles LANDED — suite stats nested by (bundle, file)
-
-`_suite_stats` (reporter/base.uc) and `reported_suites` (detailed.uc) were
-keyed on file path alone, shared across the whole run: the same file named in
-two different bundles had its second occurrence merged into the first's
-bucket (suite count under-reported) and its header silently dropped in the
-detailed reporter. Nested by (bundle, file) instead of a joined string key —
-a `bundle + "\0" + file` key was tried first and found to collide: ucode
-object keys truncate at an embedded NUL (`{}["a\0b"]` and `{}["a\0c"]` both
-land on `"a"`, verified live), which broke the very case it was meant to
-disambiguate. Pinned in meta-test.sh's `dup-file-across-bundles` check (same
-file under two different bundle names must render two headers and count two
-suites); verified red on the old file-keyed code first.
-
-## test-dir-require-shadowing LANDED — appended, not unshifted
-
-`bootstrap.uc` unshifted the test file's own directory onto the front of
-REQUIRE_SEARCH_PATH, so a same-named sibling file could outrank a properly
-configured module. **Narrower than the original framing:** this is only
-reachable via a dynamic `require()` call — `import` statements resolve
-through a separate, unaffected mechanism (verified live: mutating
-REQUIRE_SEARCH_PATH at runtime has zero effect on subsequent `import`
-resolution, only on `require()`), so the very common `import`-based test code
-was never actually at risk. Still a real hole for `require()`. Fixed by
-appending instead of unshifting, so the test's own directory ranks at the
-same (lowest) tier as project root — same feature (`require()` finds a
-sibling helper), correct priority. Regression fixture
-(`examples/requireshadow/`) uses a decoy sibling file colliding with a
-lib_paths-provided module of the same name; verified red on the old
-(unshift) code first.
-
-## shell escaping LANDED — `json_str` now escapes tab/CR/newline
-
-`utest.sh`'s `json_str` escaped only `\` and `"`, so a `-f`/`-c`/`-l` argument
-containing a raw tab/CR/newline produced a `opts` blob that is invalid JSON
-per RFC 8259. **Correction to the original claim:** this does NOT actually
-crash `cli.uc` on live ucode — `json()` was verified (live, via a standalone
-raw-control-char string) to tolerate an unescaped control character inside a
-string; it is not a strict parser. The fix is still worth having (the output
-should be valid JSON on its own terms, and a stricter parser is one ucode
-version or one alternate tool away), not a rescue from an observed crash.
-`json_str` now slurps its input (`:a;N;$!ba`, since sed is line-oriented and
-a lone `s/\n/\\n/` never sees an embedded newline) and additionally escapes
-`\t`/`\r`/`\n`. Verified against busybox sed in the real target image, not
-just GNU sed. Pinned in meta-test.sh's `json-str-escaping` check, which tests
-the helper directly against `jq` (strict) rather than round-tripping through
-`utest` — the CLI round-trip can't distinguish valid from invalid JSON here
-since ucode accepts both. This also closes the "json_str escaping untested"
-test gap below.
-
-## process-group kill LANDED — timeout kill now signals the whole group
-
-Both executors' timeout kill targeted only the worker PID, so a worker that
-forked a child (e.g. a popen'd daemon) left it running after the kill:
-`sequential.uc`'s blocking pipe read never saw EOF while the child held the
-write end open (a real, if bounded-by-the-child's-own-lifetime, hang past the
-timeout); `parallel.uc`'s SIGKILL left it as an orphan. Fixed by making the
-worker the leader of its own process group (`setsid`, which execs in place —
-pid tracking is unaffected) and signaling the *negative* pid instead: `kill
--TERM -$_P` in the sequential watchdog, `kill -9 -<pid>` in the parallel
-timer. `examples/timeout/03_grandchild_test.uc` (a worker that backgrounds a
-`sleep 30` inheriting its stdout, then hangs) pins both directions in
-meta-test.sh's `process-group-kill` check: elapsed wall time stays ~3s under
-both `-j1`/`-j2` (verified to regress to a genuine ~30s stall under -j1
-without the fix) and a `pgrep -f '^sleep 30'` after the run finds nothing
-(verified to find the orphan under -j2 without the fix). JSON-diffing alone
-can't catch this — the "timed out" diagnostic is decided before the read
-unblocks — hence the dedicated wall-clock + pgrep check, wrapped in an outer
-`timeout 40` as a CI safety net rather than the mechanism under test.
+### Deliberately deferred (documented boundaries, not planned work)
+- **patch_builtin outside snapshot/restore** (2.3-prev) —
+  `mock.global.patch_builtin` writes to `global[name]` and is not captured by
+  snapshot/restore, so a forgotten `unpatch_builtin` leaks into later tests in
+  the worker. Accepted limitation: pair it with `unpatch_builtin`, or use the
+  auto-scoped `inject_builtin`. Documented in the mock-api reference and the
+  test-isolation explanation.
+- **proxy build not cached per inject** (3.3b) — low value; a naive
+  `memoize(build_proxy)` is incorrect (it breaks `spy()` under nested injects).
+  The proxy *module* lookup is already memoized.
+- **fs write-mode edges** — random-access writes (`r+`/`w+`) and an empty
+  `mkdir`'s stat trace are unmodeled. Documented at the fs proxy and in the
+  reference.
 
 ### Test gaps still open
-- **3.4** Parallel-interrupt branch (1.3/1.11) has no automated test — needs
-  mid-run signaling; verified by construction. (Hard, acknowledged.)
-- **Carried over:** CLI `-f`/`-l` untested directly; seed reproducibility
-  asserted nowhere; warning paths
-  unasserted (a few warnings leak into meta output as unasserted byproducts).
+- **3.4** Parallel-interrupt branch (^C mid multi-bundle run; 1.3 / 1.11) has
+  no automated test — needs mid-run signaling; verified by construction only.
+  (Hard, acknowledged.)
+- A few framework warning paths leak into meta output unasserted.
 
-### Readability carried over
-- 4.6-prev (`dispatch` exported but only used in-file); 4.9-prev (no single
-  architecture-overview doc).
+### Readability / docs
+- **4.9-prev** No single architecture-overview doc. Largely addressed by the
+  `explanation/` section (concepts, worker/coordinator, mock engine, shim
+  generation, reporter architecture); a one-page "how it all fits together"
+  overview could still tie them into one entry point, but the pieces exist.
