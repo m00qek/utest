@@ -29,7 +29,22 @@ blocker alongside the PKG_VERSION bump.
 - **LANDED** D3 (uloop deadline order, timer handle, timers channel). (`9b1925f`)
 - **LANDED** D2 + D6 (stale patch proxy dies; strict = ERROR). (`8ac52c6`)
 - **LANDED** D7 + D8 (troubleshoot seed/run-dir; filter IGNORE counts in Total). (`e749c55`)
-- **Batch 1 (D0–D8) COMPLETE.** Remaining: D9–D14 (architecture, reference gaps, nits).
+- **Batch 1 (D0–D8) COMPLETE.**
+- **LANDED** D9–D11 (worker-coordinator uloop rewrite; message-protocol decoder/
+  ordering; regression missing-baseline policy). (`b053df6`, `1f48869`)
+- **LANDED** D12 (assert.fail/is_combinator; mock.reset + proxy-scope guard; fs
+  read-side/seal/handle + uci fidelity; -jN/uloop, timeout, -l in cli/ci). (`+5 commits`)
+- **LANDED** D13 (proxy-ctx-api record_call/real_call/has/clone + null note;
+  reporter-api stats/aggregate; source-layout uloop/fs/examples/util). (`1 commit`)
+- **LANDED** D14 (spy() over __utest__; config-required note; patch_builtin
+  isolation hole; reporter-arch blurb; shim search-order tiers). (`1 commit`)
+- **ALL BATCHES COMPLETE.** Final: strict `mkdocs build` passes; `make meta-test`
+  green (incl. the new `lib-flag` block). Every corrected snippet was run in the
+  container. New findings beyond the original review, all fixed: `export
+  function` needs `;` (D0); `math` is a builtin that shadows the tutorial module;
+  the `-l <relative>` flag was broken (fixed in cli.uc + regression); first-mock
+  test-2 fell through to the real `/etc/banner`; first-combinators used a
+  non-existent global `rand()`; the "100 cases pass" property output claim.
 
 **What is explicitly fine (do not churn):** the four-quadrant layout and
 mkdocs nav; the user/contributor split in all four sections; tutorial form
