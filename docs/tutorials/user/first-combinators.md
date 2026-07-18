@@ -26,8 +26,10 @@ export function build_response(code, body) {
         code:      code,
         body:      body,
         ok:        code >= 200 && code < 300,
-        id:        sprintf('%08x', rand() & 0xffffffff),  // random hex string
-        timestamp: time()                                  // current epoch second
+        // A generated id you would not hardcode in a test — an 8-digit hex
+        // fingerprint of the response content.
+        id:        sprintf('%08x', (code * 2654435761 + length(body)) & 0xffffffff),
+        timestamp: time()   // current epoch second — varies between runs
     };
 };
 
@@ -37,7 +39,7 @@ export function fetch_pages() {
         build_response(404, 'not found'),
         build_response(200, 'about'),
     ];
-    // Sort by the randomly-generated id — order varies between runs.
+    // Sorted by the generated id, so the list order is not the creation order.
     return sort(pages, (a, b) => a.id < b.id ? -1 : 1);
 };
 ```
@@ -131,7 +133,7 @@ Run again. All three tests pass.
 
 ## Step 5 — Test an unordered list with `any_order`
 
-`fetch_pages()` sorts by the randomly-generated `id`, so the element order varies between runs. Replace the file with:
+`fetch_pages()` sorts by the generated `id`, so the responses come back in an order you would not want to hardcode — it tracks the id fingerprint, not the order they were built in. Replace the file with:
 
 ```js
 import { describe, it, assert, contains, truthy, falsy, regex, any_order } from 'utest';
@@ -163,7 +165,7 @@ describe("fetch_pages()", () => {
 });
 ```
 
-`any_order([...])` passes when the actual array contains the same elements as the expected array matched in any order. A plain array assertion would fail whenever the sort order changes; `any_order` removes that brittleness while still verifying that all three responses are present.
+`any_order([...])` passes when the actual array contains the same elements as the expected array matched in any order. A plain array assertion would force you to hardcode `fetch_pages()`'s internal sort order; `any_order` removes that coupling while still verifying that all three responses are present.
 
 Run again. All four tests pass.
 
