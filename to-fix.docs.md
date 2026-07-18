@@ -25,7 +25,11 @@ blocker alongside the PKG_VERSION bump.
 - **LANDED** first-combinators: bare `rand()` (not a builtin) → content-derived
   id; ordering narrative. (`4145ca9`)
 - **LANDED** D1 + D0b (first-mock: stale-proxy guard, absent-file test, output). (`9eca300`)
-- Remaining: D2–D14 (how-tos, explanation, reference, nits) per the plan below.
+- **LANDED** D5 + D4 (fs stat type 'file'; glob real glob(3) — ** not globstar, char classes). (`af98f99`)
+- **LANDED** D3 (uloop deadline order, timer handle, timers channel). (`9b1925f`)
+- **LANDED** D2 + D6 (stale patch proxy dies; strict = ERROR). (`8ac52c6`)
+- **LANDED** D7 + D8 (troubleshoot seed/run-dir; filter IGNORE counts in Total). (`e749c55`)
+- **Batch 1 (D0–D8) COMPLETE.** Remaining: D9–D14 (architecture, reference gaps, nits).
 
 **What is explicitly fine (do not churn):** the four-quadrant layout and
 mkdocs nav; the user/contributor split in all four sections; tutorial form
