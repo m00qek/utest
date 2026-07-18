@@ -224,10 +224,28 @@ three test-coverage additions:
 ## Still open
 
 ### Carried over (from the first review; unchanged)
-- **shell escaping**: `utest.sh` `json_str` doesn't escape control chars.
 - **dup-file across bundles** corrupts per-suite bookkeeping; **test-dir require
   templates** shadow shim paths. Both contrived.
 - **2.3-prev** patch_builtin outside snapshot/restore (documented manual cleanup).
+
+## shell escaping LANDED — `json_str` now escapes tab/CR/newline
+
+`utest.sh`'s `json_str` escaped only `\` and `"`, so a `-f`/`-c`/`-l` argument
+containing a raw tab/CR/newline produced a `opts` blob that is invalid JSON
+per RFC 8259. **Correction to the original claim:** this does NOT actually
+crash `cli.uc` on live ucode — `json()` was verified (live, via a standalone
+raw-control-char string) to tolerate an unescaped control character inside a
+string; it is not a strict parser. The fix is still worth having (the output
+should be valid JSON on its own terms, and a stricter parser is one ucode
+version or one alternate tool away), not a rescue from an observed crash.
+`json_str` now slurps its input (`:a;N;$!ba`, since sed is line-oriented and
+a lone `s/\n/\\n/` never sees an embedded newline) and additionally escapes
+`\t`/`\r`/`\n`. Verified against busybox sed in the real target image, not
+just GNU sed. Pinned in meta-test.sh's `json-str-escaping` check, which tests
+the helper directly against `jq` (strict) rather than round-tripping through
+`utest` — the CLI round-trip can't distinguish valid from invalid JSON here
+since ucode accepts both. This also closes the "json_str escaping untested"
+test gap below.
 
 ## process-group kill LANDED — timeout kill now signals the whole group
 
@@ -253,7 +271,7 @@ unblocks — hence the dedicated wall-clock + pgrep check, wrapped in an outer
 - **3.4** Parallel-interrupt branch (1.3/1.11) has no automated test — needs
   mid-run signaling; verified by construction. (Hard, acknowledged.)
 - **Carried over:** CLI `-f`/`-l` untested directly; seed reproducibility
-  asserted nowhere; `utest.sh` json_str escaping untested; warning paths
+  asserted nowhere; warning paths
   unasserted (a few warnings leak into meta output as unasserted byproducts).
 
 ### Readability carried over
