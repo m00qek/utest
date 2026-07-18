@@ -11,11 +11,56 @@ must be preserved. Content is a snapshot of the framework at ~`0d1966e`
 one tutorial errors mid-walkthrough. Treat the fix batch below as a release
 blocker alongside the PKG_VERSION bump.
 
+## Progress log (updated as fixed)
+
+- **LANDED** `-l` flag bug (found during the pass): relative `-l` never
+  resolved on the worker; cli.uc now makes it absolute against cwd, with a new
+  meta-test block. Tutorials' `utest -l src` now works. (commit `cbef856`)
+- **LANDED** D0 (export-function `;`). (commit `9c2365a`)
+- **LANDED** first-test tutorial: `math`→`calc` builtin-name collision (a
+  builtin `math` shadowed the reader's module — separate from D0/`-l`), real
+  reporter output, shuffle note. (commit `935413b`)
+- **LANDED** first-property-test: `math`→`calc`, real property-failure output
+  (per-case seed note, `Saved to:` line), fixed "100 cases pass" claims. (`f6eda8e`)
+- **LANDED** first-combinators: bare `rand()` (not a builtin) → content-derived
+  id; ordering narrative. (`4145ca9`)
+- **LANDED** D1 + D0b (first-mock: stale-proxy guard, absent-file test, output). (`9eca300`)
+- Remaining: D2–D14 (how-tos, explanation, reference, nits) per the plan below.
+
 **What is explicitly fine (do not churn):** the four-quadrant layout and
 mkdocs nav; the user/contributor split in all four sections; tutorial form
 (first-person plural, visible results, links out); how-to form (goal-named,
 conditional imperatives); reference austerity; explanation boundedness;
 diagram placement (explanation + structural reference only, correct types).
+
+---
+
+## D0 CONFIRMED (found during the fix pass) — `export function` snippets do not compile
+
+On the pinned image (`openwrt/rootfs:x86-64-25.12.4`) an
+`export function foo() { ... }` declaration **must** be terminated with `;`
+(`};`) or the module fails to compile: `Syntax error: Expecting ';'` at the
+closing brace. Plain (non-`export`) `function` declarations do NOT need it;
+`export const x = <expr>` does (it is an assignment). The framework's own
+source always writes `export function ... };`, but every tutorial and how-to
+source snippet omits the `;`, so a reader who copies `src/math.uc` from
+`first-test.md` hits a compile error on the very first `utest` run. Affects
+14 `export function` occurrences across first-test, first-mock, first-property-test
+(×3), first-combinators (×2), first-patch, add-assertion, add-reporter (1 of 2),
+inject-vs-patch (×2), mock-global-patch. **Fix:** add the trailing `;`. This
+is the true worst item — it blocks the getting-started path entirely — and is
+fixed first, as its own mechanical commit.
+
+## D0b CONFIRMED (found during the fix pass) — first-mock test 2 is environment-dependent
+
+`first-mock.md`'s second test seeds `data: {}` and asserts `get_banner(m_fs)`
+returns `null`. In non-strict mode the fs proxy falls through to the REAL
+filesystem for an unseeded path, and `/etc/banner` exists on every OpenWrt
+system (and in the container), so the call returns the real banner and the
+test FAILS. **Fix:** seed the path explicitly absent (`{ '/etc/banner': null }`)
+and reword to "returns null when the banner file is absent" — robust
+everywhere and teaches the documented `null = absent` convention. Folded into
+the D1 commit.
 
 ---
 
