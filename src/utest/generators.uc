@@ -316,6 +316,21 @@ function build_string(opts, name) {
 	});
 }
 
+/**
+ * Generates a string. By default the charset is lowercase letters, digits, and
+ * space; pass `opts.charset` to draw from a custom set of characters.
+ *
+ * @example
+ * forall(gen.string({ min_len: 1, max_len: 8 }), s => assert.match(is_type('string'), s));
+ * forall(gen.string({ len: 4, charset: 'ACGT' }), s => assert.match(regex(/^[ACGT]{4}$/), s));
+ *
+ * @param {dict<any>} opts - Sizing options, plus an optional charset.
+ * @param {int} [opts.len] - The exact length.
+ * @param {int} [opts.min_len] - The minimum length.
+ * @param {int} [opts.max_len] - The maximum length.
+ * @param {string} [opts.charset] - Characters to draw from (default: lowercase, digits, space).
+ * @returns {Generator<string>} The configured generator.
+ */
 export function string(opts) {
 	return build_string(opts, "gen.string");
 };

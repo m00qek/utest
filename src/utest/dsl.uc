@@ -91,6 +91,13 @@ export function it(name, fn) {
  */
 export function skip(name, fn) { define_test(name, null, true); };
 
+/**
+ * Alias for {@link skip} — an `it`-shaped name for an unconditionally skipped
+ * test case.
+ *
+ * @param {string} name - The name of the test.
+ * @param {TestCallback} [fn] - The test logic (which will not be executed).
+ */
 export const xit = skip;
 
 /**
