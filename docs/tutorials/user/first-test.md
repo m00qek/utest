@@ -6,7 +6,10 @@ In this tutorial, we will write a ucode source module, import it from a test fil
 
 ## What we will build
 
-A source module `src/math.uc` that exports an `add` function, and a test file `test/unit/math_test.uc` that imports and exercises it. We will use the `-l` flag to tell utest where to find the source module.
+A source module `src/calc.uc` that exports an `add` function, and a test file `test/unit/calc_test.uc` that imports and exercises it. We will use the `-l` flag to tell utest where to find the source module.
+
+!!! note
+    We call the module `calc`, not `math`, because `math` is one of ucode's built-in modules — a source file named `math.uc` would be shadowed by the built-in and your `add` export would not be found. Avoid built-in names (`math`, `fs`, `uci`, `ubus`, `uloop`, `uclient`, …) for your own modules.
 
 ---
 
@@ -19,7 +22,7 @@ A source module `src/math.uc` that exports an `add` function, and a test file `t
 
 ## Step 1 — Create the source module
 
-Create `src/math.uc`:
+Create `src/calc.uc`:
 
 ```bash
 mkdir -p src
@@ -35,7 +38,7 @@ export function add(a, b) {
 
 ## Step 2 — Create the test file
 
-Create `test/unit/math_test.uc`:
+Create `test/unit/calc_test.uc`:
 
 ```bash
 mkdir -p test/unit
@@ -43,7 +46,7 @@ mkdir -p test/unit
 
 ```js
 import { describe, it, assert } from 'utest';
-import { add } from 'math';
+import { add } from 'calc';
 
 describe("add()", () => {
     it("returns the sum of two positive numbers", () => {
@@ -63,29 +66,33 @@ describe("add()", () => {
 
 ## Step 3 — Run the suite
 
-Pass `-l src` to add `src/` to the module search path so utest can resolve `import { add } from 'math'`:
+Pass `-l src` to add `src/` to the module search path so utest can resolve `import { add } from 'calc'`:
 
 ```bash
-utest -l src test/unit/math_test.uc
+utest -l src test/unit/calc_test.uc
 ```
 
 You should see:
 
 ```
-[test/unit/math_test.uc] test/unit/math_test.uc
+[test/unit/calc_test.uc] test/unit/calc_test.uc (2 tests)
   [PASS] returns the sum of two positive numbers
   [PASS] returns a negative result when the sum is negative
+
 Summary:
-  Suites: 1
-  Total:  2
-  Passed: 2
-  Failed: 0
-  Errors: 0
-  Time:   4 ms
-  Seed:   ...
+  Suites:  1
+  Total:   2
+  Passed:  2
+  Failed:  0
+  Errors:  0
+  Time:    4 ms
+  Seed:    ...
 ```
 
 The default reporter is `detailed`. Each test is shown on its own line with a `[PASS]`, `[FAIL]`, `[SKIP]`, or `[ERROR]` prefix.
+
+!!! note
+    utest runs a file's tests in a randomized order (reproducible from the `Seed` line), so the two `[PASS]` lines above may appear in either order on your run. That is expected — [test isolation](../../explanation/test-isolation.md) makes order irrelevant.
 
 ---
 
@@ -102,25 +109,26 @@ Change the first test so it expects the wrong value:
 Run again:
 
 ```bash
-utest -l src test/unit/math_test.uc
+utest -l src test/unit/calc_test.uc
 ```
 
 The output now shows what went wrong:
 
 ```
-[test/unit/math_test.uc] test/unit/math_test.uc
+[test/unit/calc_test.uc] test/unit/calc_test.uc (2 tests)
   [FAIL] returns the sum of two positive numbers
          Expected 99
            got 5
   [PASS] returns a negative result when the sum is negative
+
 Summary:
-  Suites: 1
-  Total:  2
-  Passed: 1
-  Failed: 1
-  Errors: 0
-  Time:   5 ms
-  Seed:   ...
+  Suites:  1
+  Total:   2
+  Passed:  1
+  Failed:  1
+  Errors:  0
+  Time:    5 ms
+  Seed:    ...
 ```
 
 `assert.match` prints both the expected and actual values when the check fails, so you can see the mismatch at a glance. The process exits with a non-zero status, which signals failure to CI systems.
@@ -140,7 +148,7 @@ Restore the correct expected value:
 Run one more time:
 
 ```bash
-utest -l src test/unit/math_test.uc
+utest -l src test/unit/calc_test.uc
 ```
 
 Both tests pass and the summary shows `Failed: 0`.
@@ -149,8 +157,8 @@ Both tests pass and the summary shows `Failed: 0`.
 
 ## What we just built
 
-- A source module `src/math.uc` that exports a function.
-- A test file `test/unit/math_test.uc` that imports and exercises it.
+- A source module `src/calc.uc` that exports a function.
+- A test file `test/unit/calc_test.uc` that imports and exercises it.
 - The `-l src` flag that adds `src/` to the module search path.
 - Familiarity with the `detailed` reporter's pass and failure output.
 
