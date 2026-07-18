@@ -40,16 +40,16 @@ Always call `mock.global.unpatch()` before the test ends. Unpaired patches leak 
 
 ---
 
-## Observe state clearing after unpatch
+## A patched proxy is dead after unpatch
 
-After `unpatch()`, the proxy object returned by `patch()` reflects the cleared state. Calls on it return `null` for data that was previously seeded:
+The proxy returned by `patch()` is valid only while the patch is active. After `unpatch()`, using it **dies** rather than silently falling through to the real module — a stale proxy that quietly returned real data would defeat the isolation the mock provides:
 
 ```js
 const m_fs = mock.global.patch('fs', { data: { '/tmp/setup.txt': 'setup' } });
 assert.match('setup', m_fs.readfile('/tmp/setup.txt'));
 mock.global.unpatch('fs');
 
-assert.match(null, m_fs.readfile('/tmp/setup.txt'));
+assert.throws(() => m_fs.readfile('/tmp/setup.txt'), /used outside its scope/);
 ```
 
 ---

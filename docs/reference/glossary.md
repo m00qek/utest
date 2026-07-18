@@ -85,7 +85,7 @@ Layers stack: an inner `inject()` creates a new layer on top and shadows outer l
 
 ## Strict mode
 
-**Strict mode** (`strict: true`) changes what happens when a call has no mock data and no behavior override: instead of falling through to the real module, the proxy calls `die()`, which the runner records as `FAIL`.
+**Strict mode** (`strict: true`) changes what happens when a call has no mock data and no behavior override: instead of falling through to the real module, the proxy calls `die()`, which the runner records as `ERROR` (a raw `die()`, not an assertion failure).
 
 See [About strict mode](../explanation/strict-mode.md).
 

@@ -1,6 +1,6 @@
 # About strict mode
 
-Strict mode changes what happens when code calls a proxied function for a module key that has no mock configured: instead of silently returning `null`, utest calls `die()` immediately, which the test runner catches and reports as a `FAIL`.
+Strict mode changes what happens when code calls a proxied function for a module key that has no mock configured: instead of silently returning `null`, utest calls `die()` immediately, which the test runner catches and reports as an `ERROR` (a raw `die()`, not an assertion failure, so it is classified as an error rather than a `FAIL`).
 
 ---
 
@@ -15,17 +15,17 @@ flowchart TD
     B -->|no| D{"data entry\nfor key?"}
     D -->|yes| E["return data value"]
     D -->|no| F{"strict: true?"}
-    F -->|yes| G["die() → test FAIL\n'strict mock: … is not mocked'"]
+    F -->|yes| G["die() → test ERROR\n'strict mock: … is not mocked'"]
     F -->|no| H["fall through to\nreal module / null"]
 ```
 
-With strict mode enabled, there is no fallthrough. Any call whose key is not explicitly covered by the mock configuration causes an immediate `die()` with a message like:
+With strict mode enabled, there is no fallthrough. Any call whose key is not explicitly covered by the mock configuration causes an immediate `die()`. The message always begins `strict mock:` and names the module and the missing key; the exact wording is proxy-specific, for example:
 
 ```
-strict mock: 'uci.get' is not mocked
+strict mock: uci package 'no-pkg' is not mocked
 ```
 
-The test runner catches this and marks the test as `FAIL` with that message as the error. No other tests are affected.
+The test runner catches this and marks the test as `ERROR` with that message. No other tests are affected.
 
 Strict mode is enabled by setting `strict: true` in the state object passed to either `mock.inject()` or `mock.global.patch()`:
 
