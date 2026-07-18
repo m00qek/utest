@@ -12,7 +12,7 @@ All hooks are optional. `ReporterBase` calls a hook only if the concrete reporte
 | :--- | :--- | :--- |
 | `render_suite_start(msg)` | First event from a worker process | `suite`, `bundle`, `count` |
 | `render_test_result(msg)` | After each individual test | `suite`, `bundle`, `status`, `error`, `path`, `index` |
-| `render_fatal(msg)` | Worker crash or timeout | `suite`, `bundle`, `error` |
+| `render_fatal(msg)` | Worker crash, timeout, or run interrupt | `suite`, `bundle`, `error`, `aggregate` |
 | `render_suite_end(msg)` | After all tests in a file | `suite`, `bundle`, `duration_ms`, `stats` |
 | `render_bundle_start(name)` | Before the first file in a bundle | bundle name string |
 | `render_bundle_end(name, duration_ms, stats)` | After the last file in a bundle | name, elapsed ms, aggregate stats |
@@ -40,11 +40,19 @@ The `stats` object present in `render_bundle_end` and in `ctx.stats` at summary 
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `total` | integer | Total tests (excluding ignored) |
+| `total` | integer | All test results, **including** ignored (the sum of the other test-result counters) |
 | `passed` | integer | Tests that passed |
-| `failed` | integer | Tests that failed via `die()` |
-| `errors` | integer | Tests that threw unexpectedly |
+| `failed` | integer | Tests that failed via `die()` (assertion failure) |
+| `errors` | integer | Tests that threw unexpectedly (including a strict-mock `die()`) |
 | `fatals` | integer | Suites that produced a FATAL event |
 | `skipped` | integer | Tests declared with `skip()` or `xit()` |
 | `ignored` | integer | Tests filtered out by `-f` |
-| `suites` | integer | Number of test files processed |
+| `suites` | integer | Number of test files processed (an `aggregate` FATAL does not count) |
+
+The per-suite `stats` passed to `render_suite_end` is keyed on `(bundle, file)`,
+so the same file appearing in two bundles gets its own counts rather than
+sharing one bucket.
+
+An `aggregate` FATAL (the parallel-run interrupt, `suite: "<parallel run>"`)
+carries `aggregate: true`; `render_fatal` receives it like any other FATAL, but
+it is not counted toward `suites`.

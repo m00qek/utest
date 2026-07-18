@@ -21,8 +21,10 @@ looking only within `channel`. Returns the first value found for `key`, or
 
 **Returns:** any value stored under `key` in `channel`, or `null`.
 
-**Notes:** A value of `null` stored explicitly is indistinguishable from
-"not found" — use a sentinel object if you need to distinguish the two.
+**Notes:** `get` alone cannot tell an explicitly-stored `null` from "not found"
+(both return `null`). Use `ctx.has(channel, key)` / `ctx.has_data(key)` when
+that distinction matters — for example, the `fs` proxy treats a path stored as
+`null` as *explicitly absent* rather than unseeded.
 
 ---
 
@@ -155,6 +157,71 @@ proxy.writefile = function(path, data) {
 Shorthand for `ctx.all_keys('data')`.
 
 **Returns:** array of strings.
+
+---
+
+## `ctx.has(channel, key)` / `ctx.has_data(key)`
+
+Returns `true` if `key` exists in `channel` at any layer or in global state,
+even when its stored value is `null`. `has_data(key)` is shorthand for
+`has('data', key)`. Use this to distinguish an explicitly-stored `null` from an
+absent key (see the note under `ctx.get`).
+
+**Returns:** boolean.
+
+---
+
+## `ctx.record_call(name, args)`
+
+Appends `args` (an array) to the recorded call log for method `name`, which is
+what `spy(proxy).calls.<name>` reads. **Every proxy method must call this** (as
+its first action) so the method is visible to `spy()`; a method that skips it
+silently records nothing.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | The method name being recorded (e.g. `'readfile'`) |
+| `args` | array | The argument list the method received |
+
+**Returns:** nothing.
+
+```js
+proxy.readfile = function(path, size) {
+    ctx.record_call('readfile', size === null ? [path] : [path, size]);
+    // ... behavior override → data → strict → real ...
+};
+```
+
+---
+
+## `ctx.real_call(name, args, fallback)`
+
+Calls `name(...args)` on the real module and returns its result, or returns
+`fallback` when the real module is absent (`real` is `null` — e.g. a module not
+present on the host). Use it for the final fall-through step in a non-strict
+proxy method.
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | Real-module function to call |
+| `args` | array | Arguments to pass |
+| `fallback` | any | Returned when the real module is unavailable |
+
+**Returns:** the real function's result, or `fallback`.
+
+---
+
+## `ctx.clone(v)`
+
+Returns a deep copy of `v`. Use it when a read method should hand back a fresh
+value the way a real module does (real `uci`/`fs` return copies), so a caller
+that mutates the result cannot corrupt the mock's stored data.
+
+**Returns:** a deep copy of `v`.
 
 ---
 
