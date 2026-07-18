@@ -1,10 +1,17 @@
 # Worker ↔ coordinator message protocol reference
 
 Each worker subprocess writes newline-delimited JSON to stdout. The coordinator
-reads these lines and routes each object to the appropriate reporter method via
-`dispatch()` in `src/utest/runner/executor/base.uc`.
+decodes each line through the shared stream decoder (`make_stream` in
+`src/utest/runner/executor/base.uc`) and routes recognised protocol events to
+the appropriate reporter method via `dispatch()`.
 
-Lines that cannot be parsed as JSON are silently discarded.
+A line is dispatched only if it is a well-formed protocol event — an object
+with a known `event` and every field that event's reporter dereferences (see
+`is_event`; a `TEST_RESULT` must carry a known `status` and a non-empty `path`
+of `{id, name}` objects). Anything else — non-JSON output, valid JSON that is
+not an event object, or a malformed event — is echoed to stderr and captured
+as diagnostics for the terminal FATAL message, never dispatched. This keeps a
+test's own stray stdout from being mistaken for a protocol event.
 
 ---
 
@@ -116,17 +123,22 @@ Emitted when the worker process itself fails — typically an uncaught exception
 during test file loading, or a `setup()` / `teardown()` failure. After a FATAL
 the suite produces no TEST_RESULT or SUITE_END events.
 
-The parallel executor also synthesises a FATAL (without a corresponding worker
-event) when a worker exceeds the configured timeout.
+Both executors also synthesise a FATAL (without a corresponding worker event)
+when a worker exceeds the configured timeout, via the shared `terminal_fatal`
+logic. The parallel executor synthesises one further FATAL, marked
+`aggregate`, if the whole run is interrupted (e.g. `^C`) before every worker
+finished; reporters must not count an aggregate FATAL toward the suite total,
+since it names a pseudo-suite (`<parallel run>`), not a real file.
 
 **Fields**
 
 | Field | Type | Description |
 |---|---|---|
 | `event` | string | `"FATAL"` |
-| `suite` | string | Path to the test file |
+| `suite` | string | Path to the test file (or `<parallel run>` for an aggregate FATAL) |
 | `bundle` | string | Bundle name |
 | `error` | string | Human-readable description of the failure |
+| `aggregate` | bool | Present and `true` only on the run-interrupted FATAL; tells reporters not to count it as a suite |
 
 **Example**
 
@@ -146,8 +158,12 @@ Within a single suite the coordinator always receives events in this order:
 2. `TEST_RESULT` (zero or more, in shuffled test order)
 3. `SUITE_END` (exactly once) — **or** `FATAL` if the worker aborted early
 
-When `jobs` (from `utest.config.uc`) is greater than 1, events from different suites may be interleaved.
-Reporters must use the `suite` field to demultiplex per-file state.
+When `jobs` (from `utest.config.uc`) is greater than 1, whole suites may arrive
+in any order, but a single suite's events are never interleaved with another's:
+the parallel executor feeds each worker's entire output to the decoder in one
+callback, so a suite's `SUITE_START` … `SUITE_END`/`FATAL` run always arrives
+contiguously. Reporters still key per-file state on the `suite` field, but they
+do not need to handle interleaved events from concurrent workers.
 
 ```mermaid
 sequenceDiagram

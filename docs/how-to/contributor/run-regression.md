@@ -15,8 +15,21 @@ The script runs inside the official OpenWrt Docker image (`openwrt/rootfs`,
 pinned via `ROOTFS_VERSION` in the script — a build that ships ucode with the
 uloop module, which the parallel executor requires) so results reflect the
 target environment. It finds every `*_test.uc` file under `examples/`,
-resolves the matching baseline under `test/json/`, and reports pass or fail. Any
-example without a baseline is printed as `[SKIP]` and does not cause failure.
+resolves the matching baseline under `test/json/`, and reports pass or fail.
+
+An example that has no baseline is a **failure**, not a silent skip — a
+deleted baseline or a test renamed without renaming its baseline must not
+vanish from the run. The only exceptions are the fixtures verified by the
+dedicated blocks below (`examples/envprobe/`, `examples/multi/`,
+`examples/timeout/`, `examples/requireshadow/`); those are printed as `[SKIP]`
+in the discovery loop because a later block checks them.
+
+Beyond baseline diffing, `make meta-test` also runs dedicated checks that have
+no JSON baseline: reporter smoke tests (detailed/compact rendering), CLI-error
+validation, the relative `-l` flag, env passthrough, `-j2` render contiguity,
+the process-group timeout kill, `json_str` control-char escaping, and the
+same-file-in-two-bundles bookkeeping. See `scripts/meta-test.sh` for the full
+set.
 
 Output on success:
 
