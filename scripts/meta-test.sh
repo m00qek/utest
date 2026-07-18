@@ -193,6 +193,44 @@ else
     failed_tests="$failed_tests timeout_seq_test"
 fi
 
+# Process-group kill: a worker that forks a background grandchild before
+# hanging must not leave it running once the timeout kill fires. The
+# sequential executor's blocking pipe read only unblocks once every writer of
+# the pipe closes, so a surviving grandchild would stall the run for its full
+# 30s lifetime instead of completing within the 2s timeout (checked via wall
+# clock, since the JSON output itself is identical either way — the "timed
+# out" diagnostic is decided before the read unblocks); the parallel executor
+# would leave it running as an orphan (checked via pgrep, anchored so it
+# cannot match the wrapper shell's own command line, which contains the same
+# literal text). `timeout 40` is a CI safety net, not the mechanism under
+# test — the fixture's own `sleep 30` bounds a regression to a slow test, not
+# an infinite one.
+grandchild_arg="Pass:examples/timeout/01_pass_test.uc Grandchild:examples/timeout/03_grandchild_test.uc"
+check_process_group_kill() {
+    j=$1
+    inner="utest -r json -j $j -s 7 -c examples/timeout/timeout.config.uc $grandchild_arg; sleep 1; pgrep -f '^sleep 30' >/dev/null 2>&1 && echo UTEST_ORPHAN_FOUND || echo UTEST_ORPHAN_NONE"
+    start=$(date +%s)
+    out=$(timeout 40 docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        sh -c "$inner" 2>&1)
+    elapsed=$(( $(date +%s) - start ))
+    ok=1
+    [ "$elapsed" -le 10 ] || { echo "  [FAIL] process-group-kill[-j$j] (took ${elapsed}s, expected <=10s)"; ok=0; }
+    printf '%s\n' "$out" | grep -qF "worker timed out after" || { echo "  [FAIL] process-group-kill[-j$j] (missing timeout diagnostic)"; ok=0; }
+    printf '%s\n' "$out" | grep -q "UTEST_ORPHAN_NONE" || { echo "  [FAIL] process-group-kill[-j$j] (grandchild survived the timeout kill)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] process-group-kill[-j$j] (${elapsed}s, no orphan)"
+    return $(( ! ok ))
+}
+for j in 1 2; do
+    check_process_group_kill "$j" || failed_tests="$failed_tests process_group_kill_j$j"
+done
+
 # Env passthrough (1.1): a -jN worker is spawned via uloop.process, which is
 # exec-style — it builds the child environment from exactly the dict it is given,
 # so an empty dict would leave the worker with no environment (no PATH -> cannot

@@ -23,8 +23,14 @@ export function create() {
 				// executors send different signals but the outcome is the same — a worker
 				// installs no handler, so either terminates a hung worker, and events are
 				// flushed as they are emitted, so nothing buffered is lost either way.
+				// `setsid` makes the worker the leader of its own process group (it execs
+				// in place, so `$!`/pid tracking is unaffected) so the watchdog can signal
+				// the *group* (`-$_P`, negative pid) rather than just the worker: a worker
+				// that popens a daemon and hangs would otherwise leave that child holding
+				// the pipe's write end open, and our blocking read would never see EOF even
+				// after the worker itself died.
 				let cmd = sprintf(
-					"ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill $_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
+					"setsid ucode %s %s %s 2>&1 & _P=$!; (sleep %d; kill -TERM -$_P 2>/dev/null) >/dev/null & _S=$!; wait $_P; _R=$?; kill $_S 2>/dev/null; exit $_R",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), timeout);
 				let proc = fs.popen(cmd, "r");
 

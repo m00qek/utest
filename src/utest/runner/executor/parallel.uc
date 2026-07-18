@@ -75,7 +75,11 @@ export function create() {
 				// exactly the given dict (exec-style, NOT inherit-style: {} would exec with
 				// an empty envp), so pass the parent's full environment through — otherwise
 				// a -jN worker sees no PATH and cannot even find ucode, diverging from -j1.
-				const cmd = sprintf("exec ucode %s %s %s > %s 2>&1",
+				// `setsid` makes the worker the leader of its own process group (it execs
+				// in place, so the pid uloop tracks is unaffected) so the timeout below can
+				// SIGKILL the whole group: otherwise a worker that forked a daemon and hung
+				// would leave that child running as an orphan after the worker itself died.
+				const cmd = sprintf("exec setsid ucode %s %s %s > %s 2>&1",
 					lf.flags, q(lf.worker_path + "/bootstrap.uc"), q(warg), q(out_file));
 				const proc = uloop.process("/bin/sh", ["-c", cmd], getenv(), function(code) {
 					if (worker.done) return;
@@ -110,10 +114,13 @@ export function create() {
 				// either terminates a hung (while(true)) worker identically, and the worker
 				// reporter flushes every event, so partial results are already on disk
 				// before the signal lands. See sequential.uc for the SIGTERM/exit-143 side.
+				// The pid is negated to signal the worker's whole process group (see the
+				// `setsid` above) rather than just the ucode process, so a forked child
+				// dies with it instead of surviving as an orphan.
 				worker.timer = uloop.timer(WORKER_TIMEOUT_MS, function() {
 					if (worker.done) return;
 					worker.timed_out = true;
-					system("kill -9 " + pid + " 2>/dev/null");
+					system("kill -9 -" + pid + " 2>/dev/null");
 				});
 			};
 
