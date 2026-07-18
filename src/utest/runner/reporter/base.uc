@@ -9,6 +9,25 @@ function empty_stats() {
 const STATUS_KEY = { PASS: "passed", FAIL: "failed", ERROR: "errors", SKIP: "skipped", IGNORE: "ignored" };
 const IS_FAILURE = { FAIL: true, ERROR: true };
 
+// _suite_stats is nested by (bundle, file), not keyed on file alone: the same
+// file path can legitimately appear in two different bundles (overlapping
+// bundle patterns, or the same file named in two bundle args), and a
+// file-only key would merge the second bundle's counts into the first's
+// bucket instead of giving each occurrence its own. Nesting (rather than a
+// joined string key) sidesteps ucode object keys truncating at an embedded
+// NUL — verified live: `{}["a\0b"]` and `{}["a\0c"]` collide on "a".
+export function has_suite_stats(store, bundle, file) {
+	let b = store[bundle ?? ""];
+	return !!(b && b[file]);
+};
+
+export function get_suite_stats(store, bundle, file) {
+	let b = bundle ?? "";
+	if (!store[b]) store[b] = {};
+	if (!store[b][file]) store[b][file] = empty_stats();
+	return store[b][file];
+};
+
 export const ReporterBase = {
 	stats: null,
 	failures: null,
@@ -49,34 +68,30 @@ export const ReporterBase = {
 	},
 
 	suite_start: function(msg) {
-		let file = msg.suite;
-		if (!this._suite_stats[file]) {
-			this.stats.suites++;
-			this._suite_stats[file] = empty_stats();
-		}
+		if (!has_suite_stats(this._suite_stats, msg.bundle, msg.suite)) this.stats.suites++;
+		get_suite_stats(this._suite_stats, msg.bundle, msg.suite);
 		if (this.render_suite_start) this.render_suite_start(msg);
 	},
 
 	suite_end: function(msg) {
-		let file = msg.suite;
-		if (this.render_suite_end) this.render_suite_end({ ...msg, stats: this._suite_stats[file] });
+		let stats = get_suite_stats(this._suite_stats, msg.bundle, msg.suite);
+		if (this.render_suite_end) this.render_suite_end({ ...msg, stats: stats });
 	},
 
 	test_result: function(msg) {
-		let file = msg.suite;
 		let bundle = msg.bundle;
 
 		push(this.results, msg);
 
-		if (!this._suite_stats[file]) this._suite_stats[file] = empty_stats();
+		let suite_stats = get_suite_stats(this._suite_stats, bundle, msg.suite);
 		if (bundle && !this._bundle_stats[bundle]) this._bundle_stats[bundle] = empty_stats();
 
-		let key = STATUS_KEY[msg.status];
-		let targets = [ this.stats, this._suite_stats[file] ];
+		let status_key = STATUS_KEY[msg.status];
+		let targets = [ this.stats, suite_stats ];
 		if (bundle) push(targets, this._bundle_stats[bundle]);
 		for (let s in targets) {
 			s.total++;
-			if (key) s[key]++;
+			if (status_key) s[status_key]++;
 		}
 		if (IS_FAILURE[msg.status]) push(this.failures, msg);
 
@@ -90,9 +105,9 @@ export const ReporterBase = {
 
 		// An aggregate FATAL (e.g. the parallel-run interrupt) names a pseudo-suite,
 		// not a real one, so it must not count toward the suite total.
-		if (msg.suite && !msg.aggregate && !this._suite_stats[msg.suite]) {
-			this.stats.suites++;
-			this._suite_stats[msg.suite] = empty_stats();
+		if (msg.suite && !msg.aggregate) {
+			if (!has_suite_stats(this._suite_stats, msg.bundle, msg.suite)) this.stats.suites++;
+			get_suite_stats(this._suite_stats, msg.bundle, msg.suite);
 		}
 		if (msg.bundle) {
 			if (!this._bundle_stats[msg.bundle])

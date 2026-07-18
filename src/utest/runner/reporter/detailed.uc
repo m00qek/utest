@@ -12,9 +12,15 @@ export function create(use_color) {
 	// suites never interleave.
 	return proto({
 		render_suite_start: function(msg) {
-			if (reported_suites[msg.suite]) return;
+			// Nested on (bundle, file): the same file can legitimately appear in
+			// two different bundles, and each occurrence needs its own header —
+			// a file-only key would silently drop the second bundle's header.
+			let bundle = msg.bundle ?? "";
+			let b = reported_suites[bundle];
+			if (b && b[msg.suite]) return;
 			if (length(keys(reported_suites)) > 0) print("\n");
-			reported_suites[msg.suite] = true;
+			if (!b) b = reported_suites[bundle] = {};
+			b[msg.suite] = true;
 
 			let header = color(t.HEADER, "[" + (msg.bundle || "Default") + "] " + msg.suite);
 			print(header + (msg.count !== null ? " (" + msg.count + " tests)\n" : "\n"));

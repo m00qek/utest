@@ -350,6 +350,34 @@ smoke_parallel_contiguity() {
 }
 smoke_parallel_contiguity || failed_tests="$failed_tests parallel_contiguity"
 
+# dup-file-across-bundles: the same file named in two different bundles must
+# get its own header and its own suite-stats bucket, not have the second
+# bundle's occurrence merged into (and suppressed by) the first's. _suite_stats
+# / reported_suites used to key on file path alone, shared across the whole
+# run; keyed on (bundle, file) now.
+check_dup_file_across_bundles() {
+    out=$(docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -r detailed -c test/nocolor.config.uc \
+            BundleX:examples/multi/01_bundle_a_test.uc BundleY:examples/multi/01_bundle_a_test.uc 2>&1)
+    ok=1
+    for bundle in BundleX BundleY; do
+        n=$(printf '%s\n' "$out" | grep -cF "[$bundle] examples/multi/01_bundle_a_test.uc")
+        [ "$n" -eq 1 ] || { echo "  [FAIL] dup-file-across-bundles ($bundle header appears $n times, expected 1)"; ok=0; }
+    done
+    printf '%s\n' "$out" | grep -q "Suites:  2" \
+        || { echo "  [FAIL] dup-file-across-bundles (suite count did not count both occurrences)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] dup-file-across-bundles (same file in two bundles gets two headers, two suite buckets)"
+    return $(( ! ok ))
+}
+check_dup_file_across_bundles || failed_tests="$failed_tests dup_file_across_bundles"
+
 if [ -z "$failed_tests" ]; then
     printf '\nSUCCESS: All features verified.\n'
     exit 0
