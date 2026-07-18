@@ -265,6 +265,40 @@ mock.restore(snap);
 
 ---
 
+### `mock.reset()`
+
+**Parameters:** none.
+
+**Returns:** nothing.
+
+Clears all active `mock.inject()` layers but leaves global state (`mock.global.patch()`) untouched. Use it to drop transient injection state mid-test without unpatching a module installed at suite scope. To roll back global state as well, use `mock.restore(snap)` instead.
+
+!!! warning
+    Calling `mock.reset()` from *inside* a `mock.inject()` callback pops that callback's own layer, so the rest of the callback runs with the mock unsandboxed — subsequent proxy calls fall through to the real module (or die in strict mode). This is an accepted limitation; prefer `restore()` around a snapshot when you need mid-test cleanup.
+
+```js
+mock.global.patch('fs', { data: { '/etc/base': 'v1' } });
+mock.inject('fs', { data: { '/tmp/x': 'scoped' } }, () => {
+    mock.reset();   // drops the inject layer; the global patch stays active
+});
+mock.global.unpatch('fs');
+```
+
+---
+
+## Proxy scope
+
+A proxy is valid only inside the scope that produced it. A proxy from `mock.inject()` is live only during its callback; a proxy from `mock.global.patch()` is live only until the matching `mock.global.unpatch()`. Using a proxy after its scope has ended — or calling `spy()` on it — **dies** with `used outside its scope`, rather than silently falling through to the real module and defeating the mock's isolation. Inner objects returned by a proxy (a uci cursor, a ubus connection) share the same lifetime.
+
+```js
+let leaked;
+mock.inject('fs', { data: { '/a': '1' } }, (m_fs) => { leaked = m_fs; });
+// leaked.readfile('/a');   // dies: "used outside its scope"
+// spy(leaked);             // also dies
+```
+
+---
+
 ## See also
 
 - How mocking works end-to-end: [About the mocking architecture](../explanation/concepts.md)
