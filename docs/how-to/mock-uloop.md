@@ -6,7 +6,7 @@ Declare `uloop: null` in your `utest.config.uc` `mocks` table. See [How-to: Mock
 
 ## Queue callbacks with timer()
 
-`timer(ms, callback)` registers a callback in the proxy's internal queue. The millisecond value is accepted but has no timing effect — callbacks fire when `run()` is called, not after a delay:
+`timer(ms, callback)` registers a callback and returns a handle (see [Cancel or re-arm a timer](#cancel-or-re-arm-a-timer)). No wall-clock time passes — callbacks fire when `run()` is called, not after a real delay — but `ms` is the callback's *deadline* and determines firing order:
 
 ```js
 import { describe, it, mock, assert, truthy, falsy } from 'utest';
@@ -27,9 +27,9 @@ describe('uloop mock', () => {
 
 ---
 
-## run() fires all queued callbacks in registration order
+## run() fires queued callbacks in deadline order
 
-`run()` drains the queue synchronously. Multiple timers fire in the order they were registered, regardless of their millisecond values:
+`run()` drains the queue synchronously, firing callbacks in ascending `ms` (deadline) order — like the real uloop, and regardless of registration order. Timers with the same `ms` fire in registration order:
 
 ```js
 mock.inject('uloop', {}, (m_uloop) => {
@@ -37,7 +37,7 @@ mock.inject('uloop', {}, (m_uloop) => {
     m_uloop.timer(3000, () => push(order, 'a'));
     m_uloop.timer(1000, () => push(order, 'b'));
     m_uloop.run();
-    assert.match(['a', 'b'], order);
+    assert.match(['b', 'a'], order);   // 1000 ms fires before 3000 ms
 });
 ```
 
@@ -50,6 +50,38 @@ mock.inject('uloop', {}, (m_uloop) => {
     m_uloop.run();
     m_uloop.run();
     assert.match(1, count);
+});
+```
+
+---
+
+## Cancel or re-arm a timer
+
+`timer()` returns a handle that mirrors the real `uloop.timer` resource, so code under test that stores a timer to reschedule or cancel it works under the mock. The handle exposes `remaining()` (the armed deadline, or `-1` once cancelled — the mock has no clock), `cancel()` (a cancelled timer is skipped by `run()`), and `set(ms)` (re-arm, clearing a prior cancel). `cancel()` and `set()` return the handle for chaining:
+
+```js
+mock.inject('uloop', {}, (m_uloop) => {
+    let fired = [];
+    let h = m_uloop.timer(500, () => push(fired, 'x'));
+    assert.match(500, h.remaining());
+
+    h.cancel();
+    assert.match(-1, h.remaining());
+    m_uloop.run();
+    assert.match([], fired);            // a cancelled timer never fires
+});
+```
+
+`set()` re-arms with a new deadline, and `run()` sorts on each timer's *current* `ms`, so a `set()` before `run()` reschedules correctly:
+
+```js
+mock.inject('uloop', {}, (m_uloop) => {
+    let order = [];
+    let a = m_uloop.timer(3000, () => push(order, 'a'));
+    m_uloop.timer(1000, () => push(order, 'b'));
+    a.set(100);                         // 'a' is now the earliest deadline
+    m_uloop.run();
+    assert.match(['a', 'b'], order);
 });
 ```
 

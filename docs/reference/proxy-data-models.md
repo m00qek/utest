@@ -220,9 +220,11 @@ mocks: { 'uloop': null }
 
 **`data` format:**
 
-The uloop proxy manages its own internal queue under the key `'__pending__'`. Test writers do not interact with `data` keys directly.
+The uloop proxy manages its own timer queue in a dedicated `timers` channel. Test writers do not interact with channel keys directly.
 
-`timer(ms, cb)` enqueues `cb` (the `ms` value is recorded but not used for ordering). `run()` drains the queue synchronously, firing all callbacks in registration order. `run()` clears the queue before firing, so callbacks registered during a `run()` call are not fired in the same pass. A second `run()` with an empty queue is a silent no-op. `init()` and `end()` are no-ops by default.
+`timer(ms, cb)` enqueues `cb` and returns a handle. `run()` drains the queue synchronously, firing callbacks in ascending `ms` (deadline) order — matching the real uloop — with ties broken by registration order. No wall-clock time passes; `ms` only orders the callbacks. `run()` clears the queue before firing, so callbacks registered during a `run()` call are not fired in the same pass. A second `run()` with an empty queue is a silent no-op. `init()` and `end()` are no-ops by default.
+
+The handle mirrors the real `uloop.timer` resource: `remaining()` returns the armed deadline (or `-1` once cancelled — the mock has no clock), `cancel()` marks the timer dead so `run()` skips it, and `set(ms)` re-arms it (clearing a prior cancel). `run()` sorts on each timer's *current* `ms`, so a `set()` before `run()` reschedules correctly. Both mutators return the handle.
 
 **`behavior` overrides:** `init`, `timer`, `run`, `end`.
 
@@ -231,13 +233,13 @@ mock.inject('uloop', {}, (m_uloop) => {
     let log = [];
 
     m_uloop.init();
-    m_uloop.timer(3000, () => push(log, 'first'));
+    m_uloop.timer(3000, () => push(log, 'later'));
     m_uloop.timer(1000, () => {
-        push(log, 'second');
+        push(log, 'sooner');
         m_uloop.end();
     });
 
-    m_uloop.run();          // → log == ['first', 'second']
+    m_uloop.run();          // → log == ['sooner', 'later']  (1000 ms before 3000 ms)
     m_uloop.run();          // queue empty; no-op
 });
 ```
