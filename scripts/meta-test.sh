@@ -313,6 +313,38 @@ check_lib_flag() {
 }
 check_lib_flag || failed_tests="$failed_tests lib_flag_relative"
 
+# Seed reproducibility: `-s <seed>` seeds both the per-file test shuffle and the
+# property engine, and re-running with the same seed must reproduce the run
+# exactly (this is what lets a CI failure be replayed locally). Assert it two
+# ways: the same seed produces the identical execution order across two runs,
+# and two different seeds produce different orders (so the seed is actually
+# threaded through, not ignored). Execution order = the order tests appear in
+# the json `results` array (appended as events arrive). 01_assertions has ~10
+# tests and no property/persistence state, so the comparison is clean.
+seed_order() {
+    docker run --rm --user "$(id -u):$(id -g)" --tmpfs /tmp:mode=1777 \
+        -v "$PROJECT_ROOT/src/utest.sh:/usr/bin/utest:ro" \
+        -v "$PROJECT_ROOT/src/utest.uc:/usr/share/ucode/utest.uc:ro" \
+        -v "$PROJECT_ROOT/src/utest:/usr/share/ucode/utest:ro" \
+        -v "$PROJECT_ROOT:/app" -w /app \
+        "$IMAGE_OPENWRT" \
+        utest -r json -s "$1" examples/unit/01_assertions_test.uc 2>/dev/null \
+        | jq -c '[.results[].index]'
+}
+check_seed_reproducibility() {
+    a=$(seed_order 7); b=$(seed_order 7); c=$(seed_order 42)
+    ok=1
+    { [ -n "$a" ] && [ "$a" != "null" ]; } \
+        || { echo "  [FAIL] seed-reproducibility (no ordered results)"; ok=0; }
+    [ "$a" = "$b" ] \
+        || { echo "  [FAIL] seed-reproducibility (same -s produced a different order: $a vs $b)"; ok=0; }
+    [ "$a" != "$c" ] \
+        || { echo "  [FAIL] seed-reproducibility (different -s produced the identical order — seed ignored?)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] seed-reproducibility (same -s reproduces order; a different -s changes it)"
+    return $(( ! ok ))
+}
+check_seed_reproducibility || failed_tests="$failed_tests seed_reproducibility"
+
 # Reporter smoke tests: the detailed and compact reporters have no JSON baseline,
 # so cover their PASS / FAIL+ERROR / FATAL rendering paths (a crash here would
 # otherwise ship silently — the class of bug fixed in the decoder guard).
