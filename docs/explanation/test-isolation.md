@@ -71,6 +71,8 @@ describe("my suite", () => {
 
 If you need true isolation from other tests in the same file, the only mechanism available is the mock snapshot/restore cycle described above. Shared ucode globals — functions, tables, imported module references — are not snapshotted.
 
+Built-in patches are the one part of the mock system the snapshot/restore cycle does **not** cover. `mock.global.patch_builtin()` writes directly to `global[name]` and is not captured by `mock.snapshot()`, so a forgotten `mock.global.unpatch_builtin()` leaks the replacement into every later test in the worker. Always pair `patch_builtin` with `unpatch_builtin` (in an `afterEach`), or prefer the callback-scoped `mock.inject_builtin()`, which restores the original unconditionally — see [How-to: Mock a built-in global](../how-to/mock-builtin.md).
+
 ---
 
 ## Next steps

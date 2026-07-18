@@ -21,6 +21,6 @@ Understanding-oriented material that explains the design decisions and concepts 
 | Page | What it covers |
 | :--- | :--- |
 | [About the worker/coordinator](worker-coordinator.md) | Why tests run in subprocesses and how the coordinator collects results |
-| [About the reporter architecture](reporter-architecture.md) | Why two reporters exist and how the coordinator-side hook model works |
+| [About the reporter architecture](reporter-architecture.md) | Why the worker/coordinator reporter split exists and how the coordinator-side hook model works |
 | [About the mock engine](mock-engine.md) | The registry, layer stack, and snapshot/restore design |
 | [About shim generation](shim-generation.md) | Why shims exist and how manager.uc generates them at runtime |

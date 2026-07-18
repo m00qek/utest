@@ -132,13 +132,15 @@ mock.inject('uci', { data: uci_data }, (m_uci) => {
 });
 ```
 
-If you need to verify that `load` was called, inspect the cursor's call log:
+If you need to verify that `load` was called, inspect the cursor's call log with `spy()` (call it on the cursor, not the top-level `uci` proxy):
 
 ```js
+import { spy } from 'utest';
+
 mock.inject('uci', { data: uci_data }, (m_uci) => {
     let c = m_uci.cursor();
     c.load('luci-sso');
-    assert.match([['luci-sso']], c.__utest__.calls.load);
+    assert.match([['luci-sso']], spy(c).calls.load);
 });
 ```
 

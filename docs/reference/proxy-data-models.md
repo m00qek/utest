@@ -188,7 +188,7 @@ When the value is a plain object, `call` returns it directly. When the value is 
 
 Lookup order: `'object:method'` key first; `'object'` key second; `null` in non-strict mode; fatal error in strict mode.
 
-The connection object returned by `connect()` also exposes `disconnect()`. `disconnect()` is a no-op by default and records the call in `conn.__utest__.calls.disconnect`.
+The connection object returned by `connect()` also exposes `disconnect()`. `disconnect()` is a no-op by default; the call is recorded and readable via `spy(conn).calls.disconnect`.
 
 **`behavior` overrides:** `connect`, `call`, `disconnect`.
 

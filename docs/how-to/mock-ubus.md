@@ -71,14 +71,16 @@ mock.inject('ubus', { data: {} }, (m_ubus) => {
 
 ## Exercise code paths that call disconnect()
 
-`disconnect()` is a no-op by default. If you need to verify that the code under test disconnects correctly, inspect the connection's call log:
+`disconnect()` is a no-op by default. If you need to verify that the code under test disconnects correctly, inspect the connection's call log with `spy()` (call it on the connection object returned by `connect()`):
 
 ```js
+import { spy } from 'utest';
+
 mock.inject('ubus', { data: { 'system:board': { hostname: 'OpenWrt' } } }, (m_ubus) => {
     let conn = m_ubus.connect();
     conn.call('system', 'board', {});
     conn.disconnect();
-    assert.match(1, length(conn.__utest__.calls.disconnect));
+    assert.match(1, length(spy(conn).calls.disconnect));
 });
 ```
 

@@ -78,6 +78,14 @@ The full search order seen by a worker is:
 2. Generated shims and real-module symlinks
 3. utest framework source
 4. Project root (test helpers and application source)
+5. `lib_paths` (from `-l` and config)
+6. The test file's own directory
+
+Tiers 5 and 6 are appended at the end deliberately: a `-l` directory or a
+helper sitting next to the test file must never outrank the shims (tier 2), or
+a coincidentally same-named file could silently defeat a mock. This is also why
+naming your own module after a ucode built-in (`math`, `fs`, …) fails — the
+built-in resolves before these low-priority tiers.
 
 A `real_<name>` symlink is written alongside each shim, pointing at the
 actual module file. This allows the proxy to load the real module by requiring
@@ -92,15 +100,21 @@ flowchart LR
         P2["2 · shims + real_* symlinks"]
         P3["3 · framework source"]
         P4["4 · project root"]
+        P5["5 · lib_paths (-l / config)"]
+        P6["6 · test file's own dir"]
         P1 -->|"not found"| P2
         P2 -->|"not found"| P3
         P3 -->|"not found"| P4
+        P4 -->|"not found"| P5
+        P5 -->|"not found"| P6
     end
 
     P1 -->|"found"| RES["resolved module"]
     P2 -->|"found"| RES
     P3 -->|"found"| RES
     P4 -->|"found"| RES
+    P5 -->|"found"| RES
+    P6 -->|"found"| RES
 ```
 
 ---

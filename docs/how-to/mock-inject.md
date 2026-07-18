@@ -2,6 +2,9 @@
 
 Use `mock.inject()` to replace a module's behaviour inside a single callback scope, leaving the real imported binding completely unaffected outside it.
 
+!!! note "When the config declaration is required"
+    You need the `mocks` declaration below only when the code under test reaches the module through its own `import`/`require` — the declaration is what generates the shim that intercepts that binding. If your code instead **receives the module as a parameter** and you pass the injected proxy in directly (dependency injection, as in [Tutorial: Writing your first mock](../tutorials/user/first-mock.md)), no config file is needed: the proxy goes straight to your function.
+
 ---
 
 ## Declare the module in the config file
