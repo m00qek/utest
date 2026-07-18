@@ -231,6 +231,31 @@ for j in 1 2; do
     check_process_group_kill "$j" || failed_tests="$failed_tests process_group_kill_j$j"
 done
 
+# json_str control-char escaping: a raw tab/CR/newline in a -f/-c/-l argument
+# must produce genuinely valid JSON for the hand-rolled `opts` blob utest.sh
+# passes to cli.uc. ucode's own json() tolerates a raw control character
+# inside a string (verified live against the interpreter — it is not a strict
+# RFC 8259 parser), so a round-trip through the CLI would not catch a
+# regression here; jq (strict) is used instead, against the helper directly
+# (the extraction assumes json_str keeps a standalone closing-brace line).
+check_json_str_escaping() {
+    fn=$(mktemp)
+    sed -n '/^json_str()/,/^}/p' "$PROJECT_ROOT/src/utest.sh" > "$fn"
+    payload=$(printf 'foo\tbar\rbaz\nqux\\end"quote')
+    out=$(docker run --rm -v "$fn:/json_str.sh:ro" "$IMAGE_OPENWRT" \
+        sh -c '. /json_str.sh; json_str "$1"' -- "$payload" 2>&1)
+    rm -f "$fn"
+    ok=1
+    printf '{"v":%s}\n' "$out" | jq empty >/dev/null 2>&1 \
+        || { echo "  [FAIL] json-str-escaping (invalid JSON for a control-char payload)"; ok=0; }
+    got=$(printf '{"v":%s}' "$out" | jq -r .v 2>/dev/null)
+    [ "$got" = "$payload" ] \
+        || { echo "  [FAIL] json-str-escaping (round-trip mismatch)"; ok=0; }
+    [ "$ok" -eq 1 ] && echo "  [PASS] json-str-escaping (tab/CR/newline/backslash/quote round-trip via jq)"
+    return $(( ! ok ))
+}
+check_json_str_escaping || failed_tests="$failed_tests json_str_escaping"
+
 # Env passthrough (1.1): a -jN worker is spawned via uloop.process, which is
 # exec-style — it builds the child environment from exactly the dict it is given,
 # so an empty dict would leave the worker with no environment (no PATH -> cannot

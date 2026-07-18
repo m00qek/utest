@@ -34,7 +34,16 @@ EOF
     exit 0
 }
 
-json_str() { printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
+# The trailing three substitutions handle a literal tab/CR/newline in an
+# argument (e.g. -f/-c/-l): unescaped, any of them breaks the hand-rolled JSON
+# below and cli.uc's json() dies with a raw parse error instead of a clean CLI
+# message. `:a;N;$!ba` slurps the whole input into one pattern space first —
+# sed is line-oriented, so a lone `s/\n/\\n/` would never see an embedded
+# newline (it ends the line before the substitution runs).
+json_str() {
+    printf '"%s"' "$(printf '%s' "$1" | sed -e ':a' -e 'N' -e '$!ba' \
+        -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\t/\\t/g' -e 's/\r/\\r/g' -e 's/\n/\\n/g')"
+}
 json_opt() { [ -n "$1" ] && json_str "$1" || printf 'null'; }
 
 reporter="" filter="" config="" lib_paths_json="" jobs="" seed=""
