@@ -12,8 +12,8 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `-r <fmt>` | string | `detailed` | Output format. Accepted values: `detailed`, `compact`, `json`. |
 | `-f <regex>` | string | — | Run only tests whose full name matches the regex. |
 | `-c <path>` | string | `utest.config.uc` | Path to the configuration file. Fatal if the path is given explicitly but not found. When the default path is absent, utest starts normally with no mocks declared. |
-| `-l <path>` | string | — | Prepend a directory to the module search path. Repeatable. |
-| `-j <n>` | integer | — | Number of parallel workers. Overrides `jobs` in the configuration file. |
+| `-l <path>` | string | — | Add a directory to the module search path. It is appended (searched after the framework's own modules, so it cannot shadow them). A relative path is resolved against the current working directory. Repeatable. |
+| `-j <n>` | integer | — | Number of parallel workers. Overrides `jobs` in the configuration file. `-j > 1` requires the ucode `uloop` module (there is no polling fallback); `-j 1`, the default, never loads `uloop`. |
 | `-s <seed>` | integer | — | Fix the random seed. Controls both test-file shuffle order and the default seed for all property tests. Use to reproduce a CI failure locally. |
 
 ---
@@ -30,7 +30,7 @@ Invoke as `utest [options] [<bundle>...]`. Each positional argument is a bundle 
 | `filter` | string | Default test-name filter regex. |
 | `pattern` | string | Default file glob pattern. |
 | `color` | boolean | Set to `false` to disable colour output. |
-| `timeout` | integer | Default worker timeout in seconds. |
+| `timeout` | integer | Per-worker wall-clock timeout in seconds (default `60`). A worker that exceeds it is killed and reported as a FATAL. |
 | `lib_paths` | array of strings | Additional directories to append to the module search path. Relative paths are resolved against the directory containing the configuration file, not the working directory. |
 
 ---

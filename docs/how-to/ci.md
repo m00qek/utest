@@ -28,12 +28,18 @@ utest -r json test/unit
 
 ## Run tests in parallel
 
-Set `jobs` in `utest.config.uc` to run multiple test files concurrently. Each file runs in its own subprocess, so no additional setup is required:
+Set `jobs` in `utest.config.uc` (or pass `-j <n>` on the command line) to run multiple test files concurrently. Each file runs in its own subprocess:
 
 ```js
 // utest.config.uc
 return { jobs: 4 };
 ```
+
+```bash
+utest -j 4 test/unit
+```
+
+Parallel execution (`jobs > 1`) requires the ucode `uloop` module — the official OpenWrt rootfs images below ship it. If `uloop` is unavailable, run with `-j 1` (the default), which never loads it.
 
 ---
 
