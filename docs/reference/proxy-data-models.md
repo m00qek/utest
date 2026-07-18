@@ -30,7 +30,13 @@ Filesystem paths are the keys. `lsdir`, `glob`, `access`, `stat`, `readfile`,
 
 `stat` on a virtual path returns `{ size: <byte length>, mtime: 0, type: 'file' }` (the `type` uses the real `fs` vocabulary — `'file'`, not `'regular'`).
 
-`open(path, mode)` uses the path as a data key. In read mode (`'r'`), a seeded path returns a handle supporting `read('all')`, `read('line')`, and `read(n)`; an unmocked path returns `null` in non-strict mode or dies in strict mode. In write mode (`'w'`) and append mode (`'a'`), a writable handle is always returned; content is stored back into the data channel when `close()` is called. `error()` on any handle always returns `null`.
+`readfile(path, size)` reads at most `size` bytes from the start of the content, matching real `fs.readfile`; called with no `size` it returns the whole value.
+
+`open(path, mode)` uses the path as a data key. In read mode (`'r'`), a seeded path returns a handle supporting `read('all')`, `read('line')`, and `read(n)`; an unmocked path returns `null` in non-strict mode or dies in strict mode. In write mode (`'w'`) and append mode (`'a'`), a writable handle is always returned; content is stored back into the data channel when `close()` is called. `error()` on any handle always returns `null`. Every handle also exposes `seek(off)`, `tell()`, and `flush()` (read advances the position sequentially; a write handle's `tell()` reports bytes written) so a SUT that repositions a handle does not crash. Random-access writes (`r+`/`w+`) are not modeled — a write handle appends and flushes its buffer on `close()`.
+
+**Read-side operations:** `lstat`, `readlink`, `realpath`, and `opendir` are modeled against the same data channel (they are not passed through to the real fs). `lstat` equals `stat` (the mock has no symlinks); `readlink` returns `null` for any known path; `realpath` canonicalizes `.`/`..`/redundant slashes and confirms the path exists (else `null`); `opendir` serves the merged listing through a cursor handle with `read()` (next entry, `null` past the end), `tell()`, `seek()`, `close()`, and `error()`.
+
+**Sealed operations:** the six filesystem-mutating ops the mock does not model — `rmdir`, `symlink`, `chown`, `chdir`, `mkdtemp`, `mkstemp` — **die** under an active mock (both strict and non-strict) rather than falling through to the real filesystem, unless you supply a `behavior:` override for them. This prevents a destructive call from escaping the sandbox onto the host.
 
 **`commands` channel:**
 
@@ -61,7 +67,7 @@ component, exactly like `*`. Name each directory level explicitly to reach
 nested files — `/etc/*/*.cfg` matches `/etc/init/a.cfg` (one level deep) but
 not `/etc/init/sub/b.cfg` (two levels deep).
 
-**`behavior` overrides:** `readfile`, `writefile`, `open`, `popen`, `access`, `stat`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`.
+**`behavior` overrides:** `readfile`, `writefile`, `open`, `popen`, `access`, `stat`, `lstat`, `readlink`, `realpath`, `opendir`, `rename`, `unlink`, `mkdir`, `chmod`, `error`, `lsdir`, `glob`, and the sealed ops (`rmdir`, `symlink`, `chown`, `chdir`, `mkdtemp`, `mkstemp`) — supplying a `behavior` for a sealed op is how you make it do something instead of dying.
 
 ```js
 mock.inject('fs', {
@@ -120,7 +126,9 @@ mocks: { 'uci': null }
 
 Each section object has the form `{ '.type': '<uci-type>', <option>: <value>, ... }`. The `.type` field is required for `foreach` filtering. All option values are plain strings or arrays of strings, matching the real UCI data model.
 
-`cursor()` returns a cursor object with `load`, `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, and `save`. `load`, `commit`, and `save` are no-ops returning `true`. `set` writes immediately and is readable in the same cursor. `delete` with three arguments removes a single option; with two arguments removes the entire section.
+`cursor()` returns a cursor object with `load`, `get`, `get_all`, `foreach`, `set`, `delete`, `commit`, and `save`. `commit`, `save`, and `load` return `true` by default. Under **strict** mode `load` returns `false` for a package that has no seeded config (matching real UCI, which loads only configured packages) while still returning `true` for a seeded one; the actual strict enforcement happens on the subsequent `get`/`get_all`/`foreach`/`delete`. `set` writes immediately and is readable in the same cursor. `delete` with three arguments removes a single option; with two arguments removes the entire section; it returns `null` when the target package, section, or option does not exist (matching real UCI, where a real removal returns `true`).
+
+Reads return **deep copies**, not live references into the mock store: mutating the object returned by `get`, `get_all`, or `foreach` does not change the seeded data (real UCI returns fresh objects too, so code that mutates a read result cannot corrupt the fixture).
 
 `get_all(pkg, section)` returns the full section object with `.name` set to the section name and `.type` set from the data, or `null` if the section does not exist — matching real UCI behaviour.
 
