@@ -6,7 +6,10 @@ In this tutorial, we will write a property test that checks a function for *all*
 
 ## What we will build
 
-A source module `src/math.uc` with a `clamp` function, and a test file that uses `prop` and `gen.int` to verify it against hundreds of randomly generated inputs.
+A source module `src/calc.uc` with a `clamp` function, and a test file that uses `prop` and `gen.int` to verify it against hundreds of randomly generated inputs.
+
+!!! note
+    We name the module `calc` rather than `math`: `math` is a ucode built-in module, so a `math.uc` of your own would be shadowed by it. Avoid built-in names (`math`, `fs`, `uci`, `ubus`, …) for your own modules.
 
 ---
 
@@ -19,7 +22,7 @@ A source module `src/math.uc` with a `clamp` function, and a test file that uses
 
 ## Step 1 — Create the source module
 
-Create `src/math.uc`:
+Create `src/calc.uc`:
 
 ```js
 export function clamp(value, lo, hi) {
@@ -35,11 +38,11 @@ export function clamp(value, lo, hi) {
 
 ## Step 2 — Write a passing property
 
-Create `test/unit/math_test.uc`:
+Create `test/unit/calc_test.uc`:
 
 ```js
 import { describe, prop, gen, assert } from 'utest';
-import { clamp } from 'math';
+import { clamp } from 'calc';
 
 describe("clamp()", () => {
     prop("result is always within [lo, hi]",
@@ -57,10 +60,10 @@ describe("clamp()", () => {
 Run it:
 
 ```bash
-utest -l src test/unit/math_test.uc
+utest -l src test/unit/calc_test.uc
 ```
 
-You should see 100 cases pass. The framework tried 100 randomly generated `(value, lo, hi)` triples and the property held for all of them.
+The property passes, shown as a single `[PASS]` line. Behind that one line the framework generated 100 random `(value, lo, hi)` triples and checked the property against every one — a passing property reports as one test, not one per case.
 
 ---
 
@@ -79,20 +82,21 @@ Run the tests again. You will see output like:
 
 ```
   [FAIL] result is always within [lo, hi]
-         Property failed after 3 case(s)
-         Seed:           ...
-         Original value: [ -47, 91, 12 ]
-         Shrunk value:   [ 0, 1, 0 ]
-         Shrink evals:   8
-         Error:          clamp(1, 0, 0) = 1 is out of range
-                         Expected true
-                           got false
+         Property failed after 1 case(s)
+           Seed:           433556913 (regenerates the original value)
+           Original value: [ 0, 2, -29 ]
+           Shrunk value:   [ 0, 1, 0 ]
+           Shrink evals:   20
+           Error:          clamp(1, 0, 0) = 1 is out of range
+                           Expected true
+                             got false
+           Saved to:       test/unit/.utest/property/19d78d9b.json (will replay on next run)
 ```
 
-The framework found a failure on its third attempt with `(-47, 91, 12)`, then automatically reduced it to the minimal failing triple `(0, 1, 0)` — a value above the upper bound, where `lo == hi == 0` and `value == 1`. That is the smallest possible counterexample.
+The framework found a failing triple, then automatically reduced it to the minimal failing triple `(0, 1, 0)` — a value above the upper bound, where `lo == hi == 0` and `value == 1`. That is the smallest possible counterexample. It also saved the counterexample to `.utest/property/`, so the next run replays this exact failure instead of searching for it again (see [How to reproduce a failing property](../../how-to/property-reproduce.md)).
 
 !!! note
-    The exact seed, original value, and shrink count will differ between runs. The shrunk value (`[ 0, 1, 0 ]`) should be stable because it is the true minimal counterexample for this bug.
+    The case count, seed, original value, shrink count, and saved filename will differ between runs. The shrunk value (`[ 0, 1, 0 ]`) should be stable because it is the true minimal counterexample for this bug.
 
 ---
 
@@ -108,15 +112,15 @@ export function clamp(value, lo, hi) {
 };
 ```
 
-Run again. All 100 cases pass.
+Run again. The property passes: the framework first replays the saved counterexample (which now holds), deletes it, and resumes random generation on the next run.
 
 ---
 
 ## What we just built
 
 - A source module with a `clamp` function and a property test that checks it against hundreds of randomly generated inputs.
-- A failing version of `clamp` that let us watch the framework find and shrink a counterexample from `(-47, 91, 12)` down to `(0, 1, 0)`.
-- Familiarity with reading the failure output: seed, original value, shrunk value, and the shrink step count.
+- A failing version of `clamp` that let us watch the framework find and shrink a counterexample down to the minimal `(0, 1, 0)`.
+- Familiarity with reading the failure output: seed, original value, shrunk value, the shrink step count, and the saved counterexample that replays on the next run.
 
 ---
 
