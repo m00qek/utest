@@ -79,6 +79,21 @@ assert.throws(() => load_config("missing.uc"), /not found/, "missing config must
 
 ---
 
+### `assert.fail(msg)`
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `msg` | string \| null | The failure message. Defaults to `"assert.fail() called"`. |
+
+Unconditionally raises an assertion failure. Reports as `FAIL` (like a failed `assert.match`, not an `ERROR`), so it is caught by an enclosing `assert.throws` with a matching pattern. Use it for an unreachable branch or a precondition that has no natural `match` form.
+
+```js
+if (state !== 'ready')
+    assert.fail("expected ready, got " + state);
+```
+
+---
+
 ## Combinator factories
 
 Combinators are composable predicates used with `assert.match`. Import them from `'utest'`:
@@ -269,5 +284,20 @@ Passes when `type(actual) == t`. The type string must match ucode's `type()` ret
 assert.match(is_type('int'),    result);
 assert.match(is_type('string'), hostname);
 assert.match(contains({ timeout: is_type('int') }), config);
+```
+
+---
+
+## Utility
+
+### `is_combinator(v)`
+
+Returns `true` when `v` is a combinator object (a value produced by one of the factories above), `false` otherwise. Exported from `'utest'`. Useful when building your own matcher that must decide whether a supplied expected value is a combinator or a plain value.
+
+```js
+import { is_combinator, equals } from 'utest';
+
+is_combinator(equals(1));   // true
+is_combinator(1);           // false
 ```
 
