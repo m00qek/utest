@@ -224,9 +224,38 @@ three test-coverage additions:
 ## Still open
 
 ### Carried over (from the first review; unchanged)
-- **dup-file across bundles** corrupts per-suite bookkeeping; **test-dir require
-  templates** shadow shim paths. Both contrived.
 - **2.3-prev** patch_builtin outside snapshot/restore (documented manual cleanup).
+
+## dup-file-across-bundles LANDED — suite stats nested by (bundle, file)
+
+`_suite_stats` (reporter/base.uc) and `reported_suites` (detailed.uc) were
+keyed on file path alone, shared across the whole run: the same file named in
+two different bundles had its second occurrence merged into the first's
+bucket (suite count under-reported) and its header silently dropped in the
+detailed reporter. Nested by (bundle, file) instead of a joined string key —
+a `bundle + "\0" + file` key was tried first and found to collide: ucode
+object keys truncate at an embedded NUL (`{}["a\0b"]` and `{}["a\0c"]` both
+land on `"a"`, verified live), which broke the very case it was meant to
+disambiguate. Pinned in meta-test.sh's `dup-file-across-bundles` check (same
+file under two different bundle names must render two headers and count two
+suites); verified red on the old file-keyed code first.
+
+## test-dir-require-shadowing LANDED — appended, not unshifted
+
+`bootstrap.uc` unshifted the test file's own directory onto the front of
+REQUIRE_SEARCH_PATH, so a same-named sibling file could outrank a properly
+configured module. **Narrower than the original framing:** this is only
+reachable via a dynamic `require()` call — `import` statements resolve
+through a separate, unaffected mechanism (verified live: mutating
+REQUIRE_SEARCH_PATH at runtime has zero effect on subsequent `import`
+resolution, only on `require()`), so the very common `import`-based test code
+was never actually at risk. Still a real hole for `require()`. Fixed by
+appending instead of unshifting, so the test's own directory ranks at the
+same (lowest) tier as project root — same feature (`require()` finds a
+sibling helper), correct priority. Regression fixture
+(`examples/requireshadow/`) uses a decoy sibling file colliding with a
+lib_paths-provided module of the same name; verified red on the old
+(unshift) code first.
 
 ## shell escaping LANDED — `json_str` now escapes tab/CR/newline
 
