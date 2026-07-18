@@ -47,8 +47,8 @@ describe("get_banner()", () => {
         });
     });
 
-    it("returns null when no banner file is seeded", () => {
-        mock.inject('fs', { data: {} }, (m_fs) => {
+    it("returns null when the banner file is absent", () => {
+        mock.inject('fs', { data: { '/etc/banner': null } }, (m_fs) => {
             assert.match(null, get_banner(m_fs));
         });
     });
@@ -56,6 +56,8 @@ describe("get_banner()", () => {
 ```
 
 `mock.inject('fs', ...)` builds a proxy and passes it as `m_fs` to the callback. We hand that proxy directly to `get_banner`, so the function reads from virtual data instead of the real filesystem. No `utest.config.uc` is needed.
+
+Seeding a path to `null` marks it explicitly absent, so `readfile` returns `null`. This matters here: for a path you simply leave unseeded, a non-strict mock falls through to the *real* filesystem — and `/etc/banner` exists on a real OpenWrt system — so seeding `null` is how you assert "this file is not there."
 
 ---
 
@@ -65,41 +67,43 @@ describe("get_banner()", () => {
 utest -l src test/unit/banner_test.uc
 ```
 
-You should see:
+You should see (tests run in a randomized order, so yours may differ):
 
 ```
-[test/unit/banner_test.uc] test/unit/banner_test.uc
+[test/unit/banner_test.uc] test/unit/banner_test.uc (2 tests)
   [PASS] returns the seeded banner content
-  [PASS] returns null when no banner file is seeded
+  [PASS] returns null when the banner file is absent
+
 Summary:
-  Suites: 1
-  Total:  2
-  Passed: 2
-  Failed: 0
-  Errors: 0
-  Time:   5 ms
-  Seed:   ...
+  Suites:  1
+  Total:   2
+  Passed:  2
+  Failed:  0
+  Errors:  0
+  Time:    5 ms
+  Seed:    ...
 ```
 
 ---
 
 ## Step 4 — Confirm the mock is bounded to the callback
 
-Add a third test that saves the proxy and calls `get_banner` with it after the callback exits:
+The proxy is only valid inside its callback. Add a third test that saves the proxy and tries to use it *after* the callback has exited:
 
 ```js
-    it("mock data is gone once the callback exits", () => {
+    it("the proxy dies if used after the callback exits", () => {
         let saved = null;
         mock.inject('fs', { data: { '/etc/banner': 'test content' } }, (m_fs) => {
             saved = m_fs;
             assert.match('test content', get_banner(m_fs));
         });
-        // The mock layer has been removed — the proxy returns null for unseeded paths.
-        assert.match(null, get_banner(saved));
+        // The mock layer has been popped. Using the leaked proxy now dies loudly
+        // rather than silently falling through to the real filesystem.
+        assert.throws(() => get_banner(saved), /used outside its scope/);
     });
 ```
 
-Run again and confirm all three tests pass.
+Run again and confirm all three tests pass. The guard means a proxy can never quietly escape its scope and start returning real data where you expected mock data — a leaked proxy fails fast instead.
 
 ---
 
@@ -107,7 +111,7 @@ Run again and confirm all three tests pass.
 
 - A source module that accepts `fs` as a parameter so tests control which implementation it receives.
 - Tests that use `mock.inject()` to build a proxy and pass it directly to the function under test.
-- Confirmation that the mock layer is bounded: once the callback exits, the proxy returns null for any path.
+- Confirmation that the mock layer is bounded: once the callback exits, using the proxy dies instead of leaking real data into your test.
 - No `utest.config.uc` required when code receives its dependencies as parameters.
 
 ---
