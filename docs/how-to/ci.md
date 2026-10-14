@@ -45,7 +45,7 @@ Parallel execution (`jobs > 1`) requires the ucode `uloop` module — the offici
 
 ## GitHub Actions example
 
-CI hosts run standard Linux, not OpenWrt. Use the official OpenWrt rootfs image to provide the right execution environment:
+CI hosts run standard Linux, not OpenWrt. Use the official OpenWrt rootfs image to provide the right execution environment, and install utest inside it as described in [How-to: Install utest](install.md). The `install` entries below are those steps, written for a container:
 
 ```yaml
 name: Test
@@ -59,9 +59,16 @@ jobs:
       matrix:
         include:
           - openwrt: '24.10.6'
-            install: 'opkg update && opkg install ucode-utest'
+            install: |
+              mkdir -p /var/lock
+              wget -qO /etc/opkg/keys/a2288d4745630a38 "$FEED/24.10/feed.pub"
+              echo "src/gz ucode.dev $FEED/24.10" >> /etc/opkg/customfeeds.conf
+              opkg update && opkg install ucode-utest
           - openwrt: '25.12.3'
-            install: 'apk add ucode-utest'
+            install: |
+              wget -qO /etc/apk/keys/packages.ucode.dev.pem "$FEED/25.12/feed.pub.pem"
+              echo "$FEED/25.12" >> /etc/apk/repositories.d/customfeeds.list
+              apk update && apk add ucode-utest
     steps:
       - uses: actions/checkout@v4
 
@@ -69,14 +76,18 @@ jobs:
         env:
           OPENWRT: ${{ matrix.openwrt }}
           INSTALL: ${{ matrix.install }}
+          FEED: https://m00qek.github.io/packages.ucode.dev
         run: |
           VERSION=$(echo "$OPENWRT" | sed 's/\.[^.]*$//')
           docker run --rm \
+            -e INSTALL -e FEED \
             -v "${{ github.workspace }}:/app" \
             -w /app \
             "openwrt/rootfs:x86-64-openwrt-${VERSION}" \
-            sh -c "${INSTALL} && utest test/unit"
+            sh -c 'set -e; eval "$INSTALL"; utest test/unit'
 ```
+
+The install script runs inside the container, so `$FEED` is expanded there, not on the runner. The `mkdir -p /var/lock` line is the [container-only addition for 24.10](install.md#install-in-an-openwrt-container).
 
 Docker is available on GitHub-hosted `ubuntu-latest` runners without any additional setup.
 

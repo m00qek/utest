@@ -28,6 +28,8 @@ Summary:
 
 ## Installation
 
+utest is published in the [packages.ucode.dev](https://github.com/m00qek/packages.ucode.dev) feed, not in the official OpenWrt feeds. Add the feed and its signing key first, as described in [How to install utest](https://m00qek.github.io/utest/how-to/install/), then:
+
 **OpenWrt ≤ 24.10**:
 ```bash
 opkg install ucode-utest

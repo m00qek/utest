@@ -8,6 +8,7 @@ Practical directions for common tasks. Each guide assumes you already have a wor
 
 | Guide | Goal |
 | :--- | :--- |
+| [Install utest](install.md) | Add the package feed and install utest on OpenWrt |
 | [Skip tests temporarily](skip-tests.md) | Disable a test or block without deleting it |
 | [Filter tests by name](filter-tests.md) | Run a subset of tests during development |
 | [Run tests in CI](ci.md) | Integrate utest into a CI pipeline |

@@ -15,7 +15,7 @@ A source module `src/calc.uc` that exports an `add` function, and a test file `t
 
 ## Prerequisites
 
-- utest installed: `opkg install ucode-utest` (OpenWrt ≤ 24.10) or `apk add ucode-utest` (OpenWrt ≥ 25.12).
+- utest installed on OpenWrt 24.10 or 25.12. It comes from a third-party feed you add first; see [How-to: Install utest](../../how-to/install.md).
 - A directory to work in. You do not need an existing ucode project.
 
 ---
